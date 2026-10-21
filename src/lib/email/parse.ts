@@ -8,8 +8,12 @@ import { detectCarrier } from "../carriers";
  * y si los importes no cuadran, se marca como dudoso para revisión.
  */
 
-export type EmailKind = "vinted_venta" | "vinted_etiqueta" | "wallapop_venta" | "wallapop_aviso" | "otro";
-export type Platform = "vinted" | "wallapop";
+export type EmailKind = "vinted_venta" | "vinted_etiqueta" | "wallapop_venta" | "wallapop_aviso" | "otra_venta" | "otro";
+/** Plataformas que se leen del correo. Vinted y Wallapop con reglas fijas; el resto con IA («otra_venta»). */
+export type Platform = "vinted" | "wallapop" | "ebay" | "milanuncios" | "facebook";
+export const SALE_KINDS = ["vinted_venta", "wallapop_venta", "otra_venta"] as const;
+export const isSaleKind = (k: string): boolean => (SALE_KINDS as readonly string[]).includes(k);
+export const PLATFORM_LABEL: Record<Platform, string> = { vinted: "Vinted", wallapop: "Wallapop", ebay: "eBay", milanuncios: "Milanuncios", facebook: "Facebook Marketplace" };
 
 export interface EmailInput {
   from: string;
@@ -334,6 +338,13 @@ function stripPrefixes(subject: string): string {
 // Clasificación
 // ---------------------------------------------------------------------
 
+function otherPlatform(from: string, subject: string, body: string): Platform | null {
+  if (/ebay\.[a-z.]+/.test(from)) return "ebay";
+  if (/milanuncios\.com/.test(from)) return "milanuncios";
+  if (/facebookmail\.com|facebook\.com|fb\.com/.test(from) && /\bmarketplace\b/.test(subject + " " + body.slice(0, 2000))) return "facebook";
+  return null;
+}
+
 export function classify(input: EmailInput): { kind: EmailKind; platform: Platform | null } {
   const fwd = forwardedHeaders(input.text);
   const from = `${input.from} ${fwd.from ?? ""}`.toLowerCase();
@@ -361,6 +372,14 @@ export function classify(input: EmailInput): { kind: EmailKind; platform: Platfo
       return { kind: "wallapop_aviso", platform: "wallapop" };
     }
     return { kind: "otro", platform: "wallapop" };
+  }
+  // eBay, Milanuncios y Facebook Marketplace: el remitente dice la plataforma y unas
+  // palabras de venta deciden si merece la pena leerlo (lo lee la IA; ella confirma si es una venta).
+  const other = otherPlatform(from, subject, body);
+  if (other) {
+    const saleWords = /\b(has vendido|vendido|se ha vendido|tu venta|nueva venta|venta realizada|pedido|pago recibido|te han pagado|ha comprado|comprador|envia el articulo|envia tu articulo|item sold|you sold|sold)\b/;
+    if (saleWords.test(subject) || saleWords.test(body.slice(0, 1500))) return { kind: "otra_venta", platform: other };
+    return { kind: "otro", platform: other };
   }
   return { kind: "otro", platform: null };
 }
@@ -571,6 +590,9 @@ export function parseWallapopSale(text: string): WallapopSale | null {
 const IMAGE_HOSTS: Record<Platform, RegExp> = {
   vinted: /^https:\/\/images\d*\.vinted\.net\//i,
   wallapop: /^https:\/\/(cdn\.wallapop\.com|es\.wallapop\.com\/images|cdn\d*\.wallapop\.com)\//i,
+  ebay: /^https:\/\/i\.ebayimg\.com\//i,
+  milanuncios: /^https:\/\/([a-z0-9-]+\.)*milanuncios\.com\//i,
+  facebook: /^https:\/\/([a-z0-9-]+\.)*(fbcdn\.net|fbsbx\.com)\//i,
 };
 
 /**

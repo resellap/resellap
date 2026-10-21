@@ -233,6 +233,24 @@ run("Ventas automáticas por correo", () => {
     expect(Number(price)).toBe(55);
   });
 
+  it("eBay / Milanuncios / Facebook: crea la plataforma si falta y registra la venta leída con IA", async () => {
+    const e = await email("otra_venta", { price: 33, product: "Oakley Encoder rosas", buyer: "comprador_ebay", order_id: "12-34567-89" }, "ebay");
+    const id = await rpc<string>(db, admin, "email_register_sale", e, variant, null, null, null, null, respA);
+    const r = (await db.client.query("select p.name, s.notes, s.platform_transaction_id, p.requires_shipping from sales s join platforms p on p.id = s.platform_id where s.id = $1", [id])).rows[0];
+    expect(r.name).toBe("eBay");
+    expect(r.requires_shipping).toBe(true);
+    expect(r.notes).toContain("eBay");
+    expect(r.platform_transaction_id).toBe("12-34567-89");
+    // La segunda venta usa la misma plataforma (no la duplica)
+    const e2 = await email("otra_venta", { price: 20, product: "Oakley" }, "ebay");
+    await rpc<string>(db, admin, "email_register_sale", e2, variant, null, null, null, null, respA);
+    expect((await db.client.query("select count(*)::int n from platforms where lower(name) = 'ebay'")).rows[0].n).toBe(1);
+    // Facebook Marketplace con su nombre completo
+    const f = await email("otra_venta", { price: 15, product: "Oakley" }, "facebook");
+    const fid = await rpc<string>(db, admin, "email_register_sale", f, variant, null, null, null, null, respA);
+    expect((await db.client.query("select p.name from sales s join platforms p on p.id = s.platform_id where s.id = $1", [fid])).rows[0].name).toBe("Facebook Marketplace");
+  });
+
   it("marcar como duplicado: no crea venta ni mueve stock, une el correo a la venta y se puede deshacer", async () => {
     const manual = await rpc<string>(db, admin, "create_sale", {
       responsible_id: respA,

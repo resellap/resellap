@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Notice, Select, buttonClass, clsx } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
+import { isSaleKind, PLATFORM_LABEL, type Platform } from "@/lib/email/parse";
 import { money } from "@/lib/format";
 import type { SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
@@ -78,7 +79,7 @@ export function AccountRow({
   return (
     <li className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_1fr_1fr] sm:items-end">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">{account.platform === "vinted" ? "Vinted" : "Wallapop"}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">{PLATFORM_LABEL[account.platform as Platform] ?? account.platform}</p>
         <p className="truncate font-semibold">{account.handle}</p>
       </div>
       <Field label="Responsable">
@@ -127,7 +128,7 @@ export function AccountRow({
 /** Acciones sobre un correo que necesita una persona. */
 export function IncidentActions({ email }: { email: EmailRowView }) {
   const retry = useServerAction(retryEmail);
-  const isSale = email.kind === "vinted_venta" || email.kind === "wallapop_venta";
+  const isSale = isSaleKind(email.kind);
   const isLabel = email.kind === "vinted_etiqueta";
   const productCandidates = (email.candidates ?? []).filter((c) => c.variant_id);
   const saleCandidates = (email.candidates ?? []).filter((c) => c.sale_id);

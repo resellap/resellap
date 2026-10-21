@@ -7,7 +7,8 @@ import { detectCarrier } from "../carriers";
 import { matchProduct, type MatchResult, type MatchVariant } from "./matching";
 import { pdfText, storeListingImage } from "./images";
 import { backfillSalePhotos, refreshWallapopPhotos } from "./photo-backfill";
-import { classify, extractProductImage, extractTransactionId, findTrackingCodes, normalizeName, parseVintedLabel, parseVintedSale, parseWallapopSale, type EmailKind } from "./parse";
+import { classify, extractProductImage, extractTransactionId, findTrackingCodes, isSaleKind, normalizeName, parseVintedLabel, parseVintedSale, parseWallapopSale, PLATFORM_LABEL, type EmailKind, type Platform } from "./parse";
+import { readSaleWithAi } from "./ai-sale";
 
 /**
  * Sincronización con Gmail: lee los correos nuevos, los guarda (sin el
@@ -44,7 +45,7 @@ export interface SyncSummary {
 const MAX_ATTEMPTS = 3;
 const WAIT_LABEL_DAYS = 7;
 const TIME_BUDGET_MS = 45_000;
-const SEARCH = "{from:vinted from:wallapop subject:vinted subject:wallapop vinted wallapop}";
+const SEARCH = "{from:vinted from:wallapop subject:vinted subject:wallapop vinted wallapop from:ebay from:milanuncios from:facebookmail subject:ebay subject:milanuncios subject:marketplace}";
 
 interface Integration {
   email: string | null;
@@ -60,7 +61,7 @@ interface EmailRow {
   id: string;
   gmail_message_id: string;
   received_at: string;
-  platform: "vinted" | "wallapop" | null;
+  platform: Platform | null;
   kind: EmailKind;
   status: string;
   parsed: Record<string, unknown>;
@@ -235,21 +236,27 @@ async function storeEmail(db: Admin, org: string, mail: MailMessage): Promise<"n
   let row: Record<string, unknown>;
   if (kind === "otro") {
     // Correo ajeno: ni remitente ni asunto (pueden ser datos personales)
-    row = { ...base, status: "ignorado", review_reason: "No es un correo de venta de Vinted ni de Wallapop." };
+    row = { ...base, status: "ignorado", review_reason: "No es un correo de venta." };
   } else if (kind === "wallapop_aviso") {
     row = { ...base, from_address: senderAddress(mail.from), subject: mail.subject.slice(0, 200), status: "ignorado", review_reason: "Primer aviso de Wallapop (sin importe): no crea venta." };
+  } else if (kind === "otra_venta" && platform) {
+    // eBay, Milanuncios, Facebook Marketplace: lo lee la IA
+    const head = { ...base, from_address: senderAddress(mail.from), subject: mail.subject.slice(0, 200) };
+    const ai = await readSaleWithAi(platform, mail.subject, mail.text, mail.receivedAt);
+    if (ai.kind === "not_sale") {
+      row = { ...head, status: "ignorado", review_reason: `Correo de ${PLATFORM_LABEL[platform]} que no es una venta: ${ai.reason}`.slice(0, 500) };
+    } else if (ai.kind === "unavailable") {
+      // Se vuelve a intentar en la próxima revisión (se relee el correo desde Gmail)
+      row = { ...head, status: "pendiente", parsed: { needs_ai: true }, review_reason: ai.reason.slice(0, 500) };
+    } else {
+      row = { ...head, status: "pendiente", review_reason: null, parsed: { ...ai.sale, ...(await saleExtras(db, org, mail, platform, ai.sale.product, ai.sale.order_id)) } };
+    }
   } else {
     const parsed = parseFor(kind, mail.text);
     let extra: Record<string, unknown> = kind === "vinted_etiqueta" ? { pdf: pdfs[0] ? { filename: pdfs[0].filename, size: pdfs[0].size } : null } : {};
-    if (parsed && platform && (kind === "vinted_venta" || kind === "wallapop_venta")) {
-      // Más datos para que confirmar sea solo revisar: transportista, nº de transacción y foto del anuncio
-      const carrier = detectCarrier(mail.text);
+    if (parsed && platform && isSaleKind(kind)) {
       const p = parsed as { transaction_id?: string | null; order_id?: string | null; product?: string | null };
-      extra = {
-        carrier_name: carrier?.name ?? null,
-        transaction_id: p.transaction_id ?? p.order_id ?? extractTransactionId(mail.html),
-        image_path: await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform, p.product)),
-      };
+      extra = await saleExtras(db, org, mail, platform, p.product ?? null, p.transaction_id ?? p.order_id ?? null);
     }
     row = {
       ...base,
@@ -273,6 +280,16 @@ async function storeEmail(db: Admin, org: string, mail: MailMessage): Promise<"n
       .upsert({ organization_id: org, platform, handle: p.account, handle_norm: p.account_norm }, { onConflict: "organization_id,platform,handle_norm", ignoreDuplicates: true });
   }
   return row.status === "ignorado" ? "ignored" : "new";
+}
+
+/** Más datos para que confirmar sea solo revisar: transportista, nº de transacción y foto del anuncio. */
+async function saleExtras(db: Admin, org: string, mail: MailMessage, platform: Platform, product: string | null, orderId: string | null) {
+  const carrier = detectCarrier(mail.text);
+  return {
+    carrier_name: carrier?.name ?? null,
+    transaction_id: orderId ?? extractTransactionId(mail.html),
+    image_path: await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform, product)),
+  };
 }
 
 function parseFor(kind: EmailKind, text: string) {
@@ -299,7 +316,7 @@ async function processQueue(db: Admin, org: string, gmail: Gmail, summary: SyncS
     .select("id, gmail_message_id, received_at, platform, kind, status, parsed, attempts, sale_id")
     .eq("organization_id", org)
     .in("status", ["pendiente", "esperando", "error"])
-    .in("kind", ["vinted_venta", "wallapop_venta", "vinted_etiqueta"])
+    .in("kind", ["vinted_venta", "wallapop_venta", "otra_venta", "vinted_etiqueta"])
     .order("received_at")
     .limit(100);
   if (error) throw new Error(`No se ha podido leer la cola de correos: ${error.message}`);
@@ -307,6 +324,11 @@ async function processQueue(db: Admin, org: string, gmail: Gmail, summary: SyncS
   for (const e of (rows ?? []) as EmailRow[]) {
     if (Date.now() > deadline) break;
     try {
+      if (e.kind === "otra_venta" && e.parsed.needs_ai) {
+        const ready = await retryAi(db, org, gmail, e);
+        if (!ready) continue;
+        e.parsed = ready;
+      }
       const r = e.kind === "vinted_etiqueta" ? await processLabel(db, org, gmail, e) : await processSale(db, org, catalog, e);
       if (r === "sale") summary.sales++;
       else if (r === "detected") summary.detected++;
@@ -331,6 +353,25 @@ async function processQueue(db: Admin, org: string, gmail: Gmail, summary: SyncS
         .eq("id", e.id);
     }
   }
+}
+
+/** Correo de otra plataforma que la IA no pudo leer: se relee de Gmail y se vuelve a intentar. */
+async function retryAi(db: Admin, org: string, gmail: Gmail, e: EmailRow): Promise<Record<string, unknown> | null> {
+  const platform = e.platform as Platform;
+  const mail = await gmail.message(e.gmail_message_id);
+  const ai = await readSaleWithAi(platform, mail.subject, mail.text, mail.receivedAt);
+  if (ai.kind === "unavailable") throw new Error(ai.reason);
+  if (ai.kind === "not_sale") {
+    await db
+      .from("email_messages")
+      .update({ status: "ignorado", parsed: {}, review_reason: `Correo de ${PLATFORM_LABEL[platform]} que no es una venta: ${ai.reason}`.slice(0, 500), updated_at: new Date().toISOString() })
+      .eq("organization_id", org)
+      .eq("id", e.id);
+    return null;
+  }
+  const parsed = { ...ai.sale, ...(await saleExtras(db, org, mail, platform, ai.sale.product, ai.sale.order_id)) };
+  await db.from("email_messages").update({ parsed, review_reason: null, updated_at: new Date().toISOString() }).eq("organization_id", org).eq("id", e.id);
+  return parsed;
 }
 
 type Outcome = "sale" | "detected" | "label" | "review" | "waiting" | "noop";

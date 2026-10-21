@@ -4,6 +4,7 @@ import { Mail } from "lucide-react";
 import { Badge, Empty, Notice, PageHeader, Panel, Tabs, clsx } from "@/components/ui";
 import { requirePerm } from "@/lib/auth";
 import { CENTRAL_ACCOUNT, googleCredentials } from "@/lib/email/gmail";
+import { isSaleKind, type Platform } from "@/lib/email/parse";
 import { first, type SearchParams } from "@/lib/filters";
 import { dateTime, money } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +29,7 @@ type Status = {
 export type EmailRowView = {
   id: string;
   received_at: string;
-  platform: "vinted" | "wallapop" | null;
+  platform: Platform | null;
   kind: string;
   status: string;
   parsed: Record<string, unknown>;
@@ -43,6 +44,7 @@ const KIND: Record<string, string> = {
   vinted_venta: "Venta Vinted",
   vinted_etiqueta: "Etiqueta Vinted",
   wallapop_venta: "Venta Wallapop",
+  otra_venta: "Venta (leída con IA)",
   wallapop_aviso: "Aviso Wallapop (se ignora)",
   otro: "Otro correo",
 };
@@ -102,7 +104,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
     <>
       <PageHeader
         title="Ventas por correo"
-        description={`Lee los correos de Vinted y Wallapop que llegan a ${CENTRAL_ACCOUNT ?? "tu Gmail"} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.`}
+        description={`Lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace que llegan a ${CENTRAL_ACCOUNT ?? "tu Gmail"} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.`}
       />
       {okMsg === "conectado" && (
         <Notice tone="good" className="mb-4" title="Gmail conectado">
@@ -157,7 +159,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
                 <li key={e.id} className="px-4 py-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <EmailSummary e={e} saleNumber={e.sale_id ? saleNumber.get(e.sale_id) : undefined} compact />
-                    {(e.kind === "vinted_venta" || e.kind === "wallapop_venta") && (e.status === "duplicado" || e.status === "ignorado") && <UndoButton id={e.id} />}
+                    {isSaleKind(e.kind) && (e.status === "duplicado" || e.status === "ignorado") && <UndoButton id={e.id} />}
                     {e.status === "detectada" && (
                       <Link href="/detectadas" className="shrink-0 text-[13px] font-semibold text-brand-ink hover:underline">
                         Ir a confirmarla
@@ -169,14 +171,14 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
             </ul>
           )}
           <p className="border-t border-line px-4 py-2.5 text-xs text-faint">
-            Se muestran los 100 últimos. Del correo solo se guardan los datos de la venta; los correos que no son de Vinted ni Wallapop no se guardan.
+            Se muestran los 100 últimos. Del correo solo se guardan los datos de la venta; los correos que no son de venta no se guardan.
           </p>
         </Panel>
       )}
 
       {view === "cuentas" && (
         <Panel
-          title="Cuentas de Vinted y Wallapop"
+          title="Cuentas de las plataformas"
           description="Cada correo empieza con «Hola, usuario». Asigna a cada usuario su responsable y su móvil; si no, la venta se apunta al responsable por defecto."
           padded={false}
         >
