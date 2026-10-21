@@ -22,7 +22,7 @@ export async function storeListingImage(db: SupabaseClient, org: string, message
     if (len > MAX_BYTES) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     if (!buf.length || buf.length > MAX_BYTES) return null;
-    const path = `${org}/${messageId.replace(/[^A-Za-z0-9_-]/g, "")}.${ext}`;
+    const path = `${org}/${messageId.replace(/[^A-Za-z0-9_-]/g, "")}.${ext}`; // messageId puede llevar «-v2»
     const up = await db.storage.from("sale-images").upload(path, buf, { contentType: type, upsert: true });
     return up.error ? null : path;
   } catch {

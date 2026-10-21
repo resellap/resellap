@@ -6,7 +6,7 @@ import { Gmail, GmailAuthError, pdfAttachments, refreshAccessToken, validatePdf,
 import { detectCarrier } from "../carriers";
 import { matchProduct, type MatchResult, type MatchVariant } from "./matching";
 import { pdfText, storeListingImage } from "./images";
-import { backfillSalePhotos } from "./photo-backfill";
+import { backfillSalePhotos, refreshWallapopPhotos } from "./photo-backfill";
 import { classify, extractProductImage, extractTransactionId, findTrackingCodes, normalizeName, parseVintedLabel, parseVintedSale, parseWallapopSale, type EmailKind } from "./parse";
 
 /**
@@ -35,6 +35,7 @@ export interface SyncSummary {
   /** Fotos recuperadas para ventas anteriores (solo la primera vez). */
   photos?: number;
   photos_error?: string;
+  photos_fixed?: number;
   photos_stats?: { checked: number; sales: number; matched: number; noImage: number };
   error?: string;
   skipped?: string;
@@ -168,6 +169,8 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
     // 3) Una sola vez: fotos de las ventas anteriores de Vinted y Wallapop (si queda tiempo)
     if (!integ.photos_backfill_at && Date.now() < deadline - 8_000) {
       try {
+        // Al empezar: corregir las fotos de Wallapop que eran el avatar del comprador
+        if (integ.photos_backfill_cursor == null) summary.photos_fixed = await refreshWallapopPhotos(db, org, gmail, deadline - 10_000);
         const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000, integ.photos_backfill_cursor);
         summary.photos = b.photos;
         if (b.lastError) summary.photos_error = b.lastError;
@@ -241,11 +244,11 @@ async function storeEmail(db: Admin, org: string, mail: MailMessage): Promise<"n
     if (parsed && platform && (kind === "vinted_venta" || kind === "wallapop_venta")) {
       // Más datos para que confirmar sea solo revisar: transportista, nº de transacción y foto del anuncio
       const carrier = detectCarrier(mail.text);
-      const p = parsed as { transaction_id?: string | null; order_id?: string | null };
+      const p = parsed as { transaction_id?: string | null; order_id?: string | null; product?: string | null };
       extra = {
         carrier_name: carrier?.name ?? null,
         transaction_id: p.transaction_id ?? p.order_id ?? extractTransactionId(mail.html),
-        image_path: await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform)),
+        image_path: await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform, p.product)),
       };
     }
     row = {
