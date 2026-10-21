@@ -621,7 +621,7 @@ export function findTrackingCodes(text: string): string[] {
   for (const m of t.matchAll(/(?:SEGUIMIENTO|TRACKING(?:\s*(?:NUMBER|NO\.?|ID))?|N[º°O]\.?\s*DE\s*ENV[IÍ]O|LOCALIZADOR|REFERENCIA DE ENV[IÍ]O)\s*[:#]?\s*([A-Z0-9][A-Z0-9 -]{6,34}[A-Z0-9])/g)) add(m[1].split(/\s{2,}/)[0]);
   // Formatos conocidos: Correos (PQ…ES, 2 letras + 9 cifras + ES), UPS (1Z…), InPost/genéricos largos
   for (const m of t.matchAll(/\b([A-Z]{2}\d{9}[A-Z]{2})\b/g)) add(m[1]);
-  for (const m of t.matchAll(/\b(PQ[A-Z0-9]{14,20})\b/g)) add(m[1]);
+  for (const m of t.matchAll(/\b(PQ[A-Z0-9]{14,24})\b/g)) add(m[1]);
   for (const m of t.matchAll(/\b(1Z[A-Z0-9]{16})\b/g)) add(m[1]);
   return out;
 }

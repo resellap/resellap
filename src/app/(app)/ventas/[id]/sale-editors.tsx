@@ -109,7 +109,7 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
         </Field>
         {busyLabel && <p className="text-[13px] font-medium text-muted">Subiendo etiqueta…</p>}
         {uploadError && <Notice tone="bad">{uploadError}</Notice>}
-        {!busyLabel && <ActionMessages error={label.error} message={label.message ? "Etiqueta guardada." : null} />}
+        {!busyLabel && <ActionMessages error={label.error} message={label.message} />}
       </div>
     </div>
   );

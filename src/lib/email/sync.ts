@@ -6,6 +6,7 @@ import { Gmail, GmailAuthError, pdfAttachments, refreshAccessToken, validatePdf,
 import { detectCarrier } from "../carriers";
 import { matchProduct, type MatchResult, type MatchVariant } from "./matching";
 import { pdfText, storeListingImage } from "./images";
+import { backfillSalePhotos } from "./photo-backfill";
 import { classify, extractProductImage, extractTransactionId, findTrackingCodes, normalizeName, parseVintedLabel, parseVintedSale, parseWallapopSale, type EmailKind } from "./parse";
 
 /**
@@ -31,6 +32,8 @@ export interface SyncSummary {
   waiting: number;
   errors: number;
   ignored: number;
+  /** Fotos recuperadas para ventas anteriores (solo la primera vez). */
+  photos?: number;
   error?: string;
   skipped?: string;
 }
@@ -46,6 +49,7 @@ interface Integration {
   status: string;
   connected_at: string | null;
   last_success_at: string | null;
+  photos_backfill_at: string | null;
 }
 
 interface EmailRow {
@@ -112,7 +116,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
   const summary = emptySummary(trigger);
   const { data: integ } = await db
     .from("email_integration")
-    .select("email, refresh_token_enc, status, connected_at, last_success_at")
+    .select("email, refresh_token_enc, status, connected_at, last_success_at, photos_backfill_at")
     .eq("organization_id", org)
     .maybeSingle<Integration>();
   if (!integ?.refresh_token_enc) return { ...summary, skipped: "Gmail no está conectado." };
@@ -157,6 +161,18 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
 
     // 2) Procesar lo pendiente, del más antiguo al más nuevo
     await processQueue(db, org, gmail, summary, deadline);
+
+    // 3) Una sola vez: fotos de las ventas anteriores de Vinted y Wallapop (si queda tiempo)
+    if (!integ.photos_backfill_at && Date.now() < deadline - 8_000) {
+      try {
+        const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000);
+        summary.photos = b.photos;
+        if (b.done) await db.from("email_integration").update({ photos_backfill_at: new Date().toISOString() }).eq("organization_id", org);
+      } catch (err) {
+        if (err instanceof GmailAuthError) throw err;
+        // Si falla, se reintenta en la próxima revisión; las ventas nuevas no se ven afectadas
+      }
+    }
 
     summary.finished_at = new Date().toISOString();
     await db
