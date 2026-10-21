@@ -24,7 +24,7 @@ export async function updateTracking(input: z.input<typeof schema>): Promise<Act
   const supabase = await createClient();
   const { error } = await supabase.rpc("update_tracking", { p: v.data });
   if (error) return { ok: false, error: friendlyError(error) };
-  // Con código nuevo, se da de alta y se consulta ya (si hay servicio de seguimiento)
+  // Con código nuevo, se da de alta y se consulta ya si la venta ya está enviada (si no, al marcarla como enviada)
   if (v.data.tracking_number && trackingConfigured()) await runTracking({ saleIds: [v.data.id] }).catch(() => undefined);
   revalidatePath("/", "layout");
   return { ok: true, message: v.data.status ? "Estado actualizado." : "Envío actualizado." };
@@ -36,12 +36,12 @@ export async function refreshTracking(saleId?: string): Promise<ActionResult> {
   if (!user?.orgId || !user.active) return { ok: false, error: "No tienes acceso." };
   if (!trackingConfigured()) return { ok: false, error: "El seguimiento automático no está activado (falta la clave del servicio). Puedes actualizar el estado a mano." };
   const supabase = await createClient();
-  // Solo ventas que el usuario puede ver (las reglas de acceso filtran). También las pendientes con código:
-  // si el transportista ya las ha recogido, pasan a enviadas solas.
+  // Solo ventas que el usuario puede ver (las reglas de acceso filtran) y ya marcadas como enviadas
   let q = supabase
     .from("sales")
     .select("id")
     .eq("status", "activa")
+    .eq("shipping_status", "enviado")
     .is("delivered_at", null)
     .not("tracking_number", "is", null)
     .or("tracking_status.is.null,tracking_status.not.in.(devuelto,cancelado,entregado)")

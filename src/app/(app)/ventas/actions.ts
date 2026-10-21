@@ -45,6 +45,8 @@ export async function createSale(sale: NewSale): Promise<ActionResult<string>> {
 
 export async function updateSale(patch: Record<string, unknown> & { id: string }): Promise<ActionResult> {
   const res = await callRpc<undefined>("update_sale", { p: patch }, ["/ventas"], "Cambios guardados.");
+  // Marcada como enviada a mano: empieza el seguimiento (si tiene código)
+  if (res.ok && patch.shipping_status === "enviado") after(() => runTracking({ saleIds: [patch.id] }).catch(() => undefined));
   if (res.ok && typeof patch.shipping_label_path === "string" && patch.shipping_label_path) {
     const code = await codeFromWallapopLabel(patch.id).catch(() => null);
     res.message = code ? `Etiqueta guardada. Código de seguimiento de Correos detectado: ${code}.` : "Etiqueta guardada.";
