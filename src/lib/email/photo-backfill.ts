@@ -29,6 +29,8 @@ export interface BackfillResult {
   done: boolean; // false si se acabó el tiempo (se sigue en la próxima revisión)
   checked: number;
   photos: number;
+  /** Último fallo con un correo concreto (para diagnosticar). */
+  lastError?: string;
 }
 
 const DAY = 86_400_000;
@@ -108,31 +110,30 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
     if (!left.size) break;
     if (Date.now() > deadline) return result;
     result.checked++;
-    let mail: Awaited<ReturnType<Gmail["message"]>>;
     try {
-      mail = await gmail.message(m.id);
+      const mail = await gmail.message(m.id);
+      const { kind, platform } = classify({ from: mail.from, subject: mail.subject, text: mail.text, pdfNames: [] });
+      if (!platform || (kind !== "vinted_venta" && kind !== "wallapop_venta")) continue;
+      const parsed = kind === "vinted_venta" ? parseVintedSale(mail.text) : parseWallapopSale(mail.text);
+      if (!parsed) continue;
+      const sd = (parsed as { sale_date?: string | null }).sale_date;
+      const saleDate = sd ? dayOf(sd) : madridDay(mail.receivedAt);
+      const hit = pickSale([...left.values()], { platform, day: saleDate, price: parsed.price, product: parsed.product });
+      if (!hit) continue;
+      const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform)).catch(() => null);
+      if (!path) continue;
+      const { error: upErr } = await db.from("sales").update({ image_path: path }).eq("organization_id", org).eq("id", hit.id).is("image_path", null);
+      if (upErr) {
+        await db.storage.from("sale-images").remove([path]);
+        continue;
+      }
+      left.delete(hit.id);
+      result.photos++;
     } catch (e) {
       // Un correo que no se puede leer no frena al resto
-      console.error("Fotos de ventas anteriores: correo no leído", e instanceof Error ? e.message : e);
-      continue;
+      result.lastError = e instanceof Error ? e.message.slice(0, 200) : "Error desconocido";
+      console.error("Fotos de ventas anteriores:", result.lastError);
     }
-    const { kind, platform } = classify({ from: mail.from, subject: mail.subject, text: mail.text, pdfNames: [] });
-    if (!platform || (kind !== "vinted_venta" && kind !== "wallapop_venta")) continue;
-    const parsed = kind === "vinted_venta" ? parseVintedSale(mail.text) : parseWallapopSale(mail.text);
-    if (!parsed) continue;
-    const sd = (parsed as { sale_date?: string | null }).sale_date;
-    const saleDate = sd ? dayOf(sd) : madridDay(mail.receivedAt);
-    const hit = pickSale([...left.values()], { platform, day: saleDate, price: parsed.price, product: parsed.product });
-    if (!hit) continue;
-    const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform)).catch(() => null);
-    if (!path) continue;
-    const { error: upErr } = await db.from("sales").update({ image_path: path }).eq("organization_id", org).eq("id", hit.id).is("image_path", null);
-    if (upErr) {
-      await db.storage.from("sale-images").remove([path]);
-      continue;
-    }
-    left.delete(hit.id);
-    result.photos++;
   }
   return { ...result, done: true };
 }
