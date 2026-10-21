@@ -168,6 +168,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
       try {
         const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000);
         summary.photos = b.photos;
+        if (b.lastError) summary.photos_error = b.lastError;
         if (b.done) await db.from("email_integration").update({ photos_backfill_at: new Date().toISOString() }).eq("organization_id", org);
       } catch (err) {
         if (err instanceof GmailAuthError) throw err;
