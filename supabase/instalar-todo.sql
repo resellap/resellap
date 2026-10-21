@@ -2,7 +2,7 @@
 -- Resellap · INSTALACIÓN COMPLETA DE LA BASE DE DATOS
 -- Pégalo ENTERO en Supabase → SQL Editor → New query → Run.
 -- Solo una vez por proyecto, en un proyecto NUEVO y vacío.
--- Contiene, en orden, las 24 migraciones de supabase/migrations/ (este
+-- Contiene, en orden, las 25 migraciones de supabase/migrations/ (este
 -- archivo se genera a partir de ellas con «npm run db:instalador»).
 -- Si algo falla, no se guarda nada: todo va en una sola transacción.
 -- =====================================================================
@@ -9254,6 +9254,12 @@ update public.sales
 alter table public.email_integration
   add column if not exists photos_backfill_at timestamptz;
 
+-- >>> 20261021210000_fotos_ventas_anteriores_cursor.sql
+-- La búsqueda de fotos de ventas anteriores se reparte en varias revisiones
+-- (Gmail limita la velocidad): aquí se guarda hasta qué correo se ha llegado.
+alter table public.email_integration
+  add column if not exists photos_backfill_cursor bigint;
+
 -- Registro de migraciones aplicadas (para que la CLI de Supabase sepa que ya están)
 create schema if not exists supabase_migrations;
 create table if not exists supabase_migrations.schema_migrations (version text primary key, statements text[], name text);
@@ -9281,7 +9287,8 @@ insert into supabase_migrations.schema_migrations (version, name) values
   ('20261016090000', 'envios_y_seguimiento'),
   ('20261016120000', 'codigo_marca_enviado'),
   ('20261016150000', 'seguimiento_al_anadir_codigo'),
-  ('20261021200000', 'fotos_ventas_anteriores')
+  ('20261021200000', 'fotos_ventas_anteriores'),
+  ('20261021210000', 'fotos_ventas_anteriores_cursor')
 on conflict (version) do nothing;
 
 commit;

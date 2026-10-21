@@ -31,6 +31,8 @@ export interface BackfillResult {
   photos: number;
   /** Último fallo con un correo concreto (para diagnosticar). */
   lastError?: string;
+  /** Hasta dónde se ha llegado (segundos): la próxima vuelta sigue desde aquí. */
+  cursor: number | null;
 }
 
 const DAY = 86_400_000;
@@ -67,8 +69,13 @@ export function pickSale(
   return null;
 }
 
-export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail: Gmail, search: string, deadline: number): Promise<BackfillResult> {
-  const result: BackfillResult = { done: false, checked: 0, photos: 0 };
+/**
+ * `cursor`: segundos (época) del correo más antiguo ya revisado en una vuelta
+ * anterior; se sigue desde ahí hacia atrás. Gmail limita la velocidad, así que
+ * la búsqueda se reparte en varias revisiones del correo.
+ */
+export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail: Gmail, search: string, deadline: number, cursor: number | null = null): Promise<BackfillResult> {
+  const result: BackfillResult = { done: false, checked: 0, photos: 0, cursor };
   const since = new Date(Date.now() - LOOKBACK_DAYS * DAY).toISOString().slice(0, 10);
 
   const { data: plats } = await db.from("platforms").select("id, name").eq("organization_id", org);
@@ -103,7 +110,9 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
 
   const first = Math.min(...cands.map((c) => c.date)) - 3 * DAY;
   const last = Math.max(...cands.map((c) => c.date)) + 4 * DAY;
-  const listed = await gmail.list(`${search} after:${Math.floor(first / 1000)} before:${Math.floor(last / 1000)}`, MAX_MESSAGES);
+  const before = Math.min(Math.floor(last / 1000), cursor ?? Infinity);
+  if (before <= Math.floor(first / 1000)) return { ...result, done: true };
+  const listed = await gmail.list(`${search} after:${Math.floor(first / 1000)} before:${before}`, MAX_MESSAGES);
 
   const left = new Map(cands.map((c) => [c.id, c]));
   for (const m of listed) {
@@ -111,7 +120,10 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
     if (Date.now() > deadline) return result;
     result.checked++;
     try {
+      if (result.checked > 1) await new Promise((r) => setTimeout(r, 250)); // sin saturar a Gmail
       const mail = await gmail.message(m.id);
+      // Gmail lista del más nuevo al más antiguo: la siguiente vuelta empieza antes de este
+      result.cursor = Math.floor(mail.receivedAt.getTime() / 1000);
       const { kind, platform } = classify({ from: mail.from, subject: mail.subject, text: mail.text, pdfNames: [] });
       if (!platform || (kind !== "vinted_venta" && kind !== "wallapop_venta")) continue;
       const parsed = kind === "vinted_venta" ? parseVintedSale(mail.text) : parseWallapopSale(mail.text);
@@ -130,10 +142,13 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
       left.delete(hit.id);
       result.photos++;
     } catch (e) {
-      // Un correo que no se puede leer no frena al resto
       result.lastError = e instanceof Error ? e.message.slice(0, 200) : "Error desconocido";
       console.error("Fotos de ventas anteriores:", result.lastError);
+      // Límite de Gmail: se para aquí y se sigue en la próxima revisión, desde este correo
+      if (/rateLimit|429|quota|userRateLimit/i.test(result.lastError)) return result;
+      // Otro fallo con un correo concreto: se salta y se sigue
     }
   }
-  return { ...result, done: true };
+  // Si Gmail devolvió el máximo, quedan correos más antiguos: se sigue en la próxima revisión
+  return { ...result, done: !left.size || listed.length < MAX_MESSAGES };
 }
