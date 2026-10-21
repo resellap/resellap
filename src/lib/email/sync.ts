@@ -35,6 +35,7 @@ export interface SyncSummary {
   /** Fotos recuperadas para ventas anteriores (solo la primera vez). */
   photos?: number;
   photos_error?: string;
+  photos_stats?: { checked: number; sales: number; matched: number; noImage: number };
   error?: string;
   skipped?: string;
 }
@@ -170,6 +171,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
         const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000, integ.photos_backfill_cursor);
         summary.photos = b.photos;
         if (b.lastError) summary.photos_error = b.lastError;
+        summary.photos_stats = { checked: b.checked, ...(b.stats ?? { sales: 0, matched: 0, noImage: 0 }) };
         await db
           .from("email_integration")
           .update(b.done ? { photos_backfill_at: new Date().toISOString(), photos_backfill_cursor: null } : { photos_backfill_cursor: b.cursor })
