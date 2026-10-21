@@ -29,6 +29,8 @@ export interface BackfillResult {
   done: boolean; // false si se acabó el tiempo (se sigue en la próxima revisión)
   checked: number;
   photos: number;
+  /** Correos de venta leídos, con venta encontrada y sin foto aprovechable (diagnóstico). */
+  stats?: { sales: number; matched: number; noImage: number };
   /** Último fallo con un correo concreto (para diagnosticar). */
   lastError?: string;
   /** Hasta dónde se ha llegado (segundos): la próxima vuelta sigue desde aquí. */
@@ -75,7 +77,7 @@ export function pickSale(
  * la búsqueda se reparte en varias revisiones del correo.
  */
 export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail: Gmail, search: string, deadline: number, cursor: number | null = null): Promise<BackfillResult> {
-  const result: BackfillResult = { done: false, checked: 0, photos: 0, cursor };
+  const result: BackfillResult = { done: false, checked: 0, photos: 0, cursor, stats: { sales: 0, matched: 0, noImage: 0 } };
   const since = new Date(Date.now() - LOOKBACK_DAYS * DAY).toISOString().slice(0, 10);
 
   const { data: plats } = await db.from("platforms").select("id, name").eq("organization_id", org);
@@ -128,12 +130,17 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
       if (!platform || (kind !== "vinted_venta" && kind !== "wallapop_venta")) continue;
       const parsed = kind === "vinted_venta" ? parseVintedSale(mail.text) : parseWallapopSale(mail.text);
       if (!parsed) continue;
+      result.stats!.sales++;
       const sd = (parsed as { sale_date?: string | null }).sale_date;
       const saleDate = sd ? dayOf(sd) : madridDay(mail.receivedAt);
       const hit = pickSale([...left.values()], { platform, day: saleDate, price: parsed.price, product: parsed.product });
       if (!hit) continue;
+      result.stats!.matched++;
       const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform)).catch(() => null);
-      if (!path) continue;
+      if (!path) {
+        result.stats!.noImage++;
+        continue;
+      }
       const { error: upErr } = await db.from("sales").update({ image_path: path }).eq("organization_id", org).eq("id", hit.id).is("image_path", null);
       if (upErr) {
         await db.storage.from("sale-images").remove([path]);
