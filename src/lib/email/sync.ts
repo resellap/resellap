@@ -34,6 +34,7 @@ export interface SyncSummary {
   ignored: number;
   /** Fotos recuperadas para ventas anteriores (solo la primera vez). */
   photos?: number;
+  photos_error?: string;
   error?: string;
   skipped?: string;
 }
@@ -171,6 +172,8 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
       } catch (err) {
         if (err instanceof GmailAuthError) throw err;
         // Si falla, se reintenta en la próxima revisión; las ventas nuevas no se ven afectadas
+        summary.photos_error = err instanceof Error ? err.message.slice(0, 300) : "Error desconocido";
+        console.error("Fotos de ventas anteriores:", summary.photos_error);
       }
     }
 

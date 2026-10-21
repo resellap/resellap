@@ -108,7 +108,14 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
     if (!left.size) break;
     if (Date.now() > deadline) return result;
     result.checked++;
-    const mail = await gmail.message(m.id);
+    let mail: Awaited<ReturnType<Gmail["message"]>>;
+    try {
+      mail = await gmail.message(m.id);
+    } catch (e) {
+      // Un correo que no se puede leer no frena al resto
+      console.error("Fotos de ventas anteriores: correo no leído", e instanceof Error ? e.message : e);
+      continue;
+    }
     const { kind, platform } = classify({ from: mail.from, subject: mail.subject, text: mail.text, pdfNames: [] });
     if (!platform || (kind !== "vinted_venta" && kind !== "wallapop_venta")) continue;
     const parsed = kind === "vinted_venta" ? parseVintedSale(mail.text) : parseWallapopSale(mail.text);
@@ -117,7 +124,7 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
     const saleDate = sd ? dayOf(sd) : madridDay(mail.receivedAt);
     const hit = pickSale([...left.values()], { platform, day: saleDate, price: parsed.price, product: parsed.product });
     if (!hit) continue;
-    const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform));
+    const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform)).catch(() => null);
     if (!path) continue;
     const { error: upErr } = await db.from("sales").update({ image_path: path }).eq("organization_id", org).eq("id", hit.id).is("image_path", null);
     if (upErr) {
