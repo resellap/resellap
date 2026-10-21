@@ -51,6 +51,7 @@ interface Integration {
   connected_at: string | null;
   last_success_at: string | null;
   photos_backfill_at: string | null;
+  photos_backfill_cursor: number | null;
 }
 
 interface EmailRow {
@@ -117,7 +118,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
   const summary = emptySummary(trigger);
   const { data: integ } = await db
     .from("email_integration")
-    .select("email, refresh_token_enc, status, connected_at, last_success_at, photos_backfill_at")
+    .select("email, refresh_token_enc, status, connected_at, last_success_at, photos_backfill_at, photos_backfill_cursor")
     .eq("organization_id", org)
     .maybeSingle<Integration>();
   if (!integ?.refresh_token_enc) return { ...summary, skipped: "Gmail no está conectado." };
@@ -166,10 +167,13 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
     // 3) Una sola vez: fotos de las ventas anteriores de Vinted y Wallapop (si queda tiempo)
     if (!integ.photos_backfill_at && Date.now() < deadline - 8_000) {
       try {
-        const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000);
+        const b = await backfillSalePhotos(db, org, gmail, SEARCH, deadline - 3_000, integ.photos_backfill_cursor);
         summary.photos = b.photos;
         if (b.lastError) summary.photos_error = b.lastError;
-        if (b.done) await db.from("email_integration").update({ photos_backfill_at: new Date().toISOString() }).eq("organization_id", org);
+        await db
+          .from("email_integration")
+          .update(b.done ? { photos_backfill_at: new Date().toISOString(), photos_backfill_cursor: null } : { photos_backfill_cursor: b.cursor })
+          .eq("organization_id", org);
       } catch (err) {
         if (err instanceof GmailAuthError) throw err;
         // Si falla, se reintenta en la próxima revisión; las ventas nuevas no se ven afectadas
