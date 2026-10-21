@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { RETURN_TYPES, date, dateTime, money } from "@/lib/format";
 import { must } from "@/lib/db";
-import { signLabels } from "@/lib/storage";
+import { signLabels, signSaleImages } from "@/lib/storage";
 import { loadSaleOptions } from "@/lib/options";
 import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
@@ -32,7 +32,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
     supabase
       .from("sales")
       .select(
-        "id, sale_number, sale_date, status, void_reason, voided_at, responsible_id, platform_id, carrier_id, mobile_device_id, shipping_status, shipping_label_path, external_reference, notes, source_ref, created_at, source, buyer_name, tracking_number, platform_transaction_id, shipping_deadline, responsibles(name), platforms(name, requires_shipping), carriers(name), mobile_devices(number, name)",
+        "id, sale_number, sale_date, status, void_reason, voided_at, responsible_id, platform_id, carrier_id, mobile_device_id, shipping_status, shipping_label_path, image_path, external_reference, notes, source_ref, created_at, source, buyer_name, tracking_number, platform_transaction_id, shipping_deadline, responsibles(name), platforms(name, requires_shipping), carriers(name), mobile_devices(number, name)",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -57,14 +57,17 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
   const returns = must(returnsRes, "las devoluciones") ?? [];
 
   const lotIds = (items ?? []).map((i) => i.lot_id);
-  const [lots, labels] = await Promise.all([
+  const [lots, labels, saleImages] = await Promise.all([
     isAdmin && lotIds.length ? supabase.from("v_lots").select("lot_id, lot_label, unit_cost, origin").in("lot_id", lotIds).then((r) => r.data ?? []) : Promise.resolve([]),
     signLabels([sale.shipping_label_path]),
+    signSaleImages([(sale as { image_path?: string | null }).image_path]),
   ]);
   const lotMap = new Map(lots.map((l) => [l.lot_id as string, l]));
   const refundTotal = returns.reduce((a, r) => a + Number(r.refund_amount), 0);
   const netProfit = isAdmin && canEdit && returns.length ? (profitRes.data ?? []).reduce((a, r) => a + Number(r.profit), 0) : null;
   const labelUrl = sale.shipping_label_path ? (labels.get(sale.shipping_label_path) ?? null) : null;
+  const saleImagePath = (sale as { image_path?: string | null }).image_path ?? null;
+  const imageUrl = saleImagePath ? (saleImages.get(saleImagePath) ?? null) : null;
   const s = sale as unknown as {
     id: string;
     sale_number: string;
@@ -268,6 +271,15 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
         </div>
 
         <div className="flex flex-col gap-5">
+          {imageUrl && (
+            <Panel title="Foto del anuncio">
+              <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block">
+                {/* eslint-disable-next-line @next/next/no-img-element -- URL firmada y temporal del almacén privado */}
+                <img src={imageUrl} alt={`Foto del anuncio de la venta ${s.sale_number}`} className="mx-auto max-h-72 w-auto rounded-[var(--radius-md)] border border-line object-contain" />
+              </a>
+              <p className="mt-2 text-xs text-muted">Copiada del correo de {s.platforms?.name ?? "la plataforma"}.</p>
+            </Panel>
+          )}
           {s.platforms?.requires_shipping && active && (
             <Panel title="Envío">
               {can(user, "envios") || canEdit ? (
