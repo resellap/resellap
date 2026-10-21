@@ -574,25 +574,59 @@ const IMAGE_HOSTS: Record<Platform, RegExp> = {
 };
 
 /**
- * Primera foto del artículo en el correo (la que muestra la plataforma).
+ * Foto del artículo en el correo (la que la plataforma pone junto a su nombre).
  * Solo se aceptan imágenes del CDN de la plataforma; se descartan logos,
- * iconos y píxeles de seguimiento.
+ * iconos, avatares del comprador y píxeles de seguimiento. Con el nombre del
+ * artículo, se elige la imagen más cercana a ese nombre (en Wallapop, el
+ * avatar del comprador aparece antes que la foto del producto).
  */
-export function extractProductImage(html: string, platform: Platform): string | null {
+export function extractProductImage(html: string, platform: Platform, productName?: string | null): string | null {
   if (!html) return null;
   const re = /<img\b[^>]*>/gi;
+  const found: { src: string; at: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(html))) {
     const tag = m[0];
     const src = decodeEntities(tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i)?.[1] ?? "").trim();
     if (!IMAGE_HOSTS[platform].test(src)) continue;
-    if (/logo|icon|avatar|badge|pixel|tracking|emoji|app-store|google-play|social/i.test(src + " " + (tag.match(/\balt\s*=\s*["']([^"']*)["']/i)?.[1] ?? ""))) continue;
+    const alt = tag.match(/\balt\s*=\s*["']([^"']*)["']/i)?.[1] ?? "";
+    if (/logo|icon|avatar|badge|pixel|tracking|emoji|app-store|google-play|social|profile|perfil|\/users?\//i.test(src + " " + alt)) continue;
+    // Imágenes redondas (avatares): border-radius del 50 % o más
+    if (/border-radius\s*:\s*(50%|[5-9]\d%|100%|\d{3,}px)/i.test(tag)) continue;
     const w = Number(tag.match(/\bwidth\s*=\s*["']?(\d+)/i)?.[1] ?? 0);
     const h = Number(tag.match(/\bheight\s*=\s*["']?(\d+)/i)?.[1] ?? 0);
     if ((w && w < 48) || (h && h < 48)) continue;
-    return src;
+    found.push({ src, at: m.index });
   }
-  return null;
+  if (!found.length) return null;
+  const at = productName ? productPosition(html, productName) : -1;
+  if (at < 0) return found[0].src;
+  // La más cercana al nombre del artículo (antes o después)
+  return found.reduce((best, f) => (Math.abs(f.at - at) < Math.abs(best.at - at) ? f : best)).src;
+}
+
+/** Posición en el HTML donde aparece el nombre del artículo (como texto, fuera de las etiquetas). */
+function productPosition(html: string, name: string): number {
+  const lower = html.toLowerCase();
+  const textAt = (needle: string) => {
+    let i = lower.indexOf(needle);
+    while (i >= 0) {
+      // Solo cuenta si está en el texto, no dentro de una etiqueta (alt, title…)
+      const lt = lower.lastIndexOf("<", i), gt = lower.lastIndexOf(">", i);
+      if (gt > lt) return i;
+      i = lower.indexOf(needle, i + 1);
+    }
+    return -1;
+  };
+  const full = textAt(name.trim().toLowerCase());
+  if (full >= 0) return full;
+  // Si el nombre lleva acentos o símbolos codificados, vale la palabra más larga
+  const words = name.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3).sort((x, y) => y.length - x.length);
+  for (const w of words) {
+    const i = textAt(w);
+    if (i >= 0) return i;
+  }
+  return -1;
 }
 
 /** Nº de transacción o pedido en los enlaces del correo («…/transactions/123456789»). */
