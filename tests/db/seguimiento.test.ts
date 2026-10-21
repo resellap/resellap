@@ -92,10 +92,12 @@ run("Seguimiento de envíos", () => {
     await rpc(db, admin, "update_tracking", { id, tracking_number: "pq 1234 5678 es" });
     const withCode = await row(id);
     expect(withCode.tracking_number).toBe("PQ12345678ES");
-    // Con código, la venta pasa a enviada y entra en «Seguimiento»
-    expect(withCode.shipping_status).toBe("enviado");
-    expect(withCode.shipped_at).not.toBeNull();
-    expect(withCode.tracking_status).toBe("enviado");
+    // El código no marca la venta como enviada: sigue pendiente hasta que la persona la marque
+    expect(withCode.shipping_status).toBe("pendiente");
+    expect(withCode.shipped_at).toBeNull();
+    await expect(rpc(db, admin, "update_tracking", { id, status: "entregado" })).rejects.toThrow(/Primero marca/);
+    await rpc(db, admin, "set_sales_shipping_status", [id], "enviado");
+    expect((await row(id)).tracking_status).toBe("enviado");
     await rpc(db, admin, "update_tracking", { id, status: "entregado", note: "Recogido en el punto" });
     const r = await row(id);
     expect(r.tracking_status).toBe("entregado");

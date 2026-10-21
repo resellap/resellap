@@ -12,8 +12,8 @@ import { CARRIER_CODES, fetchTrackInfo, registerNumbers, trackingConfigured } fr
  * · al marcar ventas como enviadas,
  * · al confirmar una venta detectada o llegar una etiqueta con código (solo los códigos nuevos),
  * · al pulsar «Actualizar envíos» (todos los abiertos).
- * También entran las ventas pendientes con código: si el transportista ya las
- * ha recogido, pasan a enviadas solas.
+ * Solo entran las ventas marcadas como enviadas: una venta con código pero
+ * pendiente no se consulta ni cambia de estado hasta que la marques tú.
  * Sin TRACK17_API_KEY no se consulta nada: el seguimiento se lleva a mano.
  */
 
@@ -46,6 +46,7 @@ async function openSales(db: SupabaseClient, opts: TrackingScope): Promise<OpenS
     .from("sales")
     .select("id, organization_id, tracking_number, tracking_registered_at, tracking_checked_at, tracking_error, carrier:carriers(name)")
     .eq("status", "activa")
+    .eq("shipping_status", "enviado")
     .is("delivered_at", null)
     .not("tracking_number", "is", null)
     .or("tracking_status.is.null,tracking_status.not.in.(devuelto,cancelado,entregado)")
