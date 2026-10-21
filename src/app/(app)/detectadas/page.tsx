@@ -7,13 +7,14 @@ import { Badge, Empty, Notice, PageHeader, clsx } from "@/components/ui";
 import { requirePerm } from "@/lib/auth";
 import { dateTime, money } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { PLATFORM_LABEL } from "@/lib/email/parse";
 import { loadDetected, type DetectedSale, type Option } from "./data";
 import { ConfidenceBadge, ConfirmAllButton, DetectedActions } from "./detected-actions";
 
 export const metadata: Metadata = { title: "Ventas detectadas" };
 export const maxDuration = 60;
 
-const PLATFORM_NAME = { vinted: "Vinted", wallapop: "Wallapop" } as const;
+const PLATFORM_NAME = PLATFORM_LABEL;
 
 export default async function DetectedPage() {
   await requirePerm("correo");
@@ -29,7 +30,7 @@ export default async function DetectedPage() {
     <>
       <PageHeader
         title="Ventas detectadas"
-        description="Resellap lee los correos de Vinted y Wallapop, identifica el producto, el transportista y el comprador, y te lo deja preparado. Tú solo revisas y confirmas: hasta entonces no se registra nada ni se toca el stock."
+        description="Resellap lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace, identifica el producto, el transportista y el comprador, y te lo deja preparado. Tú solo revisas y confirmas: hasta entonces no se registra nada ni se toca el stock."
         actions={
           clean.length >= 2 ? (
             <ConfirmAllButton
@@ -58,7 +59,7 @@ export default async function DetectedPage() {
 
       {!error && rows.length === 0 ? (
         <div className="rounded-[var(--radius-md)] border border-line bg-surface">
-          <Empty title="Nada por confirmar">Cuando llegue una venta de Vinted o Wallapop a tu correo, aparecerá aquí con el producto, el transportista y la foto ya identificados.</Empty>
+          <Empty title="Nada por confirmar">Cuando llegue una venta de Vinted, Wallapop, eBay, Milanuncios o Facebook Marketplace a tu correo, aparecerá aquí con el producto, el transportista y la foto ya identificados.</Empty>
         </div>
       ) : (
         <ul className="stagger grid gap-4 2xl:grid-cols-2">

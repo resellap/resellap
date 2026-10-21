@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { carrierMark, normalizeKey } from "@/lib/carriers";
 import { scoreExistingSale, type ExistingSale } from "@/lib/email/matching";
 import { Catalog } from "@/lib/email/sync";
+import type { Platform } from "@/lib/email/parse";
 import { saleThumbs, signPhotos } from "@/lib/storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export type ExistingOption = {
 
 export type DetectedSale = {
   id: string;
-  platform: "vinted" | "wallapop";
+  platform: Platform;
   receivedAt: string;
   saleDate: string;
   product: string;

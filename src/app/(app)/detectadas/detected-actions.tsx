@@ -8,10 +8,11 @@ import { Badge, Button, Field, Input, Notice, Select, clsx } from "@/components/
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
 import { money } from "@/lib/format";
 import { variantDisplay, type SellableVariant } from "@/lib/types";
+import { PLATFORM_LABEL } from "@/lib/email/parse";
 import { confirmDetected, confirmMany, discardDetected, markDuplicate } from "./actions";
 import type { DetectedSale, ExistingOption, Option, ProductGuess } from "./data";
 
-const PLATFORM_NAME = { vinted: "Vinted", wallapop: "Wallapop" } as const;
+const PLATFORM_NAME = PLATFORM_LABEL;
 
 /** Grado de confianza de la identificación del producto. */
 export function ConfidenceBadge({ score }: { score: number | null }) {

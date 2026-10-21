@@ -133,7 +133,7 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
       result.stats!.sales++;
       const sd = (parsed as { sale_date?: string | null }).sale_date;
       const saleDate = sd ? dayOf(sd) : madridDay(mail.receivedAt);
-      const hit = pickSale([...left.values()], { platform, day: saleDate, price: parsed.price, product: parsed.product });
+      const hit = pickSale([...left.values()], { platform: platform as Platform, day: saleDate, price: parsed.price, product: parsed.product });
       if (!hit) continue;
       result.stats!.matched++;
       const path = await storeListingImage(db, org, mail.id, extractProductImage(mail.html, platform, parsed.product)).catch(() => null);
