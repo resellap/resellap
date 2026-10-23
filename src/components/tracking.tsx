@@ -40,6 +40,31 @@ export function TrackingBadge({ status }: { status: string | null | undefined })
   );
 }
 
+/**
+ * Estado del envío de una venta en 4 pasos (lo que se ve en Ventas):
+ * pendiente (sin marcar como enviada) → enviado → en reparto → entregado,
+ * según lo que diga 17TRACK una vez marcada como enviada.
+ */
+export type EnvioState = "pendiente" | "enviado" | "en_reparto" | "entregado";
+export const ENVIO_LABEL: Record<EnvioState, string> = { pendiente: "Pendiente de envío", enviado: "Enviado", en_reparto: "En reparto", entregado: "Entregado" };
+export const ENVIO_OPTIONS = (Object.keys(ENVIO_LABEL) as EnvioState[]).map((value) => ({ value, label: ENVIO_LABEL[value] }));
+const ENVIO_TONE: Record<EnvioState, "warn" | "info" | "good"> = { pendiente: "warn", enviado: "info", en_reparto: "info", entregado: "good" };
+
+export function envioState(shipping: string | null | undefined, tracking?: string | null, deliveredAt?: string | null): EnvioState {
+  if (shipping !== "enviado") return "pendiente";
+  if (deliveredAt || tracking === "entregado") return "entregado";
+  if (tracking === "en_reparto") return "en_reparto";
+  return "enviado";
+}
+
+export function EnvioBadge({ state }: { state: EnvioState }) {
+  return (
+    <Badge tone={ENVIO_TONE[state]} dot>
+      {ENVIO_LABEL[state]}
+    </Badge>
+  );
+}
+
 const STEPS: { key: TrackingStatus; label: string }[] = [
   { key: "enviado", label: "Enviado" },
   { key: "en_transito", label: "En tránsito" },

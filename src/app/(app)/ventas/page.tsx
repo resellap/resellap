@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
-import { Badge, Empty, Figures, LinkButton, LotTag, Notice, PageHeader, Pagination, Panel, Table, Td, Th, Tr } from "@/components/ui";
+import { Empty, Figures, LinkButton, LotTag, Notice, PageHeader, Pagination, Panel, Table, Td, Th, Tr } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { filtersFrom, pageFrom, toQuery, type SearchParams } from "@/lib/filters";
@@ -15,7 +15,7 @@ import { BulkShippingBar, SaleCheckbox, SelectAllCheckbox, ShippingSelection } f
 import { SaleCards, type CardSale } from "./sale-cards";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
 import { ProductThumb } from "@/components/thumb";
-import { TrackingBadge } from "@/components/tracking";
+import { ENVIO_OPTIONS, EnvioBadge, envioState } from "@/components/tracking";
 import { saleThumbs } from "@/lib/storage";
 
 export const metadata: Metadata = { title: "Ventas" };
@@ -23,17 +23,9 @@ export const metadata: Metadata = { title: "Ventas" };
 type Ship = "pendiente" | "enviado" | null;
 const shipOf = (status: string | null, requires: boolean): Ship => (requires ? (status === "enviado" ? "enviado" : "pendiente") : null);
 
-function ShippingBadge({ status, requires }: { status: string | null; requires: boolean }) {
+function ShippingBadge({ status, requires, tracking, delivered }: { status: string | null; requires: boolean; tracking?: string | null; delivered?: string | null }) {
   if (!requires) return <span className="text-xs text-muted">En mano</span>;
-  return status === "enviado" ? (
-    <Badge tone="info" dot>
-      Enviado
-    </Badge>
-  ) : (
-    <Badge tone="warn" dot>
-      Pendiente
-    </Badge>
-  );
+  return <EnvioBadge state={envioState(status, tracking, delivered)} />;
 }
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -52,7 +44,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     let q = supabase
       .from("sales")
       .select(
-        "id, sale_number, sale_date, shipping_status, platforms(name, requires_shipping), sale_items(quantity, unit_price, product_variants(name, products(name)))",
+        "id, sale_number, sale_date, shipping_status, tracking_status, delivered_at, platforms(name, requires_shipping), sale_items(quantity, unit_price, product_variants(name, products(name)))",
         { count: "exact" },
       )
       .eq("status", "activa")
@@ -61,13 +53,20 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       .range(from, to);
     if (filters.from) q = q.gte("sale_date", filters.from);
     if (filters.to) q = q.lte("sale_date", filters.to);
-    if (filters.shipping_status) q = q.eq("shipping_status", filters.shipping_status);
+    // Envío en 4 estados (el de 17TRACK cuando ya está enviada)
+    if (filters.shipping_status === "pendiente") q = q.eq("shipping_status", "pendiente");
+    else if (filters.shipping_status === "entregado") q = q.eq("shipping_status", "enviado").or("delivered_at.not.is.null,tracking_status.eq.entregado");
+    else if (filters.shipping_status === "en_reparto") q = q.eq("shipping_status", "enviado").is("delivered_at", null).eq("tracking_status", "en_reparto");
+    else if (filters.shipping_status === "enviado")
+      q = q.eq("shipping_status", "enviado").is("delivered_at", null).or("tracking_status.is.null,tracking_status.not.in.(en_reparto,entregado)");
     const { data, count, error } = await q;
     type Row = {
       id: string;
       sale_number: string;
       sale_date: string;
       shipping_status: string | null;
+      tracking_status: string | null;
+      delivered_at: string | null;
       platforms: { name: string; requires_shipping: boolean } | null;
       sale_items: {
         quantity: number;
@@ -92,10 +91,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
               type: "select",
               name: "shipping_status",
               label: "Envío",
-              options: [
-                { value: "pendiente", label: "Pendiente" },
-                { value: "enviado", label: "Enviado" },
-              ],
+              options: ENVIO_OPTIONS,
             },
           ]}
         />
@@ -110,6 +106,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
               total: s.sale_items.reduce((a, i) => a + i.quantity * Number(i.unit_price), 0),
               platform: s.platforms?.name ?? "",
               shipping: shipOf(s.shipping_status, !!s.platforms?.requires_shipping),
+              tracking: s.tracking_status,
+              delivered: s.delivered_at,
               lines: s.sale_items.map((i) => ({
                 quantity: i.quantity,
                 text: variantDisplay(i.product_variants?.products?.name ?? "", i.product_variants?.name),
@@ -160,7 +158,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                       </Td>
                       <Td>{s.platforms?.name}</Td>
                       <Td>
-                        <ShippingBadge status={s.shipping_status} requires={!!s.platforms?.requires_shipping} />
+                        <ShippingBadge status={s.shipping_status} requires={!!s.platforms?.requires_shipping} tracking={s.tracking_status} delivered={s.delivered_at} />
                       </Td>
                       <Td num>{money(s.sale_items.reduce((a, i) => a + i.quantity * Number(i.unit_price), 0))}</Td>
                     </Tr>
@@ -186,10 +184,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const { data: extraRows } = saleIds.length
     ? await supabase
         .from("sales")
-        .select("id, buyer_name, image_path, tracking_status, carriers(name), sale_items(product_variants(products(photo_path)))")
+        .select("id, buyer_name, image_path, tracking_status, delivered_at, carriers(name), sale_items(product_variants(products(photo_path)))")
         .in("id", saleIds)
     : { data: [] };
-  type Extra = { id: string; buyer_name: string | null; image_path: string | null; tracking_status: string | null; carriers: { name: string } | null; sale_items: { product_variants: { products: { photo_path: string | null } | null } | null }[] };
+  type Extra = { id: string; buyer_name: string | null; image_path: string | null; tracking_status: string | null; delivered_at: string | null; carriers: { name: string } | null; sale_items: { product_variants: { products: { photo_path: string | null } | null } | null }[] };
   const extras = new Map(((extraRows ?? []) as unknown as Extra[]).map((e) => [e.id, e]));
   const thumbs = await saleThumbs(
     ((extraRows ?? []) as unknown as Extra[]).map((e) => ({ key: e.id, image_path: e.image_path, product_photo: e.sale_items[0]?.product_variants?.products?.photo_path ?? null })),
@@ -241,10 +239,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             type: "select",
             name: "shipping_status",
             label: "Envío",
-            options: [
-              { value: "pendiente", label: "Pendiente" },
-              { value: "enviado", label: "Enviado" },
-            ],
+            options: ENVIO_OPTIONS,
           },
           {
             type: "number",
@@ -280,7 +275,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         <SaleCards
           sales={groupLines(rows).map((c) => {
             const e = extras.get(c.id);
-            return { ...c, photo: thumbs.get(c.id) ?? null, buyer: e?.buyer_name ?? null, carrier: e?.carriers?.name ?? null, tracking: e?.tracking_status ?? null };
+            return { ...c, photo: thumbs.get(c.id) ?? null, buyer: e?.buyer_name ?? null, carrier: e?.carriers?.name ?? null, tracking: e?.tracking_status ?? null, delivered: e?.delivered_at ?? null };
           })}
         />
         <Panel padded={false} className={rows.length ? "max-lg:mt-3 max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none" : undefined}>
@@ -385,9 +380,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                           return (
                             <Td key={c}>
                               <span className="flex flex-col items-start gap-1">
-                                {l.requires_shipping && l.shipping_status === "enviado" && extras.get(l.sale_id)?.tracking_status ? (
+                                {l.requires_shipping && l.shipping_status === "enviado" ? (
                                   <Link href={`/seguimiento/${l.sale_id}`}>
-                                    <TrackingBadge status={extras.get(l.sale_id)!.tracking_status} />
+                                    <ShippingBadge status={l.shipping_status} requires tracking={extras.get(l.sale_id)?.tracking_status} delivered={extras.get(l.sale_id)?.delivered_at} />
                                   </Link>
                                 ) : (
                                   <ShippingBadge status={l.shipping_status} requires={l.requires_shipping} />
