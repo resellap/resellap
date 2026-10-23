@@ -1,11 +1,12 @@
 /** Opciones del generador (compartidas entre la pantalla y el servidor). */
 
+import { msg } from "@/i18n/translate";
 export const TONES = {
-  profesional: { label: "Profesional", hint: "Cuidada, clara y comercial" },
-  natural: { label: "Natural", hint: "Cercana, humana y directa" },
-  informal: { label: "Informal", hint: "Desenfadada, sin sonar artificial" },
-  premium: { label: "Premium", hint: "Calidad y diseño, sin exagerar" },
-  tecnico: { label: "Técnico", hint: "Materiales y datos verificables" },
+  profesional: { label: msg("Profesional"), hint: msg("Cuidada, clara y comercial") },
+  natural: { label: msg("Natural"), hint: msg("Cercana, humana y directa") },
+  informal: { label: msg("Informal"), hint: msg("Desenfadada, sin sonar artificial") },
+  premium: { label: msg("Premium"), hint: msg("Calidad y diseño, sin exagerar") },
+  tecnico: { label: msg("Técnico"), hint: msg("Materiales y datos verificables") },
 } as const;
 export type Tone = keyof typeof TONES;
 
@@ -16,26 +17,26 @@ export const PLATFORMS = {
   instagram: "Instagram",
   facebook: "Facebook Marketplace",
   milanuncios: "Milanuncios",
-  otra: "Otra plataforma",
+  otra: msg("Otra plataforma"),
 } as const;
 export type PlatformKey = keyof typeof PLATFORMS;
 
 export const LENGTHS = {
-  corta: "Corta",
-  media: "Media",
-  detallada: "Detallada",
+  corta: msg("Corta"),
+  media: msg("Media"),
+  detallada: msg("Detallada"),
 } as const;
 export type Length = keyof typeof LENGTHS;
 
 export const CONDITIONS = [
-  "Nuevo con etiquetas",
-  "Nuevo sin etiquetas",
-  "Nuevo, sin usar",
-  "Como nuevo",
-  "Muy buen estado",
-  "Buen estado",
-  "Usado, con señales de uso",
-  "Para piezas o reparar",
+  msg("Nuevo con etiquetas"),
+  msg("Nuevo sin etiquetas"),
+  msg("Nuevo, sin usar"),
+  msg("Como nuevo"),
+  msg("Muy buen estado"),
+  msg("Buen estado"),
+  msg("Usado, con señales de uso"),
+  msg("Para piezas o reparar"),
 ] as const;
 
 /** Datos que el usuario puede completar o corregir para cada producto (no se guardan en la ficha). */

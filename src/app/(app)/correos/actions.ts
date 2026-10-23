@@ -1,4 +1,6 @@
 "use server";
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -13,7 +15,7 @@ import { runTracking } from "@/lib/tracking/service";
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error("No tienes permisos para hacer esto.");
+  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error(msg("No tienes permisos para hacer esto."));
   return u as typeof u & { orgId: string };
 }
 
@@ -29,53 +31,56 @@ function done(message?: string): ActionResult {
 
 /** «Revisar ahora»: la misma sincronización que la automática. */
 export async function syncNow(): Promise<ActionResult> {
+  const t = await getT();
   const me = await admin();
   const s = await runSync("manual", me.orgId);
   if (!s.skipped && !s.error) await trackNewCodes(me.orgId);
   revalidatePath("/", "layout");
-  if (s.skipped) return { ok: false, error: s.skipped };
-  if (s.error) return { ok: false, error: s.error };
+  if (s.skipped) return { ok: false, error: t(s.skipped) };
+  if (s.error) return { ok: false, error: t(s.error) };
   const parts = [
-    `${s.new_emails} ${s.new_emails === 1 ? "correo nuevo" : "correos nuevos"}`,
-    `${s.detected} ${s.detected === 1 ? "venta detectada (por confirmar)" : "ventas detectadas (por confirmar)"}`,
-    `${s.labels} ${s.labels === 1 ? "etiqueta añadida" : "etiquetas añadidas"}`,
+    s.new_emails === 1 ? t("1 correo nuevo") : t("{n} correos nuevos", { n: s.new_emails }),
+    s.detected === 1 ? t("1 venta detectada (por confirmar)") : t("{n} ventas detectadas (por confirmar)", { n: s.detected }),
+    s.labels === 1 ? t("1 etiqueta añadida") : t("{n} etiquetas añadidas", { n: s.labels }),
   ];
-  if (s.review) parts.push(`${s.review} para revisar`);
-  if (s.waiting) parts.push(`${s.waiting} esperando su venta`);
-  if (s.errors) parts.push(`${s.errors} con error (se reintentarán)`);
-  return { ok: true, message: `Hecho: ${parts.join(" · ")}.` };
+  if (s.review) parts.push(t("{n} para revisar", { n: s.review }));
+  if (s.waiting) parts.push(t("{n} esperando su venta", { n: s.waiting }));
+  if (s.errors) parts.push(t("{n} con error (se reintentarán)", { n: s.errors }));
+  return { ok: true, message: t("Hecho: {v}.", { v: parts.join(" · ") }) };
 }
 
 export async function disconnectGmail(): Promise<ActionResult> {
-  return callRpc("email_disconnect", {}, ["/correos"], "Gmail desconectado. Ya no se leerán correos.");
+  return callRpc("email_disconnect", {}, ["/correos"], msg("Gmail desconectado. Ya no se leerán correos."));
 }
 
 export async function setDefaultResponsible(id: string | null): Promise<ActionResult> {
-  return callRpc("email_set_default_responsible", { p_responsible_id: id || null }, ["/correos"], "Guardado.");
+  return callRpc("email_set_default_responsible", { p_responsible_id: id || null }, ["/correos"], msg("Guardado."));
 }
 
 const accountSchema = z.object({ id: z.uuid(), responsible_id: z.uuid().nullable(), mobile_device_id: z.uuid().nullable() });
 
 export async function saveAccount(input: z.input<typeof accountSchema>): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const v = accountSchema.safeParse(input);
-  if (!v.success) return { ok: false, error: "Datos no válidos." };
+  if (!v.success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const { error } = await supabase
     .from("email_accounts")
     .update({ responsible_id: v.data.responsible_id, mobile_device_id: v.data.mobile_device_id })
     .eq("id", v.data.id);
   if (error) return { ok: false, error: friendlyError(error) };
-  return done("Guardado.");
+  return done(msg("Guardado."));
 }
 
 /** El administrador elige el producto de una venta que no se pudo identificar. */
 export async function resolveSale(emailId: string, variantId: string, remember: boolean): Promise<ActionResult> {
+  const t = await getT();
   await admin();
-  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(variantId).success) return { ok: false, error: "Datos no válidos." };
+  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(variantId).success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const { data: e } = await supabase.from("email_messages").select("parsed").eq("id", emailId).maybeSingle();
-  if (!e) return { ok: false, error: "El correo no existe." };
+  if (!e) return { ok: false, error: t("El correo no existe.") };
   const p = e.parsed as { product?: string; product_norm?: string };
   const { error } = await supabase.rpc("email_register_sale", {
     p_email_id: emailId,
@@ -88,52 +93,55 @@ export async function resolveSale(emailId: string, variantId: string, remember: 
   const { orgId } = await admin();
   await runSync("manual", orgId).catch(() => undefined);
   await trackNewCodes(orgId);
-  return done(remember ? "Venta registrada. La próxima vez ese nombre se reconocerá solo." : "Venta registrada.");
+  return done(remember ? msg("Venta registrada. La próxima vez ese nombre se reconocerá solo.") : msg("Venta registrada."));
 }
 
 /** El administrador indica a qué venta va una etiqueta de Vinted. */
 export async function linkLabel(emailId: string, saleId: string, force: boolean): Promise<ActionResult> {
+  const t = await getT();
   const { orgId } = await admin();
-  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(saleId).success) return { ok: false, error: "Datos no válidos." };
+  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(saleId).success) return { ok: false, error: t("Datos no válidos.") };
   const db = createAdminClient();
   const { data: e } = await db.from("email_messages").select("id, gmail_message_id, parsed, kind").eq("organization_id", orgId).eq("id", emailId).maybeSingle();
-  if (!e || e.kind !== "vinted_etiqueta") return { ok: false, error: "El correo no es una etiqueta de Vinted." };
+  if (!e || e.kind !== "vinted_etiqueta") return { ok: false, error: t("El correo no es una etiqueta de Vinted.") };
   try {
     const gmail = await gmailForServer(db, orgId);
     const r = await attachLabel(db, orgId, gmail, e, saleId, { force, userClient: await createClient() });
     if (r === "review") {
       const { data: again } = await db.from("email_messages").select("review_reason").eq("organization_id", orgId).eq("id", emailId).single();
-      return { ok: false, error: again?.review_reason ?? "No se ha podido añadir la etiqueta." };
+      return { ok: false, error: again?.review_reason ?? t("No se ha podido añadir la etiqueta.") };
     }
     await trackNewCodes(orgId);
-    return done("Etiqueta añadida a la venta.");
+    return done(msg("Etiqueta añadida a la venta."));
   } catch (err) {
     if (err instanceof GmailAuthError) {
       await markAuthError(db, orgId, err.message);
       revalidatePath("/correos");
     }
-    return { ok: false, error: err instanceof Error ? err.message : "No se ha podido añadir la etiqueta." };
+    return { ok: false, error: err instanceof Error ? err.message : t("No se ha podido añadir la etiqueta.") };
   }
 }
 
 /** Deshace «duplicado» o «descartado» de una venta: vuelve a Ventas detectadas. */
 export async function undoEmail(emailId: string): Promise<ActionResult> {
+  const t = await getT();
   const r = await callRpc("email_set_status", { p_email_id: emailId, p_status: "pendiente" });
   if (!r.ok) return r;
   await runSync("manual", (await admin()).orgId).catch(() => undefined);
   revalidatePath("/", "layout");
-  return { ok: true, message: "Ha vuelto a Ventas detectadas." };
+  return { ok: true, message: t("Ha vuelto a Ventas detectadas.") };
 }
 
 export async function retryEmail(emailId: string): Promise<ActionResult> {
+  const t = await getT();
   const r = await callRpc("email_set_status", { p_email_id: emailId, p_status: "pendiente" });
   if (!r.ok) return r;
   const s = await runSync("manual", (await admin()).orgId);
   revalidatePath("/", "layout");
   if (s.error) return { ok: false, error: s.error };
-  return { ok: true, message: "Reintentado. Mira el estado del correo en la lista." };
+  return { ok: true, message: t("Reintentado. Mira el estado del correo en la lista.") };
 }
 
 export async function dismissEmail(emailId: string): Promise<ActionResult> {
-  return callRpc("email_set_status", { p_email_id: emailId, p_status: "ignorado" }, ["/"], "Descartado. No creará ninguna venta.");
+  return callRpc("email_set_status", { p_email_id: emailId, p_status: "ignorado" }, ["/"], msg("Descartado. No creará ninguna venta."));
 }

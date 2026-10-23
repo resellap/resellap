@@ -1,3 +1,4 @@
+import { msg } from "@/i18n/translate";
 /**
  * Preparación de fotos en el propio dispositivo (navegador).
  *
@@ -43,7 +44,7 @@ async function decode(file: Blob): Promise<{ source: CanvasImageSource; width: n
 /** Convierte cualquier foto que el navegador sepa abrir en un JPG limpio y ligero. */
 export async function prepareImage(file: Blob, maxSide = MAX_SIDE): Promise<PreparedImage> {
   if (file.type && !file.type.startsWith("image/") && !/\.(heic|heif)$/i.test((file as File).name ?? "")) {
-    throw new Error("Ese archivo no es una foto.");
+    throw new Error(msg("Ese archivo no es una foto."));
   }
   let d;
   try {
@@ -60,7 +61,7 @@ export async function prepareImage(file: Blob, maxSide = MAX_SIDE): Promise<Prep
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("No se ha podido preparar la foto.");
+  if (!ctx) throw new Error(msg("No se ha podido preparar la foto."));
   ctx.fillStyle = "#ffffff"; // las PNG con transparencia quedan con fondo blanco
   ctx.fillRect(0, 0, w, h);
   ctx.imageSmoothingQuality = "high";
@@ -68,14 +69,14 @@ export async function prepareImage(file: Blob, maxSide = MAX_SIDE): Promise<Prep
   d.close();
   const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", maxSide <= THUMB_SIDE ? 0.78 : QUALITY));
   canvas.width = canvas.height = 0; // libera memoria en el iPhone
-  if (!blob) throw new Error("No se ha podido preparar la foto.");
+  if (!blob) throw new Error(msg("No se ha podido preparar la foto."));
   return { blob, width: w, height: h };
 }
 
 /** Copia nueva de una foto ya guardada (JPG recién creado, sin datos internos), lista para compartir. */
 export async function freshCopy(url: string, name: string): Promise<File> {
   const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error("No se ha podido descargar la foto.");
+  if (!res.ok) throw new Error(msg("No se ha podido descargar la foto."));
   const prepared = await prepareImage(await res.blob());
   return new File([prepared.blob], name, { type: "image/jpeg", lastModified: Date.now() });
 }

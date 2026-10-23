@@ -1,3 +1,5 @@
+import { getT } from "@/i18n/server";
+import { msg } from "@/i18n/translate";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/filter-bar";
 import { Badge, Empty, PageHeader, Pagination, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -7,33 +9,66 @@ import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Auditoría" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Auditoría") };
+}
 
 const ENTITIES: Record<string, string> = {
-  sales: "Ventas",
-  sale_items: "Líneas de venta",
-  products: "Productos",
-  product_variants: "Variantes",
-  purchase_orders: "Pedidos de compra",
-  purchase_order_items: "Líneas de compra",
-  purchase_order_costs: "Costes de compra",
-  stock_exits: "Salidas sin venta",
-  stock_adjustments: "Ajustes de stock",
-  returns: "Devoluciones",
-  return_items: "Líneas de devolución",
-  responsibles: "Responsables",
-  suppliers: "Proveedores",
-  profiles: "Usuarios",
-  partner_transfers: "Pagos entre socios",
-  import_batches: "Importaciones",
-  review_items: "Revisión",
-  categories: "Categorías",
-  brands: "Marcas",
-  platforms: "Plataformas",
-  carriers: "Transportistas",
-  mobile_devices: "Móviles",
-  mobile_device_accounts: "Cuentas de móviles",
+  sales: msg("Ventas"),
+  sale_items: msg("Líneas de venta"),
+  products: msg("Productos"),
+  product_variants: msg("Variantes"),
+  purchase_orders: msg("Pedidos de compra"),
+  purchase_order_items: msg("Líneas de compra"),
+  purchase_order_costs: msg("Costes de compra"),
+  stock_exits: msg("Salidas sin venta"),
+  stock_adjustments: msg("Ajustes de stock"),
+  returns: msg("Devoluciones"),
+  return_items: msg("Líneas de devolución"),
+  responsibles: msg("Responsables"),
+  suppliers: msg("Proveedores"),
+  profiles: msg("Usuarios"),
+  partner_transfers: msg("Pagos entre socios"),
+  import_batches: msg("Importaciones"),
+  review_items: msg("Revisión"),
+  categories: msg("Categorías"),
+  brands: msg("Marcas"),
+  platforms: msg("Plataformas"),
+  carriers: msg("Transportistas"),
+  mobile_devices: msg("Móviles"),
+  mobile_device_accounts: msg("Cuentas de móviles"),
 };
+
+/** Acciones del registro (las que no estén aquí se muestran tal cual, sin guiones bajos). */
+const ACTIONS: Record<string, string> = {
+  crear: msg("crear"),
+  modificar: msg("modificar"),
+  eliminar: msg("eliminar"),
+  preferencias: msg("preferencias"),
+  restablecer_preferencias: msg("restablecer preferencias"),
+  crear_venta: msg("crear venta"),
+  crear_producto: msg("crear producto"),
+  ajuste_stock: msg("ajuste de stock"),
+  anular_venta: msg("anular venta"),
+  conectar_gmail: msg("conectar Gmail"),
+  desconectar_gmail: msg("desconectar Gmail"),
+  crear_organizacion: msg("crear espacio"),
+  crear_devolucion: msg("crear devolución"),
+  invitar_miembro: msg("invitar miembro"),
+  quitar_miembro: msg("quitar miembro"),
+  cambiar_rol: msg("cambiar rol"),
+  aceptar_invitacion: msg("aceptar invitación"),
+  venta_duplicada: msg("venta duplicada"),
+  importacion: msg("importación"),
+  solicitar_eliminacion: msg("solicitar eliminación"),
+  anular_eliminacion: msg("anular eliminación"),
+  cerrar_sesiones: msg("cerrar sesiones"),
+  copia_seguridad: msg("copia de seguridad"),
+  comprobar_copia: msg("comprobar copia"),
+  exportar: msg("exportar"),
+  exportar_mis_datos: msg("exportar mis datos"),
+}
 
 const HIDDEN = new Set(["updated_at", "created_at", "id"]);
 
@@ -45,12 +80,13 @@ function changes(oldData: Record<string, unknown> | null, newData: Record<string
 }
 
 const short = (v: unknown) => {
-  if (v === null || v === undefined) return "vacío";
+  if (v === null || v === undefined) return "—";
   const s = typeof v === "object" ? JSON.stringify(v) : String(v);
   return s.length > 60 ? s.slice(0, 57) + "…" : s;
 };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requireAdmin();
   const sp = await searchParams;
   const entity = first(sp.entidad);
@@ -71,29 +107,29 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Auditoría" description="Quién hizo qué y cuándo: altas, cambios, anulaciones, recepciones, ajustes e importaciones." />
+      <PageHeader title={t("Auditoría")} description={t("Quién hizo qué y cuándo: altas, cambios, anulaciones, recepciones, ajustes e importaciones.")} />
       <FilterBar
         basePath="/auditoria"
         values={values}
         fields={[
-          { type: "select", name: "entidad", label: "Sección", empty: "Todas", options: Object.entries(ENTITIES).map(([value, label]) => ({ value, label })) },
-          { type: "text", name: "usuario", label: "Usuario", placeholder: "Email" },
-          { type: "date", name: "from", label: "Desde" },
-          { type: "date", name: "to", label: "Hasta" },
+          { type: "select", name: "entidad", label: t("Sección"), empty: t("Todas"), options: Object.entries(ENTITIES).map(([value, label]) => ({ value, label: t(label) })) },
+          { type: "text", name: "usuario", label: t("Usuario"), placeholder: t("Email") },
+          { type: "date", name: "from", label: t("Desde") },
+          { type: "date", name: "to", label: t("Hasta") },
         ]}
       />
       <Panel padded={false}>
         {(data ?? []).length === 0 ? (
-          <Empty title="Sin registros" />
+          <Empty title={t("Sin registros")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Fecha</Th>
-                <Th>Usuario</Th>
-                <Th>Acción</Th>
-                <Th>Sección</Th>
-                <Th>Detalle</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Usuario")}</Th>
+                <Th>{t("Acción")}</Th>
+                <Th>{t("Sección")}</Th>
+                <Th>{t("Detalle")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -102,13 +138,13 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 return (
                   <Tr key={r.id}>
                     <Td className="num whitespace-nowrap">{dateTime(r.occurred_at)}</Td>
-                    <Td>{r.user_email ?? <span className="text-muted">Sistema</span>}</Td>
+                    <Td>{r.user_email ?? <span className="text-muted">{t("Sistema")}</span>}</Td>
                     <Td>
-                      <Badge tone={r.action === "eliminar" || r.action.startsWith("anular") ? "bad" : r.action === "crear" ? "good" : "neutral"}>{r.action.replace(/_/g, " ")}</Badge>
+                      <Badge tone={r.action === "eliminar" || r.action.startsWith("anular") ? "bad" : r.action === "crear" ? "good" : "neutral"}>{ACTIONS[r.action] ? t(ACTIONS[r.action]) : r.action.replace(/_/g, " ")}</Badge>
                     </Td>
-                    <Td>{ENTITIES[r.entity] ?? r.entity}</Td>
+                    <Td>{ENTITIES[r.entity] ? t(ENTITIES[r.entity]) : r.entity}</Td>
                     <Td className="text-[13px]">
-                      {r.summary && <span className="block">{r.summary}</span>}
+                      {r.summary && <span className="block">{t(r.summary)}</span>}
                       {diff.slice(0, 6).map((d) => (
                         <span key={d.k} className="block text-muted">
                           {d.k}: {short(d.from)} → {short(d.to)}

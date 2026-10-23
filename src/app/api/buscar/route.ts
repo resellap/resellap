@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { friendlyError } from "@/lib/errors";
@@ -11,8 +12,9 @@ import type { SellableVariant } from "@/lib/types";
  * Los permisos los aplica la base de datos.
  */
 export async function GET(request: NextRequest) {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.active) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });
+  if (!user?.active) return NextResponse.json({ error: t("Tu sesión ha caducado. Vuelve a entrar.") }, { status: 401 });
   const sp = request.nextUrl.searchParams;
   const q = (sp.get("q") ?? "").trim().slice(0, 100);
   if (q.length < 2) return NextResponse.json({ data: [] });

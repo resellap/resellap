@@ -1,3 +1,4 @@
+import { msg } from "@/i18n/translate";
 import "server-only";
 import { saleThumbs } from "../storage";
 import { createClient } from "../supabase/server";
@@ -106,7 +107,7 @@ export async function loadShipments(view: ShipmentView, q: string): Promise<{ ro
   const term = q.trim().replace(/[%,()]/g, " ").trim();
   if (term) query = query.or(`tracking_number.ilike.%${term}%,buyer_name.ilike.%${term}%,sale_number.ilike.%${term}%`);
   const { data, error } = await query;
-  if (error) return { rows: [], error: "No se ha podido cargar el seguimiento." };
+  if (error) return { rows: [], error: msg("No se ha podido cargar el seguimiento.") };
   return { rows: await toShipments((data ?? []) as unknown as Row[]), error: null };
 }
 

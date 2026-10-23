@@ -1,3 +1,4 @@
+import { getLocale } from "@/i18n/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       customer: sub.stripe_customer_id,
       configuration: await portalConfiguration(),
       return_url: `${base}/suscripcion`,
-      locale: "es",
+      locale: (await getLocale()) as "es" | "en" | "fr" | "de" | "it" | "pt",
     });
     return NextResponse.redirect(session.url, { status: 303 });
   } catch (e) {

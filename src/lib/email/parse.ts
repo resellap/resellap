@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import { detectCarrier } from "../carriers";
 
 /**
@@ -555,10 +556,10 @@ export function parseWallapopSale(text: string): WallapopSale | null {
 
   let doubt: string | null = null;
   if (entries.length - 1 - (shipping !== null ? 1 : 0) > 0 || shippingEntries.length > 1) {
-    doubt = "El correo tiene más importes de los esperados.";
+    doubt = msg("El correo tiene más importes de los esperados.");
   } else if (total !== null && Math.abs(price + (shipping ?? 0) - total) > 0.01) {
     const eur = (v: number) => `${v.toFixed(2).replace(".", ",")} €`;
-    doubt = `Los importes no cuadran: artículo ${eur(price)} + envío ${eur(shipping ?? 0)} ≠ total ${eur(total)}.`;
+    doubt = fmtMsg(msg("Los importes no cuadran: artículo {0} + envío {1} ≠ total {2}."), eur(price), eur(shipping ?? 0), eur(total));
   }
   if (!(price > 0)) return null;
 

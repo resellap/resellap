@@ -1,10 +1,12 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { DatabaseBackup } from "lucide-react";
 import { useState } from "react";
 import { Button, Notice } from "@/components/ui";
 
 /** Descarga la copia mostrando el progreso y el resultado (o el error). */
 export function DownloadBackup() {
+  const t = useT();
   const [state, setState] = useState<{ status: "idle" | "working" | "ok" | "error"; text?: string }>({ status: "idle" });
   async function download() {
     setState({ status: "working" });
@@ -12,7 +14,7 @@ export function DownloadBackup() {
       const res = await fetch("/api/copia-seguridad", { cache: "no-store" });
       if (!res.ok) {
         const j = await res.json().catch(() => null);
-        setState({ status: "error", text: j?.error ?? "No se ha podido crear la copia." });
+        setState({ status: "error", text: j?.error ?? t("No se ha podido crear la copia.") });
         return;
       }
       const blob = await res.blob();
@@ -27,15 +29,15 @@ export function DownloadBackup() {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      setState({ status: "ok", text: `Copia creada: ${name} · ${Object.keys(json.recuentos).length} tablas, ${total.toLocaleString("es-ES")} registros, ${(blob.size / 1024 / 1024).toLocaleString("es-ES", { maximumFractionDigits: 1 })} MB. Guárdala en un lugar seguro.` });
+      setState({ status: "ok", text: t("Copia creada: {name} · {length} tablas, {v} registros, {v2} MB. Guárdala en un lugar seguro.", { name, length: Object.keys(json.recuentos).length, v: total.toLocaleString("es-ES"), v2: (blob.size / 1024 / 1024).toLocaleString("es-ES", { maximumFractionDigits: 1 }) }) });
     } catch {
-      setState({ status: "error", text: "No se ha podido conectar. Comprueba la conexión y vuelve a intentarlo." });
+      setState({ status: "error", text: t("No se ha podido conectar. Comprueba la conexión y vuelve a intentarlo.") });
     }
   }
   return (
     <div className="flex flex-col gap-3">
       <Button variant="primary" onClick={download} disabled={state.status === "working"}>
-        <DatabaseBackup size={18} /> {state.status === "working" ? "Creando la copia…" : "Crear y descargar copia"}
+        <DatabaseBackup size={18} /> {state.status === "working" ? t("Creando la copia…") : t("Crear y descargar copia")}
       </Button>
       {state.status === "ok" && <Notice tone="good">{state.text}</Notice>}
       {state.status === "error" && <Notice tone="bad">{state.text}</Notice>}

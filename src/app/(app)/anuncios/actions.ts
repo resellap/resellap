@@ -1,4 +1,6 @@
 "use server";
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -18,7 +20,7 @@ const platformEnum = z.enum(["vinted", "wallapop"]);
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !can(u, "anuncios")) throw new Error("No tienes permisos para gestionar anuncios.");
+  if (!u || !u.active || !can(u, "anuncios")) throw new Error(msg("No tienes permisos para gestionar anuncios."));
   return u;
 }
 
@@ -31,20 +33,21 @@ function refresh(productId: string) {
 const draftSchema = z.object({
   productId: z.uuid(),
   platform: platformEnum,
-  title: z.string().trim().max(200, "El título es demasiado largo."),
-  description: z.string().trim().max(5000, "El texto es demasiado largo."),
+  title: z.string().trim().max(200, msg("El título es demasiado largo.")),
+  description: z.string().trim().max(5000, msg("El texto es demasiado largo.")),
   price: z.number().min(0).max(100000).nullable(),
   url: z
     .string()
     .trim()
     .max(500)
-    .refine((u) => u === "" || /^https?:\/\//i.test(u), "El enlace debe empezar por https://"),
+    .refine((u) => u === "" || /^https?:\/\//i.test(u), msg("El enlace debe empezar por https://")),
 });
 
 export async function saveListing(input: z.input<typeof draftSchema>): Promise<ActionResult> {
+  const t = await getT();
   const user = await admin();
   const v = draftSchema.safeParse(input);
-  if (!v.success) return { ok: false, error: v.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!v.success) return { ok: false, error: v.error.issues[0]?.message ?? t("Datos no válidos.") };
   const d = v.data;
   const supabase = await createClient();
   const { error } = await supabase.from("listings").upsert(
@@ -62,13 +65,14 @@ export async function saveListing(input: z.input<typeof draftSchema>): Promise<A
   );
   if (error) return { ok: false, error: friendlyError(error) };
   refresh(d.productId);
-  return { ok: true, message: "Guardado." };
+  return { ok: true, message: t("Guardado.") };
 }
 
 export async function setListingStatus(productId: string, platform: ListingPlatform, status: "publicado" | "retirado" | "borrador"): Promise<ActionResult> {
+  const t = await getT();
   const user = await admin();
   const v = z.object({ productId: z.uuid(), platform: platformEnum, status: z.enum(["publicado", "retirado", "borrador"]) }).safeParse({ productId, platform, status });
-  if (!v.success) return { ok: false, error: "Datos no válidos." };
+  if (!v.success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const now = new Date().toISOString();
   const { error } = await supabase.from("listings").upsert(
@@ -86,7 +90,7 @@ export async function setListingStatus(productId: string, platform: ListingPlatf
   if (error) return { ok: false, error: friendlyError(error) };
   refresh(productId);
   const name = platform === "vinted" ? "Vinted" : "Wallapop";
-  return { ok: true, message: status === "publicado" ? `Marcado como publicado en ${name}.` : status === "retirado" ? `Marcado como retirado de ${name}.` : "Guardado." };
+  return { ok: true, message: status === "publicado" ? t("Marcado como publicado en {name}.", { name }) : status === "retirado" ? t("Marcado como retirado de {name}.", { name }) : t("Guardado.") };
 }
 
 const genSchema = z.object({
@@ -102,13 +106,14 @@ const genSchema = z.object({
 
 /** Texto del anuncio con el generador de siempre (Gemini). */
 export async function generateListingText(input: z.input<typeof genSchema>): Promise<ActionResult<{ title: string; text: string }>> {
+  const t = await getT();
   await admin();
   const v = genSchema.safeParse(input);
-  if (!v.success) return { ok: false, error: "Datos no válidos." };
+  if (!v.success) return { ok: false, error: t("Datos no válidos.") };
   const d = v.data;
   const supabase = await createClient();
   const { data: p } = await supabase.from("products").select("name, brands(name), categories(name)").eq("id", d.productId).maybeSingle();
-  if (!p) return { ok: false, error: "El producto no existe." };
+  if (!p) return { ok: false, error: t("El producto no existe.") };
   const prod = p as unknown as { name: string; brands: { name: string } | null; categories: { name: string } | null };
   const r = await generateDescriptions({
     items: [
@@ -141,7 +146,7 @@ export async function generateListingText(input: z.input<typeof genSchema>): Pro
   });
   if (!r.ok) return r;
   const item = r.data?.[0];
-  if (!item || item.error || !item.text) return { ok: false, error: item?.error ?? "No se ha podido generar el texto." };
+  if (!item || item.error || !item.text) return { ok: false, error: item?.error ?? t("No se ha podido generar el texto.") };
   // Primera línea = título; el resto = descripción
   const lines = item.text.replace(/\r/g, "").split("\n");
   const first = (lines[0] ?? "").replace(/^t[ií]tulo\s*:\s*/i, "").trim();

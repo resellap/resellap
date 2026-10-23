@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import { testOnlyEnv } from "../test-env";
 
@@ -47,10 +48,10 @@ async function call<T>(path: string, body: unknown): Promise<T> {
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
-  if (res.status === 401 || res.status === 403) throw new Error("17TRACK ha rechazado la clave (TRACK17_API_KEY).");
-  if (!res.ok) throw new Error(`17TRACK ha respondido con un error (${res.status}).`);
+  if (res.status === 401 || res.status === 403) throw new Error(msg("17TRACK ha rechazado la clave (TRACK17_API_KEY)."));
+  if (!res.ok) throw new Error(fmtMsg(msg("17TRACK ha respondido con un error ({0})."), res.status));
   const j = (await res.json()) as { code: number; data?: T; message?: string };
-  if (j.code !== 0 || !j.data) throw new Error(`17TRACK: ${j.message ?? `código ${j.code}`}`);
+  if (j.code !== 0 || !j.data) throw new Error(`17TRACK: ${j.message ?? fmtMsg(msg("código {0}"), j.code)}`);
   return j.data;
 }
 
@@ -58,8 +59,8 @@ type Rejected = { number: string; error?: { code?: number; message?: string } };
 
 const ALREADY_REGISTERED = -18019901;
 const QUOTA_MESSAGES: Record<number, string> = {
-  [-18019908]: "Se ha gastado la cuota de 17TRACK: amplíala en tu cuenta de 17TRACK o introduce los estados a mano.",
-  [-18019907]: "Se ha llegado al límite diario de 17TRACK. Se volverá a intentar mañana.",
+  [-18019908]: msg("Se ha gastado la cuota de 17TRACK: amplíala en tu cuenta de 17TRACK o introduce los estados a mano."),
+  [-18019907]: msg("Se ha llegado al límite diario de 17TRACK. Se volverá a intentar mañana."),
 };
 
 /** Da de alta códigos. Devuelve, por código, null si está bien o el motivo del error. */
@@ -149,7 +150,7 @@ export function parseTrackInfo(raw: Raw17): TrackResult {
       events.push({
         at: new Date(at).toISOString(),
         status: mapStatus(e.stage, e.sub_status),
-        description: (e.description ?? "").trim().slice(0, 500) || "Movimiento del envío",
+        description: (e.description ?? "").trim().slice(0, 500) || msg("Movimiento del envío"),
         location: e.location?.trim().slice(0, 200) || null,
       });
     }
@@ -161,7 +162,7 @@ export function parseTrackInfo(raw: Raw17): TrackResult {
     events,
     eta: eta && !Number.isNaN(Date.parse(eta)) ? new Date(eta).toISOString().slice(0, 10) : null,
     carrierName: providers[0]?.provider?.name ?? null,
-    error: !events.length && (latest === "NotFound" || !latest) ? "El transportista aún no tiene información de este código." : null,
+    error: !events.length && (latest === "NotFound" || !latest) ? msg("El transportista aún no tiene información de este código.") : null,
   };
 }
 

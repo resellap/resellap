@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import { testOnlyEnv } from "../test-env";
 import { cleanText, htmlToText } from "./parse";
@@ -33,7 +34,7 @@ export function googleCredentials() {
 
 export function authorizationUrl(opts: { redirectUri: string; state: string }): string {
   const c = googleCredentials();
-  if (!c) throw new Error("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel.");
+  if (!c) throw new Error(msg("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel."));
   const u = new URL(AUTH_URL());
   u.search = new URLSearchParams({
     client_id: c.id,
@@ -51,7 +52,7 @@ export function authorizationUrl(opts: { redirectUri: string; state: string }): 
 
 async function tokenRequest(body: Record<string, string>) {
   const c = googleCredentials();
-  if (!c) throw new GmailAuthError("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel.");
+  if (!c) throw new GmailAuthError(msg("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel."));
   const res = await fetch(TOKEN_URL(), {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -62,9 +63,9 @@ async function tokenRequest(body: Record<string, string>) {
   if (!res.ok) {
     const code = json.error || `HTTP ${res.status}`;
     if (code === "invalid_grant" || code === "unauthorized_client" || code === "invalid_client" || res.status === 401) {
-      throw new GmailAuthError(`Google ha rechazado el permiso (${code}). Vuelve a conectar Gmail.`);
+      throw new GmailAuthError(fmtMsg(msg("Google ha rechazado el permiso ({0}). Vuelve a conectar Gmail."), code));
     }
-    throw new GmailError(`Google no ha respondido bien (${code}).`);
+    throw new GmailError(fmtMsg(msg("Google no ha respondido bien ({0})."), code));
   }
   return json;
 }
@@ -76,7 +77,7 @@ export async function exchangeCode(code: string, redirectUri: string) {
 
 export async function refreshAccessToken(refreshToken: string): Promise<string> {
   const j = await tokenRequest({ refresh_token: refreshToken, grant_type: "refresh_token" });
-  if (!j.access_token) throw new GmailError("Google no ha devuelto el acceso.");
+  if (!j.access_token) throw new GmailError(msg("Google no ha devuelto el acceso."));
   return j.access_token;
 }
 
@@ -94,14 +95,14 @@ export class Gmail {
       const reason = body.error?.errors?.[0]?.reason ?? "";
       if (res.status === 401 || (res.status === 403 && /insufficient|forbidden|accessNotConfigured|authError/i.test(reason + " " + (body.error?.message ?? "")))) {
         throw new GmailAuthError(
-          res.status === 401 ? "Gmail ha rechazado el acceso. Vuelve a conectar Gmail." : `Gmail no da permiso (${reason || res.status}). Vuelve a conectar Gmail.`,
+          res.status === 401 ? msg("Gmail ha rechazado el acceso. Vuelve a conectar Gmail.") : fmtMsg(msg("Gmail no da permiso ({0}). Vuelve a conectar Gmail."), reason || res.status),
         );
       }
-      last = new GmailError(`Gmail ha respondido con un error (${res.status}${reason ? ` ${reason}` : ""}).`);
+      last = new GmailError(fmtMsg(msg("Gmail ha respondido con un error ({0})."), `${res.status}${reason ? ` ${reason}` : ""}`));
       if (res.status !== 429 && res.status < 500) break;
       await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
     }
-    throw last ?? new GmailError("Gmail no responde.");
+    throw last ?? new GmailError(msg("Gmail no responde."));
   }
 
   profile() {
@@ -223,9 +224,9 @@ export const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
 /** ¿Es un PDF de verdad? Cabecera %PDF- y marca de final %%EOF. */
 export function validatePdf(buf: Buffer): string | null {
-  if (buf.length === 0) return "El PDF está vacío.";
-  if (buf.length > MAX_PDF_BYTES) return "El PDF pesa más de 10 MB.";
-  if (buf.subarray(0, 1024).indexOf("%PDF-") < 0) return "El archivo no es un PDF.";
-  if (buf.subarray(Math.max(0, buf.length - 2048)).indexOf("%%EOF") < 0) return "El PDF está incompleto o dañado.";
+  if (buf.length === 0) return msg("El PDF está vacío.");
+  if (buf.length > MAX_PDF_BYTES) return msg("El PDF pesa más de 10 MB.");
+  if (buf.subarray(0, 1024).indexOf("%PDF-") < 0) return msg("El archivo no es un PDF.");
+  if (buf.subarray(Math.max(0, buf.length - 2048)).indexOf("%%EOF") < 0) return msg("El PDF está incompleto o dañado.");
   return null;
 }

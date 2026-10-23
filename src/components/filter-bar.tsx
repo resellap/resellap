@@ -1,3 +1,4 @@
+import { tSync } from "@/i18n/server";
 import { SlidersHorizontal } from "lucide-react";
 import Form from "next/form";
 import Link from "next/link";
@@ -29,6 +30,7 @@ export function FilterBar({
   /** Parámetros de la URL que se conservan al aplicar los filtros (p. ej. la pestaña elegida). */
   keep?: Record<string, string | undefined>;
 }) {
+  const t = tSync();
   const activeCount = fields.filter((f) => values[f.name]).length;
   const active = activeCount > 0;
   const toggleId = `filtros-${basePath.replace(/\W+/g, "")}`;
@@ -42,10 +44,10 @@ export function FilterBar({
       >
         <span className="flex items-center gap-2">
           <SlidersHorizontal size={17} strokeWidth={2.25} className="text-brand" />
-          Filtros
+          {t("Filtros")}
           {active && <span className="num rounded-full bg-brand px-1.5 text-[11.5px] font-bold leading-5 text-on-brand">{activeCount}</span>}
         </span>
-        <span className="text-[12.5px] font-medium text-muted">{active ? "Cambiar" : "Mostrar"}</span>
+        <span className="text-[12.5px] font-medium text-muted">{active ? t("Cambiar") : t("Mostrar")}</span>
       </label>
       {/* Form de Next: cambia de página sin recargar (más rápido) */}
       <Form
@@ -62,21 +64,21 @@ export function FilterBar({
             return (
               <label key={f.name} className="flex h-11 items-center gap-2 text-[15px] font-medium md:h-9 md:text-[13.5px]">
                 <input type="checkbox" name={f.name} value="true" defaultChecked={values[f.name] === "true"} className="h-5 w-5 accent-[var(--color-brand)] md:h-4 md:w-4" />
-                {f.label}
+                {t(f.label)}
               </label>
             );
           }
           return (
             <div key={f.name} className="flex flex-col gap-1">
               <label htmlFor={id} className="text-xs font-semibold text-muted">
-                {f.label}
+                {t(f.label)}
               </label>
               {f.type === "select" ? (
                 <select id={id} name={f.name} defaultValue={values[f.name] ?? ""} className={`${common} min-w-36 pr-7`}>
-                  <option value="">{f.empty ?? "Todos"}</option>
+                  <option value="">{f.empty ? t(f.empty) : t("Todos")}</option>
                   {f.options.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.label)}
                     </option>
                   ))}
                 </select>
@@ -86,7 +88,7 @@ export function FilterBar({
                   name={f.name}
                   type={f.type === "number" ? "number" : f.type}
                   defaultValue={values[f.name] ?? ""}
-                  placeholder={"placeholder" in f ? f.placeholder : undefined}
+                  placeholder={"placeholder" in f && f.placeholder ? t(f.placeholder) : undefined}
                   className={`${common} ${f.type === "text" ? (f.width ?? "w-52") : f.type === "number" ? "num w-28" : "num w-[9.5rem]"}`}
                 />
               )}
@@ -94,10 +96,10 @@ export function FilterBar({
           );
         })}
         <div className="flex gap-2 max-md:w-full">
-          <button className={buttonClass("primary", "sm", "h-11 flex-1 md:h-9 md:flex-none")}>Aplicar filtros</button>
+          <button className={buttonClass("primary", "sm", "h-11 flex-1 md:h-9 md:flex-none")}>{t("Aplicar filtros")}</button>
           {active && (
             <Link href={basePath} className={buttonClass("ghost", "sm", "h-11 md:h-9")}>
-              Quitar filtros
+              {t("Quitar filtros")}
             </Link>
           )}
         </div>
@@ -109,14 +111,15 @@ export function FilterBar({
 
 /** Botones para exportar exactamente lo filtrado. */
 export function ExportLinks({ type, filters }: { type: string; filters: Record<string, string> }) {
+  const t = tSync();
   const q = new URLSearchParams({ ...filters, tipo: type });
   return (
     <>
       <a target="_blank" rel="noopener" className={buttonClass("secondary", "sm", "h-11 md:h-9")} href={`/api/exportar?${q.toString()}&formato=xlsx`}>
-        Exportar Excel
+        {t("Exportar Excel")}
       </a>
       <a target="_blank" rel="noopener" className={buttonClass("secondary", "sm", "h-11 md:h-9")} href={`/api/exportar?${q.toString()}&formato=csv`}>
-        CSV
+        {t("CSV")}
       </a>
     </>
   );

@@ -1,4 +1,6 @@
 "use client";
+import { msg } from "@/i18n/translate";
+import { useFormat, useT } from "@/i18n/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -9,7 +11,6 @@ import { cleanText } from "@/lib/import/normalize";
 import { buildPlan, collectProductNames, suggestMerges, type ImportExisting, type ImportPlan, type IssueLevel, type MergeSuggestion } from "@/lib/import/plan";
 import { CONFIRMED_MERGES, DEFAULT_OPTIONS } from "@/lib/import/presets";
 import { readWorkbook, type ParsedWorkbook } from "@/lib/import/read";
-import { dateTime, money, units } from "@/lib/format";
 // El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
 const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 
@@ -24,7 +25,7 @@ type DbResult = {
   totals: Record<string, number>;
 };
 
-const STEPS = ["Archivo", "Hojas y columnas", "Revisión", "Simulación", "Resultado"];
+const STEPS = [msg("Archivo"), msg("Hojas y columnas"), msg("Revisión"), msg("Simulación"), msg("Resultado")];
 
 function display(v: unknown) {
   if (v === null || v === undefined) return "";
@@ -33,6 +34,8 @@ function display(v: unknown) {
 }
 
 export function ImportWizard({ existing, previous }: { existing: ImportExisting; previous: { id: string; file_name: string; created_at: string; summary: Record<string, unknown> }[] }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [wb, setWb] = useState<ParsedWorkbook | null>(null);
@@ -62,7 +65,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
       setMerges(suggestMerges(collectProductNames(parsed, cfgs), CONFIRMED_MERGES).map((m) => ({ ...m, on: m.preset })));
       setStep(1);
     } catch (e) {
-      setReadError(e instanceof Error ? `No se ha podido leer el archivo: ${e.message}` : "No se ha podido leer el archivo.");
+      setReadError(e instanceof Error ? t("No se ha podido leer el archivo: {error}", { error: e.message }) : t("No se ha podido leer el archivo."));
     } finally {
       setReading(false);
     }
@@ -78,8 +81,8 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
     () =>
       configs
         .filter((c) => c.type !== "ignorar")
-        .flatMap((c) => FIELDS[c.type as Exclude<SheetType, "ignorar">].filter((f) => f.required && (c.mapping[f.key] ?? null) === null).map((f) => `${c.sheetName}: ${f.label}`)),
-    [configs],
+        .flatMap((c) => FIELDS[c.type as Exclude<SheetType, "ignorar">].filter((f) => f.required && (c.mapping[f.key] ?? null) === null).map((f) => `${c.sheetName}: ${t(f.label)}`)),
+    [configs, t],
   );
 
   function makePlan() {
@@ -133,7 +136,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
   return (
     <div>
-      <ol className="mb-6 flex flex-wrap gap-2 text-[13px]" aria-label="Pasos de la importación">
+      <ol className="mb-6 flex flex-wrap gap-2 text-[13px]" aria-label={t("Pasos de la importación")}>
         {STEPS.map((s, i) => (
           <li
             key={s}
@@ -143,47 +146,47 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
               i === step ? "border-ink bg-ink text-paper" : i < step ? "border-good/40 bg-good-soft text-good-ink" : "border-line text-muted",
             )}
           >
-            {i + 1}. {s}
+            {i + 1}. {t(s)}
           </li>
         ))}
       </ol>
 
       {step === 0 && (
         <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-          <Panel title="Selecciona el archivo Excel">
+          <Panel title={t("Selecciona el archivo Excel")}>
             <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--radius-md)] border-2 border-dashed border-line-strong bg-paper px-6 py-12 text-center hover:border-brand">
-              <span className="text-base font-semibold">Elige tu archivo .xlsx</span>
-              <span className="text-sm text-muted">Se lee en tu navegador. Nada se guarda hasta que confirmes al final.</span>
+              <span className="text-base font-semibold">{t("Elige tu archivo .xlsx")}</span>
+              <span className="text-sm text-muted">{t("Se lee en tu navegador. Nada se guarda hasta que confirmes al final.")}</span>
               <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
-              <span className="mt-2 rounded-[var(--radius-sm)] bg-brand px-4 py-2 text-sm font-semibold text-on-brand">{reading ? "Leyendo…" : "Elegir archivo"}</span>
+              <span className="mt-2 rounded-[var(--radius-sm)] bg-brand px-4 py-2 text-sm font-semibold text-on-brand">{reading ? t("Leyendo…") : t("Elegir archivo")}</span>
             </label>
             {readError && (
               <Notice tone="bad" className="mt-3">
-                {readError}
+                {t(readError)}
               </Notice>
             )}
           </Panel>
-          <Panel title="Cómo funciona">
+          <Panel title={t("Cómo funciona")}>
             <ol className="list-decimal space-y-2 pl-5 text-sm text-ink-soft">
-              <li>Resellap lee todas las hojas y detecta qué contiene cada una.</li>
-              <li>Relacionas las columnas con los campos (se proponen solas).</li>
-              <li>Ves los errores, avisos y el resumen.</li>
-              <li>Simulas la importación completa: se calcula todo y se deshace.</li>
-              <li>Si cuadra, confirmas y se guarda en una sola operación.</li>
+              <li>{t("Resellap lee todas las hojas y detecta qué contiene cada una.")}</li>
+              <li>{t("Relacionas las columnas con los campos (se proponen solas).")}</li>
+              <li>{t("Ves los errores, avisos y el resumen.")}</li>
+              <li>{t("Simulas la importación completa: se calcula todo y se deshace.")}</li>
+              <li>{t("Si cuadra, confirmas y se guarda en una sola operación.")}</li>
             </ol>
-            <p className="mt-3 text-[13px] text-muted">Si vuelves a importar el mismo Excel, lo que ya existe se omite: no se duplican pedidos, ventas ni productos.</p>
+            <p className="mt-3 text-[13px] text-muted">{t("Si vuelves a importar el mismo Excel, lo que ya existe se omite: no se duplican pedidos, ventas ni productos.")}</p>
           </Panel>
           {previous.length > 0 && (
-            <Panel title="Importaciones anteriores" className="lg:col-span-2" padded={false}>
+            <Panel title={t("Importaciones anteriores")} className="lg:col-span-2" padded={false}>
               <Table>
                 <thead>
                   <tr>
-                    <Th>Fecha</Th>
-                    <Th>Archivo</Th>
-                    <Th num>Productos</Th>
-                    <Th num>Pedidos</Th>
-                    <Th num>Ventas</Th>
-                    <Th num>Salidas</Th>
+                    <Th>{t("Fecha")}</Th>
+                    <Th>{t("Archivo")}</Th>
+                    <Th num>{t("Productos")}</Th>
+                    <Th num>{t("Pedidos")}</Th>
+                    <Th num>{t("Ventas")}</Th>
+                    <Th num>{t("Salidas")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -191,7 +194,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                     const c = (b.summary?.counts ?? {}) as Record<string, number>;
                     return (
                       <tr key={b.id}>
-                        <Td>{dateTime(b.created_at)}</Td>
+                        <Td>{f.dateTime(b.created_at)}</Td>
                         <Td>{b.file_name}</Td>
                         <Td num>{c.products_created ?? "—"}</Td>
                         <Td num>{c.purchase_orders_created ?? "—"}</Td>
@@ -209,15 +212,15 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
       {step === 1 && wb && (
         <div className="flex flex-col gap-5">
-          <Panel title={`Hojas de «${wb.fileName}»`} description="Comprueba el tipo de cada hoja. Las de cálculos o resúmenes no se importan." padded={false}>
+          <Panel title={t("Hojas de «{fileName}»", { fileName: wb.fileName })} description={t("Comprueba el tipo de cada hoja. Las de cálculos o resúmenes no se importan.")} padded={false}>
             <Table>
               <thead>
                 <tr>
-                  <Th>Hoja</Th>
-                  <Th>Tipo</Th>
-                  <Th>Fila de cabeceras</Th>
-                  <Th num>Filas</Th>
-                  <Th>Detección</Th>
+                  <Th>{t("Hoja")}</Th>
+                  <Th>{t("Tipo")}</Th>
+                  <Th>{t("Fila de cabeceras")}</Th>
+                  <Th num>{t("Filas")}</Th>
+                  <Th>{t("Detección")}</Th>
                   <Th />
                 </tr>
               </thead>
@@ -229,9 +232,9 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                       <Td className="font-semibold">{c.sheetName}</Td>
                       <Td>
                         <Select className="h-9 min-w-52" value={c.type} onChange={(e) => updateConfig(c.sheetName, (cfg) => withType(sheet, cfg, e.target.value as SheetType))}>
-                          {SHEET_TYPES.map((t) => (
-                            <option key={t.type} value={t.type}>
-                              {t.label}
+                          {SHEET_TYPES.map((st) => (
+                            <option key={st.type} value={st.type}>
+                              {t(st.label)}
                             </option>
                           ))}
                         </Select>
@@ -241,18 +244,18 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                           <Select className="h-9 w-24" value={c.headerRow} onChange={(e) => updateConfig(c.sheetName, (cfg) => withHeaderRow(sheet, cfg, Number(e.target.value)))}>
                             {Array.from({ length: Math.min(15, sheet.rows.length) }, (_, i) => (
                               <option key={i} value={i}>
-                                Fila {i + 1}
+                                {t("Fila {v}", { v: i + 1 })}
                               </option>
                             ))}
                           </Select>
                         )}
                       </Td>
                       <Td num>{Math.max(0, sheet.rows.length - c.headerRow - 1)}</Td>
-                      <Td className="max-w-80 text-[13px]">{c.reason}</Td>
+                      <Td className="max-w-80 text-[13px]">{t(c.reason)}</Td>
                       <Td>
                         {c.type !== "ignorar" && (
                           <Button size="sm" variant={openSheet === c.sheetName ? "primary" : "secondary"} onClick={() => setOpenSheet(openSheet === c.sheetName ? null : c.sheetName)}>
-                            Columnas
+                            {t("Columnas")}
                           </Button>
                         )}
                       </Td>
@@ -267,46 +270,46 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
             .filter((c) => c.sheetName === openSheet)
             .map((c) => {
               const sheet = wb.sheets.find((s) => s.name === c.sheetName)!;
-              const headers = (sheet.rows[c.headerRow] ?? []).map((h, i) => ({ i, label: cleanText(h) ?? `Columna ${i + 1}` }));
+              const headers = (sheet.rows[c.headerRow] ?? []).map((h, i) => ({ i, label: cleanText(h) ?? t("Columna {v}", { v: i + 1 }) }));
               const normalized = headersOf(sheet, c.headerRow);
               const auto = autoMap(c.type, normalized).mapping;
               const preview = sheet.rows.slice(c.headerRow + 1, c.headerRow + 6);
               const fields = FIELDS[c.type as Exclude<SheetType, "ignorar">];
               return (
-                <Panel key={c.sheetName} title={`Columnas de «${c.sheetName}»`} description="Cada campo de Resellap con la columna del Excel de la que se lee. Puedes cambiarla.">
+                <Panel key={c.sheetName} title={t("Columnas de «{sheetName}»", { sheetName: c.sheetName })} description={t("Cada campo de Resellap con la columna del Excel de la que se lee. Puedes cambiarla.")}>
                   <div className="grid gap-x-6 gap-y-3 md:grid-cols-2">
                     {fields.map((f) => (
                       <label key={f.key} className="flex flex-col gap-1">
                         <span className="text-[13px] font-semibold text-ink-soft">
-                          {f.label}
+                          {t(f.label)}
                           {f.required && <span className="text-danger"> *</span>}
-                          {f.verifyOnly && <span className="ml-1 font-normal text-muted">(solo para comprobar)</span>}
+                          {f.verifyOnly && <span className="ml-1 font-normal text-muted">{t("(solo para comprobar)")}</span>}
                         </span>
                         <Select
                           className={clsx("h-9", f.required && c.mapping[f.key] == null && "border-danger")}
                           value={c.mapping[f.key] ?? ""}
                           onChange={(e) => updateConfig(c.sheetName, (cfg) => ({ ...cfg, mapping: { ...cfg.mapping, [f.key]: e.target.value === "" ? null : Number(e.target.value) } }))}
                         >
-                          <option value="">No usar</option>
+                          <option value="">{t("No usar")}</option>
                           {headers.map((h) => (
                             <option key={h.i} value={h.i}>
                               {h.label}
-                              {auto[f.key] === h.i ? " (sugerida)" : ""}
+                              {auto[f.key] === h.i ? ` (${t("sugerida")})` : ""}
                             </option>
                           ))}
                         </Select>
-                        {f.help && <span className="text-xs text-muted">{f.help}</span>}
+                        {f.help && <span className="text-xs text-muted">{t(f.help)}</span>}
                       </label>
                     ))}
                   </div>
-                  <h3 className="mb-2 mt-5 text-sm font-bold">Vista previa (primeras filas)</h3>
+                  <h3 className="mb-2 mt-5 text-sm font-bold">{t("Vista previa (primeras filas)")}</h3>
                   <Table>
                     <thead>
                       <tr>
                         {fields
                           .filter((f) => c.mapping[f.key] != null)
                           .map((f) => (
-                            <Th key={f.key}>{f.label}</Th>
+                            <Th key={f.key}>{t(f.label)}</Th>
                           ))}
                       </tr>
                     </thead>
@@ -329,15 +332,15 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
             })}
 
           {merges.length > 0 && (
-            <Panel title="Productos que podrían ser el mismo" description="Si los marcas, se importan como un único producto con todas sus compras y ventas.">
+            <Panel title={t("Productos que podrían ser el mismo")} description={t("Si los marcas, se importan como un único producto con todas sus compras y ventas.")}>
               <ul className="flex flex-col gap-2">
                 {merges.map((m, i) => (
                   <li key={i}>
                     <label className="flex items-start gap-2 text-sm">
                       <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={m.on} onChange={(e) => setMerges((ms) => ms.map((x, j) => (j === i ? { ...x, on: e.target.checked } : x)))} />
                       <span>
-                        «{m.from}» es «{m.to}»
-                        <span className="block text-xs text-muted">{m.reason}</span>
+                        «{m.from}{t("» es «{to}»", { to: m.to })}
+                        <span className="block text-xs text-muted">{t(m.reason)}</span>
                       </span>
                     </label>
                   </li>
@@ -346,22 +349,22 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
             </Panel>
           )}
 
-          <Panel title="Reglas">
+          <Panel title={t("Reglas")}>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={zeroAsExit} onChange={(e) => setZeroAsExit(e.target.checked)} />
               <span>
-                Las ventas a 0 € son salidas sin venta (regalo, pérdida…)
-                <span className="block text-xs text-muted">No cuentan como ventas ni bajan el ticket medio; su coste se registra como pérdida. Si la nota dice «regalo» o «pérdida» se usa como motivo.</span>
+                {t("Las ventas a 0 € son salidas sin venta (regalo, pérdida…)")}
+                <span className="block text-xs text-muted">{t("No cuentan como ventas ni bajan el ticket medio; su coste se registra como pérdida. Si la nota dice «regalo» o «pérdida» se usa como motivo.")}</span>
               </span>
             </label>
-            <p className="mt-3 text-[13px] text-muted">Si en una venta el importe total y el precio unitario no cuadran, manda el importe total.</p>
+            <p className="mt-3 text-[13px] text-muted">{t("Si en una venta el importe total y el precio unitario no cuadran, manda el importe total.")}</p>
           </Panel>
 
-          {missingRequired.length > 0 && <Notice tone="bad" title="Faltan columnas obligatorias">{missingRequired.join("; ")}</Notice>}
+          {missingRequired.length > 0 && <Notice tone="bad" title={t("Faltan columnas obligatorias")}>{missingRequired.join("; ")}</Notice>}
           <div className="flex gap-2">
-            <Button onClick={() => setStep(0)}>Cambiar archivo</Button>
+            <Button onClick={() => setStep(0)}>{t("Cambiar archivo")}</Button>
             <Button variant="primary" disabled={missingRequired.length > 0 || sheetsInUse.length === 0} onClick={makePlan}>
-              Validar datos
+              {t("Validar datos")}
             </Button>
           </div>
         </div>
@@ -371,35 +374,35 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
         <div className="flex flex-col gap-5">
           <Figures
             items={[
-              { label: "Filas válidas", value: units(plan.summary.rows.valid), note: `de ${units(plan.summary.rows.total)} (${plan.summary.rows.empty} vacías)` },
-              { label: "Filas con errores", value: units(plan.summary.rows.withErrors), tone: plan.summary.rows.withErrors ? "bad" : "default" },
-              { label: "Posibles duplicados", value: units(plan.summary.rows.possibleDuplicates) },
-              { label: "Productos nuevos", value: units(plan.summary.products.new), note: `${plan.summary.products.existing} ya existen` },
-              { label: "Pedidos de compra nuevos", value: units(plan.summary.purchaseOrders.new), note: `${plan.summary.purchaseOrders.duplicated} ya existen` },
-              { label: "Ventas nuevas", value: units(plan.summary.sales.new), note: `${money(plan.summary.sales.amount)}${plan.summary.sales.duplicated ? `, ${plan.summary.sales.duplicated} ya importadas` : ""}` },
-              { label: "Salidas sin venta", value: units(plan.summary.exits.new), note: plan.summary.exits.pendingReason ? `${plan.summary.exits.pendingReason} sin motivo` : undefined },
-              { label: "Pendientes de revisar", value: units(plan.summary.reviewItems) },
+              { label: t("Filas válidas"), value: f.units(plan.summary.rows.valid), note: t("de {total} ({empty} vacías)", { total: f.units(plan.summary.rows.total), empty: plan.summary.rows.empty }) },
+              { label: t("Filas con errores"), value: f.units(plan.summary.rows.withErrors), tone: plan.summary.rows.withErrors ? "bad" : "default" },
+              { label: t("Posibles duplicados"), value: f.units(plan.summary.rows.possibleDuplicates) },
+              { label: t("Productos nuevos"), value: f.units(plan.summary.products.new), note: t("{existing} ya existen", { existing: plan.summary.products.existing }) },
+              { label: t("Pedidos de compra nuevos"), value: f.units(plan.summary.purchaseOrders.new), note: t("{duplicated} ya existen", { duplicated: plan.summary.purchaseOrders.duplicated }) },
+              { label: t("Ventas nuevas"), value: f.units(plan.summary.sales.new), note: `${f.money(plan.summary.sales.amount)}${plan.summary.sales.duplicated ? `, ${plan.summary.sales.duplicated} ya importadas` : ""}` },
+              { label: t("Salidas sin venta"), value: f.units(plan.summary.exits.new), note: plan.summary.exits.pendingReason ? t("{pendingReason} sin motivo", { pendingReason: plan.summary.exits.pendingReason }) : undefined },
+              { label: t("Pendientes de revisar"), value: f.units(plan.summary.reviewItems) },
             ]}
           />
           {plan.summary.responsibles.new.length > 0 && (
-            <Notice tone="info" title="Responsables que se crearán">
+            <Notice tone="info" title={t("Responsables que se crearán")}>
               {plan.summary.responsibles.new.join(", ")}
-              {plan.summary.responsibles.partners.length > 0 && `. Socios del reparto: ${plan.summary.responsibles.partners.join(", ")}.`}
+              {plan.summary.responsibles.partners.length > 0 && t(". Socios del reparto: {v}.", { v: plan.summary.responsibles.partners.join(", ") })}
             </Notice>
           )}
-          {plan.summary.platformsNew.length > 0 && <Notice tone="info">Plataformas nuevas: {plan.summary.platformsNew.join(", ")}.</Notice>}
+          {plan.summary.platformsNew.length > 0 && <Notice tone="info">{t("Plataformas nuevas: {v}.", { v: plan.summary.platformsNew.join(", ") })}</Notice>}
 
           <Panel
-            title="Errores y avisos"
+            title={t("Errores y avisos")}
             padded={false}
             actions={
               <div className="flex gap-1">
                 {(
                   [
-                    ["error", `Errores (${plan.summary.errors})`],
-                    ["warning", `Avisos (${plan.summary.warnings})`],
-                    ["info", "Información"],
-                    ["all", "Todo"],
+                    ["error", t("Errores ({n})", { n: plan.summary.errors })],
+                    ["warning", t("Avisos ({n})", { n: plan.summary.warnings })],
+                    ["info", t("Información")],
+                    ["all", t("Todo")],
                   ] as const
                 ).map(([k, l]) => (
                   <Button key={k} size="sm" variant={issueFilter === k ? "primary" : "ghost"} onClick={() => setIssueFilter(k)}>
@@ -410,16 +413,16 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
             }
           >
             {plan.issues.filter((i) => issueFilter === "all" || i.level === issueFilter).length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted">Nada en esta categoría.</p>
+              <p className="px-4 py-6 text-sm text-muted">{t("Nada en esta categoría.")}</p>
             ) : (
               <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <thead>
                     <tr>
-                      <Th>Tipo</Th>
-                      <Th>Hoja</Th>
-                      <Th num>Fila</Th>
-                      <Th>Detalle</Th>
+                      <Th>{t("Tipo")}</Th>
+                      <Th>{t("Hoja")}</Th>
+                      <Th num>{t("Fila")}</Th>
+                      <Th>{t("Detalle")}</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -427,10 +430,10 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                       .filter((i) => issueFilter === "all" || i.level === issueFilter)
                       .map((i, k) => (
                         <tr key={k}>
-                          <Td>{i.level === "error" ? <Badge tone="bad">Error</Badge> : i.level === "warning" ? <Badge tone="warn">Aviso</Badge> : <Badge tone="info">Info</Badge>}</Td>
+                          <Td>{i.level === "error" ? <Badge tone="bad">{t("Error")}</Badge> : i.level === "warning" ? <Badge tone="warn">{t("Aviso")}</Badge> : <Badge tone="info">{t("Info")}</Badge>}</Td>
                           <Td>{i.sheet}</Td>
                           <Td num>{i.row ?? "—"}</Td>
-                          <Td className="text-[13.5px]">{i.message}</Td>
+                          <Td className="text-[13.5px]">{t(i.message)}</Td>
                         </tr>
                       ))}
                   </tbody>
@@ -441,27 +444,27 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
           {plan.stockCheck.length > 0 && (
             <Notice tone={plan.stockCheck.some((s) => s.expected !== s.computed) ? "warn" : "good"}>
-              Stock: {plan.stockCheck.filter((s) => s.expected === s.computed).length} de {plan.stockCheck.length} productos cuadran con la columna de stock del Excel.
+              {t("Stock: {length} de {length2} productos cuadran con la columna de stock del Excel.", { length: plan.stockCheck.filter((s) => s.expected === s.computed).length, length2: plan.stockCheck.length })}
               {plan.stockCheck
                 .filter((s) => s.expected !== s.computed)
                 .slice(0, 10)
                 .map((s) => (
                   <span key={s.product} className="block">
-                    {s.product}: Excel {s.expected}, calculado {s.computed}
+                    {s.product}{t(": Excel {expected}, calculado {computed}", { expected: s.expected, computed: s.computed })}
                   </span>
                 ))}
             </Notice>
           )}
 
-          <Panel title="Pendientes de revisar después" description="Se guardarán en «Pendientes de revisar» para completarlos desde la aplicación." padded={false}>
+          <Panel title={t("Pendientes de revisar después")} description={t("Se guardarán en «Pendientes de revisar» para completarlos desde la aplicación.")} padded={false}>
             {plan.payload.review_items.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-muted">Ninguno.</p>
+              <p className="px-4 py-6 text-sm text-muted">{t("Ninguno.")}</p>
             ) : (
               <ul className="max-h-72 divide-y divide-line overflow-y-auto">
                 {plan.payload.review_items.map((r, i) => (
                   <li key={i} className="px-4 py-2 text-sm">
-                    <span className="font-semibold">{r.title}</span>
-                    {r.details && <span className="block text-[13px] text-muted">{r.details}</span>}
+                    <span className="font-semibold">{t(r.title)}</span>
+                    {r.details && <span className="block text-[13px] text-muted">{t(r.details)}</span>}
                   </li>
                 ))}
               </ul>
@@ -470,9 +473,9 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
           {dbError && <Notice tone="bad">{dbError}</Notice>}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setStep(1)}>Volver a las columnas</Button>
+            <Button onClick={() => setStep(1)}>{t("Volver a las columnas")}</Button>
             <Button variant="primary" disabled={running} onClick={() => runImport(true)}>
-              {running ? "Simulando…" : "Simular importación"}
+              {running ? t("Simulando…") : t("Simular importación")}
             </Button>
           </div>
         </div>
@@ -480,23 +483,23 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
       {step === 3 && plan && dry && (
         <div className="flex flex-col gap-5">
-          <Notice tone="info" title="Simulación terminada: no se ha guardado nada">
-            La base de datos ha hecho la importación completa y la ha deshecho. Este es el resultado que tendrías.
+          <Notice tone="info" title={t("Simulación terminada: no se ha guardado nada")}>
+            {t("La base de datos ha hecho la importación completa y la ha deshecho. Este es el resultado que tendrías.")}
           </Notice>
           <ResultFigures r={dry} />
           <IntegrityPanel r={dry} checks={checks} />
           {dry.errors.length > 0 && <ErrorsPanel r={dry} />}
-          <Panel title="Confirmación del administrador">
+          <Panel title={t("Confirmación del administrador")}>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
-              He revisado el resumen, los avisos y la simulación, y quiero importar estos datos.
+              {t("He revisado el resumen, los avisos y la simulación, y quiero importar estos datos.")}
             </label>
           </Panel>
           {dbError && <Notice tone="bad">{dbError}</Notice>}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setStep(2)}>Volver</Button>
+            <Button onClick={() => setStep(2)}>{t("Volver")}</Button>
             <Button variant="primary" disabled={!confirmed || running} onClick={() => runImport(false)}>
-              {running ? "Importando…" : "Importar definitivamente"}
+              {running ? t("Importando…") : t("Importar definitivamente")}
             </Button>
           </div>
         </div>
@@ -504,18 +507,18 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 
       {step === 4 && final && (
         <div className="flex flex-col gap-5">
-          <Notice tone="good" title="Importación completada">
-            Los datos ya están en Resellap. Los casos pendientes están en <Link href="/revision">Pendientes de revisar</Link>.
+          <Notice tone="good" title={t("Importación completada")}>
+            {t("Los datos ya están en Resellap. Los casos pendientes están en")}{" "}<Link href="/revision">{t("Pendientes de revisar")}</Link>.
           </Notice>
           <ResultFigures r={final} />
           <IntegrityPanel r={final} checks={checks} />
           {final.errors.length > 0 && <ErrorsPanel r={final} />}
           <div className="flex flex-wrap gap-2">
             <Link href="/" className="rounded-[var(--radius-sm)] bg-brand px-4 py-2 text-sm font-semibold text-on-brand">
-              Ir al inicio
+              {t("Ir al inicio")}
             </Link>
             <Link href="/revision" className="rounded-[var(--radius-sm)] border border-line-strong px-4 py-2 text-sm font-semibold">
-              Revisar pendientes
+              {t("Revisar pendientes")}
             </Link>
           </div>
         </div>
@@ -525,29 +528,33 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
 }
 
 function ResultFigures({ r }: { r: DbResult }) {
+  const t = useT();
+  const f = useFormat();
   const c = r.counts;
   return (
     <Figures
       items={[
-        { label: "Productos", value: units(c.products_created), note: `${c.products_existing} ya existían` },
-        { label: "Pedidos de compra", value: units(c.purchase_orders_created), note: `${c.purchase_items_created} líneas, ${c.purchase_orders_duplicated} omitidos` },
-        { label: "Ventas", value: units(c.sales_created), note: `${c.sales_duplicated} omitidas, ${c.sales_failed} con error` },
-        { label: "Salidas sin venta", value: units(c.stock_exits_created), note: c.stock_exits_failed ? `${c.stock_exits_failed} con error` : undefined },
-        { label: "Importe de las ventas", value: money(r.totals.sales_amount) },
-        { label: "Stock resultante", value: units(r.totals.stock_units), note: money(r.totals.stock_value) },
-        { label: "Pendientes de revisar", value: units(c.review_items_created) },
+        { label: t("Productos"), value: f.units(c.products_created), note: t("{products_existing} ya existían", { products_existing: c.products_existing }) },
+        { label: t("Pedidos de compra"), value: f.units(c.purchase_orders_created), note: t("{purchase_items_created} líneas, {purchase_orders_duplicated} omitidos", { purchase_items_created: c.purchase_items_created, purchase_orders_duplicated: c.purchase_orders_duplicated }) },
+        { label: t("Ventas"), value: f.units(c.sales_created), note: t("{sales_duplicated} omitidas, {sales_failed} con error", { sales_duplicated: c.sales_duplicated, sales_failed: c.sales_failed }) },
+        { label: t("Salidas sin venta"), value: f.units(c.stock_exits_created), note: c.stock_exits_failed ? t("{stock_exits_failed} con error", { stock_exits_failed: c.stock_exits_failed }) : undefined },
+        { label: t("Importe de las ventas"), value: f.money(r.totals.sales_amount) },
+        { label: t("Stock resultante"), value: f.units(r.totals.stock_units), note: f.money(r.totals.stock_value) },
+        { label: t("Pendientes de revisar"), value: f.units(c.review_items_created) },
       ]}
     />
   );
 }
 
 function IntegrityPanel({ r, checks }: { r: DbResult; checks: { costTotal: number; costBad: { source_ref: string; product: string; expected: number }[]; stockTotal: number; stockBad: { product: string; expected: number }[] } | null }) {
+  const t = useT();
+  const f = useFormat();
   return (
-    <Panel title="Comprobación de integridad">
+    <Panel title={t("Comprobación de integridad")}>
       <ul className="flex flex-col gap-1.5 text-sm">
         {r.integrity.map((i) => (
           <li key={i.check} className="flex items-start gap-2">
-            {i.ok ? <Badge tone="good">Correcto</Badge> : <Badge tone="warn">{i.problems} pendiente(s)</Badge>}
+            {i.ok ? <Badge tone="good">{t("Correcto")}</Badge> : <Badge tone="warn">{t("{problems} pendiente(s)", { problems: i.problems })}</Badge>}
             <span>
               {i.check}
               {!i.ok && i.detail && <span className="block text-xs text-muted">{i.detail}</span>}
@@ -556,12 +563,12 @@ function IntegrityPanel({ r, checks }: { r: DbResult; checks: { costTotal: numbe
         ))}
         {checks && checks.costTotal > 0 && (
           <li className="flex items-start gap-2">
-            {checks.costBad.length === 0 ? <Badge tone="good">Correcto</Badge> : <Badge tone="warn">{checks.costBad.length} distintos</Badge>}
+            {checks.costBad.length === 0 ? <Badge tone="good">{t("Correcto")}</Badge> : <Badge tone="warn">{t("{length} distintos", { length: checks.costBad.length })}</Badge>}
             <span>
-              Coste real por unidad igual que el que calculaba el Excel ({checks.costTotal - checks.costBad.length} de {checks.costTotal} líneas)
+              {t("Coste real por unidad igual que el que calculaba el Excel ({v} de {costTotal} líneas)", { v: checks.costTotal - checks.costBad.length, costTotal: checks.costTotal })}
               {checks.costBad.slice(0, 5).map((b) => (
                 <span key={b.source_ref} className="block text-xs text-muted">
-                  {b.source_ref} {b.product}: Excel {b.expected}
+                  {b.source_ref} {b.product}{t(": Excel {expected}", { expected: b.expected })}
                 </span>
               ))}
             </span>
@@ -569,9 +576,9 @@ function IntegrityPanel({ r, checks }: { r: DbResult; checks: { costTotal: numbe
         )}
         {checks && checks.stockTotal > 0 && (
           <li className="flex items-start gap-2">
-            {checks.stockBad.length === 0 ? <Badge tone="good">Correcto</Badge> : <Badge tone="warn">{checks.stockBad.length} distintos</Badge>}
+            {checks.stockBad.length === 0 ? <Badge tone="good">{t("Correcto")}</Badge> : <Badge tone="warn">{t("{length} distintos", { length: checks.stockBad.length })}</Badge>}
             <span>
-              Stock por producto igual que el del Excel ({checks.stockTotal - checks.stockBad.length} de {checks.stockTotal})
+              {t("Stock por producto igual que el del Excel ({v} de {stockTotal})", { v: checks.stockTotal - checks.stockBad.length, stockTotal: checks.stockTotal })}
             </span>
           </li>
         )}
@@ -581,8 +588,10 @@ function IntegrityPanel({ r, checks }: { r: DbResult; checks: { costTotal: numbe
 }
 
 function ErrorsPanel({ r }: { r: DbResult }) {
+  const t = useT();
+  const f = useFormat();
   return (
-    <Panel title="Filas que la base de datos no ha podido importar" padded={false}>
+    <Panel title={t("Filas que la base de datos no ha podido importar")} padded={false}>
       <ul className="divide-y divide-line">
         {r.errors.map((e, i) => (
           <li key={i} className="px-4 py-2 text-sm">

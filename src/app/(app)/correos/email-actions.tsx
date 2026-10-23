@@ -1,4 +1,5 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import Link from "next/link";
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
@@ -6,13 +7,14 @@ import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Notice, Select, buttonClass, clsx } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
 import { isSaleKind, PLATFORM_LABEL, type Platform } from "@/lib/email/parse";
-import { money } from "@/lib/format";
 import type { SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
 import { disconnectGmail, dismissEmail, undoEmail, linkLabel, resolveSale, retryEmail, saveAccount, setDefaultResponsible, syncNow } from "./actions";
 import type { EmailRowView } from "./page";
 
 export function ConnectionButtons({ connected, credentials, status }: { connected: boolean; credentials: boolean; status: string }) {
+  const t = useT();
+  const f = useFormat();
   const sync = useServerAction(syncNow);
   return (
     <div>
@@ -23,20 +25,20 @@ export function ConnectionButtons({ connected, credentials, status }: { connecte
           className={buttonClass(connected && status === "conectado" ? "secondary" : "primary", "md", !credentials ? "pointer-events-none opacity-50" : undefined)}
           aria-disabled={!credentials}
         >
-          {connected ? "Volver a conectar" : "Conectar Gmail"}
+          {connected ? t("Volver a conectar") : t("Conectar Gmail")}
         </a>
         {connected && (
           <Button variant="primary" onClick={() => sync.run()} disabled={sync.pending}>
             <RefreshCw size={16} strokeWidth={2.5} className={sync.pending ? "animate-spin" : undefined} />
-            {sync.pending ? "Revisando…" : "Revisar ahora"}
+            {sync.pending ? t("Revisando…") : t("Revisar ahora")}
           </Button>
         )}
         {connected && (
           <ConfirmAction
-            label="Desconectar"
-            title="Desconectar Gmail"
-            description="Se dejarán de leer los correos. Las ventas ya registradas no se tocan. Si vuelves a conectar, se empezará desde ese momento."
-            confirmLabel="Desconectar"
+            label={t("Desconectar")}
+            title={t("Desconectar Gmail")}
+            description={t("Se dejarán de leer los correos. Las ventas ya registradas no se tocan. Si vuelves a conectar, se empezará desde ese momento.")}
+            confirmLabel={t("Desconectar")}
             action={() => disconnectGmail()}
           />
         )}
@@ -47,11 +49,13 @@ export function ConnectionButtons({ connected, credentials, status }: { connecte
 }
 
 export function DefaultResponsible({ value, responsibles }: { value: string | null; responsibles: { id: string; name: string }[] }) {
+  const t = useT();
+  const f = useFormat();
   const { run, pending, error, message } = useServerAction(setDefaultResponsible);
   return (
-    <Field label="Responsable por defecto" hint="Para las ventas de cuentas que no tengan responsable asignado.">
+    <Field label={t("Responsable por defecto")} hint={t("Para las ventas de cuentas que no tengan responsable asignado.")}>
       <Select defaultValue={value ?? ""} disabled={pending} onChange={(e) => run(e.target.value || null)}>
-        <option value="">— Ninguno (la venta queda para revisar) —</option>
+        <option value="">{t("— Ninguno (la venta queda para revisar) —")}</option>
         {responsibles.map((r) => (
           <option key={r.id} value={r.id}>
             {r.name}
@@ -72,6 +76,8 @@ export function AccountRow({
   responsibles: { id: string; name: string }[];
   mobiles: { id: string; number: number; name: string }[];
 }) {
+  const t = useT();
+  const f = useFormat();
   const [resp, setResp] = useState(account.responsible_id ?? "");
   const [mob, setMob] = useState(account.mobile_device_id ?? "");
   const { run, pending, error, message } = useServerAction(saveAccount);
@@ -82,7 +88,7 @@ export function AccountRow({
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">{PLATFORM_LABEL[account.platform as Platform] ?? account.platform}</p>
         <p className="truncate font-semibold">{account.handle}</p>
       </div>
-      <Field label="Responsable">
+      <Field label={t("Responsable")}>
         <Select
           value={resp}
           disabled={pending}
@@ -91,7 +97,7 @@ export function AccountRow({
             save(e.target.value, mob);
           }}
         >
-          <option value="">— El de por defecto —</option>
+          <option value="">{t("— El de por defecto —")}</option>
           {responsibles.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
@@ -99,7 +105,7 @@ export function AccountRow({
           ))}
         </Select>
       </Field>
-      <Field label="Móvil">
+      <Field label={t("Móvil")}>
         <Select
           value={mob}
           disabled={pending}
@@ -108,10 +114,10 @@ export function AccountRow({
             save(resp, e.target.value);
           }}
         >
-          <option value="">— Sin móvil —</option>
+          <option value="">{t("— Sin móvil —")}</option>
           {mobiles.map((m) => (
             <option key={m.id} value={m.id}>
-              Móvil {m.number} · {m.name}
+              {t("Móvil {number} ·", { number: m.number })}{" "}{m.name}
             </option>
           ))}
         </Select>
@@ -127,6 +133,8 @@ export function AccountRow({
 
 /** Acciones sobre un correo que necesita una persona. */
 export function IncidentActions({ email }: { email: EmailRowView }) {
+  const t = useT();
+  const f = useFormat();
   const retry = useServerAction(retryEmail);
   const isSale = isSaleKind(email.kind);
   const isLabel = email.kind === "vinted_etiqueta";
@@ -139,24 +147,24 @@ export function IncidentActions({ email }: { email: EmailRowView }) {
         {isSale && email.status !== "pendiente" && !amountsDoubt && <ChooseProduct email={email} suggestions={productCandidates} />}
         {isSale && amountsDoubt && (
           <Link href="/ventas/nueva" className={buttonClass("primary", "sm")}>
-            Registrar a mano
+            {t("Registrar a mano")}
           </Link>
         )}
         {isLabel && email.status !== "pendiente" && <ChooseSale email={email} candidates={saleCandidates} />}
         <Button size="sm" onClick={() => retry.run(email.id)} disabled={retry.pending}>
-          {retry.pending ? "Reintentando…" : "Reintentar"}
+          {retry.pending ? t("Reintentando…") : t("Reintentar")}
         </Button>
         <ConfirmAction
           size="sm"
           variant="secondary"
-          label="Descartar"
-          title="Descartar este correo"
+          label={t("Descartar")}
+          title={t("Descartar este correo")}
           description={
             isSale
-              ? "No se creará ninguna venta con este correo. Úsalo si ya la registraste a mano o si no es una venta real."
-              : "La etiqueta no se añadirá a ninguna venta. Podrás subirla a mano desde la ficha de la venta."
+              ? t("No se creará ninguna venta con este correo. Úsalo si ya la registraste a mano o si no es una venta real.")
+              : t("La etiqueta no se añadirá a ninguna venta. Podrás subirla a mano desde la ficha de la venta.")
           }
-          confirmLabel="Descartar"
+          confirmLabel={t("Descartar")}
           action={() => dismissEmail(email.id)}
         />
       </div>
@@ -166,6 +174,8 @@ export function IncidentActions({ email }: { email: EmailRowView }) {
 }
 
 function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestions: { variant_id?: string; label: string }[] }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<{ id: string; label: string } | null>(null);
   const [remember, setRemember] = useState(true);
@@ -174,16 +184,16 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
   return (
     <>
       <Button size="sm" variant="primary" onClick={() => setOpen(true)}>
-        Elegir producto
+        {t("Elegir producto")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="¿Qué producto es?"
+        title={t("¿Qué producto es?")}
         footer={
           <>
             <Button onClick={() => setOpen(false)} disabled={pending}>
-              Volver
+              {t("Volver")}
             </Button>
             <Button
               variant="primary"
@@ -194,22 +204,22 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
                 if (r.ok) setOpen(false);
               }}
             >
-              {pending ? "Registrando…" : "Registrar la venta"}
+              {pending ? t("Registrando…") : t("Registrar la venta")}
             </Button>
           </>
         }
       >
         <div className="rounded-[var(--radius-sm)] bg-ink/5 p-3 text-sm">
-          <p className="text-muted">En el correo:</p>
+          <p className="text-muted">{t("En el correo:")}</p>
           <p className="font-semibold">{p.product}</p>
           <p className="num text-ink-soft">
-            {typeof p.price === "number" ? money(p.price) : ""}
+            {typeof p.price === "number" ? f.money(p.price) : ""}
             {p.buyer ? ` · ${p.buyer}` : ""}
           </p>
         </div>
         {suggestions.length > 0 && (
           <div className="mt-3">
-            <p className="mb-1.5 text-[13px] font-semibold text-ink-soft">Parecidos en tu inventario</p>
+            <p className="mb-1.5 text-[13px] font-semibold text-ink-soft">{t("Parecidos en tu inventario")}</p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s) => (
                 <button
@@ -221,14 +231,14 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
                     picked?.id === s.variant_id ? "border-brand bg-brand text-on-brand" : "border-line-strong bg-surface hover:border-brand",
                   )}
                 >
-                  {s.label}
+                  {t(s.label)}
                 </button>
               ))}
             </div>
           </div>
         )}
         <div className="mt-3">
-          <p className="mb-1.5 text-[13px] font-semibold text-ink-soft">O búscalo</p>
+          <p className="mb-1.5 text-[13px] font-semibold text-ink-soft">{t("O búscalo")}</p>
           <ProductPicker
             onlyInStock
             onSelect={(v: SellableVariant) => setPicked({ id: v.variant_id, label: variantDisplay(v.product_name, v.variant_name, v.variant_count) })}
@@ -236,16 +246,16 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
         </div>
         {picked && (
           <Notice tone="info" className="mt-3">
-            Elegido: <strong>{picked.label}</strong>. Se descontará 1 unidad del lote más antiguo.
+            {t("Elegido:")}{" "}<strong>{picked.label}</strong>{t(". Se descontará 1 unidad del lote más antiguo.")}
           </Notice>
         )}
         <label className="mt-3 flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          <span>Recordar que «{p.product}» es este producto (la próxima venta se registrará sola)</span>
+          <span>{t("Recordar que «{product}» es este producto (la próxima venta se registrará sola)", { product: p.product })}</span>
         </label>
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>
@@ -254,6 +264,8 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
 }
 
 function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { sale_id?: string; label: string }[] }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [force, setForce] = useState(false);
@@ -262,16 +274,16 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
   return (
     <>
       <Button size="sm" variant="primary" onClick={() => setOpen(true)} disabled={candidates.length === 0}>
-        Elegir la venta
+        {t("Elegir la venta")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="¿De qué venta es la etiqueta?"
+        title={t("¿De qué venta es la etiqueta?")}
         footer={
           <>
             <Button onClick={() => setOpen(false)} disabled={pending}>
-              Volver
+              {t("Volver")}
             </Button>
             <Button
               variant="primary"
@@ -282,13 +294,13 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
                 if (r.ok) setOpen(false);
               }}
             >
-              {pending ? "Añadiendo…" : "Añadir la etiqueta"}
+              {pending ? t("Añadiendo…") : t("Añadir la etiqueta")}
             </Button>
           </>
         }
       >
         <p className="text-sm text-ink-soft">
-          Etiqueta de <strong>{String((email.parsed as { product?: string }).product ?? "un artículo")}</strong>. Elige la venta (número · fecha · comprador):
+          {t("Etiqueta de")}{" "}<strong>{String((email.parsed as { product?: string }).product ?? t("un artículo"))}</strong>{t(". Elige la venta (número · fecha · comprador):")}
         </p>
         <ul className="mt-3 flex flex-col gap-2">
           {candidates.map((c) => (
@@ -300,7 +312,7 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
                 )}
               >
                 <input type="radio" name={`sale-${email.id}`} checked={picked === c.sale_id} onChange={() => setPicked(c.sale_id!)} className="accent-[var(--color-brand)]" />
-                <span className="num">{c.label}</span>
+                <span className="num">{t(c.label)}</span>
               </label>
             </li>
           ))}
@@ -308,12 +320,12 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
         {manualConflict && (
           <label className="mt-3 flex items-start gap-2 text-sm">
             <input type="checkbox" className="mt-0.5 h-4 w-4" checked={force} onChange={(e) => setForce(e.target.checked)} />
-            <span>Esa venta ya tiene una etiqueta subida a mano. Sustituirla por la del correo.</span>
+            <span>{t("Esa venta ya tiene una etiqueta subida a mano. Sustituirla por la del correo.")}</span>
           </label>
         )}
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>
@@ -322,11 +334,13 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
 }
 
 export function UndoButton({ id }: { id: string }) {
+  const t = useT();
+  const f = useFormat();
   const { run, pending, error, message } = useServerAction(undoEmail);
   return (
     <div className="shrink-0">
       <Button size="sm" onClick={() => run(id)} disabled={pending}>
-        {pending ? "Deshaciendo…" : "Volver a detectadas"}
+        {pending ? t("Deshaciendo…") : t("Volver a detectadas")}
       </Button>
       <ActionMessages error={error} message={message} />
     </div>

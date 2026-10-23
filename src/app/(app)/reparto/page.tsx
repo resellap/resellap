@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/filter-bar";
 import { Empty, Figures, Notice, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -8,7 +9,10 @@ import { todayIso } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteTransferButton, TransferButton } from "./transfer-form";
 
-export const metadata: Metadata = { title: "Reparto entre socios" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Reparto entre socios") };
+}
 
 type Settlement = {
   total: number;
@@ -19,6 +23,7 @@ type Settlement = {
 };
 
 export default async function SettlementPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("costes");
   const filters = filtersFrom(await searchParams);
   const supabase = await createClient();
@@ -39,8 +44,8 @@ export default async function SettlementPage({ searchParams }: { searchParams: P
   return (
     <>
       <PageHeader
-        title="Reparto entre socios"
-        description="El total vendido se reparte a partes iguales entre los socios. Cada uno ha cobrado sus propias ventas; aquí ves quién debe pagar a quién."
+        title={t("Reparto entre socios")}
+        description={t("El total vendido se reparte a partes iguales entre los socios. Cada uno ha cobrado sus propias ventas; aquí ves quién debe pagar a quién.")}
         actions={
           partners.length > 1 && (
             <TransferButton
@@ -55,15 +60,15 @@ export default async function SettlementPage({ searchParams }: { searchParams: P
         basePath="/reparto"
         values={filters}
         fields={[
-          { type: "date", name: "from", label: "Desde" },
-          { type: "date", name: "to", label: "Hasta" },
-          { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
+          { type: "date", name: "from", label: t("Desde") },
+          { type: "date", name: "to", label: t("Hasta") },
+          { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
         ]}
       />
       {error && <Notice tone="bad">{error.message}</Notice>}
       {s && s.partner_count === 0 && (
         <Notice tone="warn" className="mb-4">
-          No hay ningún socio. Marca a los responsables que participan en el reparto desde Responsables.
+          {t("No hay ningún socio. Marca a los responsables que participan en el reparto desde Responsables.")}
         </Notice>
       )}
       {s && s.partner_count > 0 && (
@@ -71,38 +76,38 @@ export default async function SettlementPage({ searchParams }: { searchParams: P
           <Figures
             className="mb-4"
             items={[
-              { label: "Total vendido", value: money(s.total) },
-              { label: "Socios", value: s.partner_count },
-              { label: "Corresponde a cada uno", value: money(s.share) },
+              { label: t("Total vendido"), value: money(s.total) },
+              { label: t("Socios"), value: s.partner_count },
+              { label: t("Corresponde a cada uno"), value: money(s.share) },
             ]}
           />
           {debtor && creditor ? (
             <div className="mb-5 rounded-[var(--radius-md)] border border-good/30 bg-good-soft px-5 py-4">
               <p className="text-[19px] font-bold text-good-ink">
-                {debtor.name} debe pagar <span className="num">{money(Math.min(debtor.balance, -creditor.balance))}</span> a {creditor.name}
+                {debtor.name}{" "}{t("debe pagar")}{" "}<span className="num">{money(Math.min(debtor.balance, -creditor.balance))}</span> a {creditor.name}
               </p>
-              <p className="mt-1 text-sm text-good-ink/80">Para que cada socio se quede con {money(s.share)}.</p>
+              <p className="mt-1 text-sm text-good-ink/80">{t("Para que cada socio se quede con {share}.", { share: money(s.share) })}</p>
             </div>
           ) : (
             <Notice tone="good" className="mb-5">
-              El reparto está cuadrado: nadie debe nada.
+              {t("El reparto está cuadrado: nadie debe nada.")}
             </Notice>
           )}
           {!s.transfers_included && (
             <Notice tone="info" className="mb-4">
-              Filtrando por pedido no se tienen en cuenta los pagos entre socios (no están ligados a un pedido).
+              {t("Filtrando por pedido no se tienen en cuenta los pagos entre socios (no están ligados a un pedido).")}
             </Notice>
           )}
-          <Panel title="Detalle por socio" padded={false} className="mb-5">
+          <Panel title={t("Detalle por socio")} padded={false} className="mb-5">
             <Table>
               <thead>
                 <tr>
-                  <Th>Socio</Th>
-                  <Th num>Ha cobrado (sus ventas)</Th>
-                  <Th num>Ha pagado</Th>
-                  <Th num>Ha recibido</Th>
-                  <Th num>Le corresponde</Th>
-                  <Th num>Diferencia</Th>
+                  <Th>{t("Socio")}</Th>
+                  <Th num>{t("Ha cobrado (sus ventas)")}</Th>
+                  <Th num>{t("Ha pagado")}</Th>
+                  <Th num>{t("Ha recibido")}</Th>
+                  <Th num>{t("Le corresponde")}</Th>
+                  <Th num>{t("Diferencia")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -114,7 +119,7 @@ export default async function SettlementPage({ searchParams }: { searchParams: P
                     <Td num>{money(p.received)}</Td>
                     <Td num>{money(p.share)}</Td>
                     <Td num className={p.balance > 0.004 ? "text-danger" : p.balance < -0.004 ? "text-good" : undefined}>
-                      {p.balance > 0.004 ? `debe ${money(p.balance)}` : p.balance < -0.004 ? `le deben ${money(-p.balance)}` : "cuadrado"}
+                      {p.balance > 0.004 ? t("debe {balance}", { balance: money(p.balance) }) : p.balance < -0.004 ? t("le deben {v}", { v: money(-p.balance) }) : "cuadrado"}
                     </Td>
                   </Tr>
                 ))}
@@ -123,18 +128,18 @@ export default async function SettlementPage({ searchParams }: { searchParams: P
           </Panel>
         </>
       )}
-      <Panel title="Pagos entre socios" padded={false}>
+      <Panel title={t("Pagos entre socios")} padded={false}>
         {(transfers ?? []).length === 0 ? (
-          <Empty title="Aún no hay pagos registrados">Cuando un socio pague a otro, regístralo para que el reparto se actualice.</Empty>
+          <Empty title={t("Aún no hay pagos registrados")}>{t("Cuando un socio pague a otro, regístralo para que el reparto se actualice.")}</Empty>
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Fecha</Th>
-                <Th>Paga</Th>
-                <Th>Recibe</Th>
-                <Th num>Importe</Th>
-                <Th>Notas</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Paga")}</Th>
+                <Th>{t("Recibe")}</Th>
+                <Th num>{t("Importe")}</Th>
+                <Th>{t("Notas")}</Th>
                 <Th />
               </tr>
             </thead>

@@ -2,6 +2,7 @@
  * Inicio: «Tareas» pendientes y accesos rápidos. Mismos contadores que el
  * menú (una sola consulta). El vendedor solo ve lo suyo.
  */
+import { tSync } from "@/i18n/server";
 import { CheckCheck, ChevronRight, CirclePlus, Mail, MailCheck, Megaphone, PackageMinus, PackageSearch, ShoppingCart, Truck, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { clsx } from "@/components/ui";
@@ -11,18 +12,19 @@ import type { Prefs } from "@/lib/preferences";
 type Task = { href: string; label: string; done: string; n: number; icon: LucideIcon; strong?: boolean };
 
 export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges; perms: string[]; notify: Prefs["notifications"]; lowStock: number }) {
+  const t = tSync();
   const has = (k: string) => perms.includes(k);
   // Cada aviso se puede desactivar en Ajustes → Avisos; solo se muestra lo que la persona puede abrir
   const all: (Task & { on: boolean })[] = [];
-  if (has("correo")) all.push({ href: "/detectadas", label: "Ventas por confirmar", done: "Sin ventas por confirmar", n: badges.detected, icon: MailCheck, strong: true, on: notify.detected });
-  all.push({ href: "/envios", label: "Envíos pendientes", done: "Todo enviado", n: badges.shipments, icon: Truck, strong: true, on: notify.shipments });
-  if (has("anuncios")) all.push({ href: "/anuncios?ver=por-retirar", label: "Anuncios por quitar", done: "Ningún anuncio por quitar", n: badges.listings, icon: Megaphone, on: notify.listings });
-  if (has("correo")) all.push({ href: "/correos", label: "Correos a revisar", done: "Correos al día", n: badges.emails, icon: Mail, on: notify.emails });
+  if (has("correo")) all.push({ href: "/detectadas", label: t("Ventas por confirmar"), done: t("Sin ventas por confirmar"), n: badges.detected, icon: MailCheck, strong: true, on: notify.detected });
+  all.push({ href: "/envios", label: t("Envíos pendientes"), done: t("Todo enviado"), n: badges.shipments, icon: Truck, strong: true, on: notify.shipments });
+  if (has("anuncios")) all.push({ href: "/anuncios?ver=por-retirar", label: t("Anuncios por quitar"), done: t("Ningún anuncio por quitar"), n: badges.listings, icon: Megaphone, on: notify.listings });
+  if (has("correo")) all.push({ href: "/correos", label: t("Correos a revisar"), done: t("Correos al día"), n: badges.emails, icon: Mail, on: notify.emails });
   if (has("catalogo") && notify.lowStock) {
-    all.push({ href: `/productos?bajo=${notify.lowStockThreshold}`, label: `Stock bajo (≤ ${notify.lowStockThreshold} uds.)`, done: "Sin stock bajo", n: lowStock, icon: PackageMinus, on: true });
+    all.push({ href: `/productos?bajo=${notify.lowStockThreshold}`, label: t("Stock bajo (≤ {lowStockThreshold} uds.)", { lowStockThreshold: notify.lowStockThreshold }), done: t("Sin stock bajo"), n: lowStock, icon: PackageMinus, on: true });
   }
   if (has("importar") && notify.imports && badges.reviews > 0) {
-    all.push({ href: "/revision", label: "Pendientes de revisar (importación)", done: "", n: badges.reviews, icon: CheckCheck, on: true });
+    all.push({ href: "/revision", label: t("Pendientes de revisar (importación)"), done: "", n: badges.reviews, icon: CheckCheck, on: true });
   }
   const tasks: Task[] = all.filter((t) => t.on);
   if (!tasks.length) return null;
@@ -31,14 +33,14 @@ export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges;
   return (
     <section aria-labelledby="tareas" className="flex flex-col gap-2.5">
       <h2 id="tareas" className="display text-[22px]">
-        Tareas {pending.length > 0 && <span className="num text-brand">· {pending.reduce((a, t) => a + t.n, 0)}</span>}
+        {t("Tareas")}{" "}{pending.length > 0 && <span className="num text-brand">· {pending.reduce((a, t) => a + t.n, 0)}</span>}
       </h2>
       {pending.length === 0 ? (
         <p className="flex items-center gap-2.5 rs-card rounded-[var(--radius-md)] bg-surface px-4 py-3.5 text-sm font-semibold shadow-[var(--shadow-card)]">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-good-soft text-good-ink">
             <CheckCheck size={18} strokeWidth={2.5} />
           </span>
-          Todo al día
+          {t("Todo al día")}
         </p>
       ) : (
         <ul className="stagger grid gap-2.5 sm:grid-cols-2">
@@ -72,18 +74,19 @@ export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges;
 }
 
 export function QuickActions({ perms }: { perms: string[] }) {
+  const t = tSync();
   const has = (k: string) => perms.includes(k);
   const items = [
     has("ventas_crear")
-      ? { href: "/ventas/nueva", label: "Nueva venta", icon: CirclePlus, main: true }
-      : { href: "/envios", label: "Preparar envíos", icon: Truck, main: true },
-    ...(has("anuncios") ? [{ href: "/anuncios", label: "Preparar anuncio", icon: Megaphone, main: false }] : []),
-    { href: "/productos?only_in_stock=true", label: "Buscar stock", icon: PackageSearch, main: false },
-    ...(has("compras") ? [{ href: "/compras/nuevo", label: "Registrar compra", icon: ShoppingCart, main: false }] : []),
+      ? { href: "/ventas/nueva", label: t("Nueva venta"), icon: CirclePlus, main: true }
+      : { href: "/envios", label: t("Preparar envíos"), icon: Truck, main: true },
+    ...(has("anuncios") ? [{ href: "/anuncios", label: t("Preparar anuncio"), icon: Megaphone, main: false }] : []),
+    { href: "/productos?only_in_stock=true", label: t("Buscar stock"), icon: PackageSearch, main: false },
+    ...(has("compras") ? [{ href: "/compras/nuevo", label: t("Registrar compra"), icon: ShoppingCart, main: false }] : []),
   ];
   const wide = items.length > 2;
   return (
-    <nav aria-label="Accesos rápidos" className={clsx("grid gap-2.5", wide ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2")}>
+    <nav aria-label={t("Accesos rápidos")} className={clsx("grid gap-2.5", wide ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2")}>
       {items.map((q) => (
         <Link
           key={q.href}

@@ -3,6 +3,7 @@
  * (siglas sobre su color) + nombre. En espacios pequeños, solo el icono
  * con el nombre como texto alternativo y tooltip. Funciona sin hover.
  */
+import { Tx } from "@/i18n/tx";
 import { carrierMark, genericMark, platformMark, type BrandMark } from "@/lib/carriers";
 import { clsx } from "./ui";
 
@@ -42,6 +43,6 @@ export function PlatformIcon({ name, ...rest }: MarkProps) {
 }
 
 export function CarrierIcon({ name, ...rest }: MarkProps) {
-  if (!name) return <span className={clsx("text-faint", rest.className)}>Sin transportista</span>;
+  if (!name) return <span className={clsx("text-faint", rest.className)}><Tx>Sin transportista</Tx></span>;
   return <Labeled mark={carrierMark(name) ?? genericMark(name)} name={name} {...rest} />;
 }

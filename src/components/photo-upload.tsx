@@ -47,7 +47,7 @@ export async function uploadProductPhotos(
         order.set(path, item.i);
         saved.push({ path, width: img.width, height: img.height });
       } catch (e) {
-        errors.push(`${item.f.name || "Foto"}: ${e instanceof Error ? e.message : "no se ha podido subir"}`);
+        errors.push(`${item.f.name || "—"}: ${e instanceof Error ? e.message : "✕"}`);
       }
       done++;
       report();

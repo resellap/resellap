@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { BACKUP_FORMAT, BACKUP_TABLES, BACKUP_VERSION } from "@/lib/backup";
@@ -12,27 +13,28 @@ export const maxDuration = 60;
  * puede leer entera, NO se entrega una copia a medias: se avisa del error.
  */
 export async function GET() {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin" || !user.active) return new NextResponse("No autorizado", { status: 403 });
+  if (!user || user.role !== "admin" || !user.active) return new NextResponse(t("No autorizado"), { status: 403 });
   const supabase = await createClient();
   const tables: Record<string, unknown[]> = {};
   const counts: Record<string, number> = {};
-  for (const t of BACKUP_TABLES) {
+  for (const tb of BACKUP_TABLES) {
     const rows: unknown[] = [];
     for (let from = 0; ; from += 1000) {
       const { data, error } = await supabase
-        .from(t.name)
-        .select(t.select ?? "*")
-        .order(t.order)
+        .from(tb.name)
+        .select(tb.select ?? "*")
+        .order(tb.order)
         .range(from, from + 999);
       if (error) {
-        return NextResponse.json({ error: `No se ha podido copiar la tabla «${t.name}»: ${error.message}. No se ha generado la copia.` }, { status: 500 });
+        return NextResponse.json({ error: t("No se ha podido copiar la tabla «{table}»: {error}. No se ha generado la copia.", { table: tb.name, error: error.message }) }, { status: 500 });
       }
       rows.push(...(data ?? []));
       if (!data || data.length < 1000) break;
     }
-    tables[t.name] = rows;
-    counts[t.name] = rows.length;
+    tables[tb.name] = rows;
+    counts[tb.name] = rows.length;
   }
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   await supabase.rpc("log_user_event", { p_action: "copia_seguridad", p_summary: `Copia de seguridad descargada (${BACKUP_TABLES.length} tablas, ${total} registros)` });
@@ -43,7 +45,7 @@ export async function GET() {
     version: BACKUP_VERSION,
     generado: now.toISOString(),
     generado_por: user.email,
-    nota: "Contiene todos los datos del negocio. No incluye los archivos de fotos y etiquetas (están en el almacén de Supabase) ni la conexión de Gmail.",
+    nota: t("Contiene todos los datos del negocio. No incluye los archivos de fotos y etiquetas (están en el almacén de Supabase) ni la conexión de Gmail."),
     recuentos: counts,
     tablas: tables,
   };

@@ -1,3 +1,4 @@
+import { getLocale } from "@/i18n/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       line_items: [{ price: process.env.STRIPE_PRICE_ID!.trim(), quantity: 1 }],
       subscription_data: { metadata: { organization_id: user.orgId }, ...(keepTrial ? { trial_end: trialEnd } : {}) },
       metadata: { organization_id: user.orgId },
-      locale: "es",
+      locale: (await getLocale()) as "es" | "en" | "fr" | "de" | "it" | "pt",
       // Stripe activa por defecto «Managed Payments» (Stripe como vendedor, con comisión
       // extra y códigos fiscales obligatorios). Aquí se usa el cobro normal.
       ...({ managed_payments: { enabled: false } } as object),

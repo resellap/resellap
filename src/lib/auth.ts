@@ -1,3 +1,4 @@
+import { msg } from "@/i18n/translate";
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -68,7 +69,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!sub) return null;
   const { data: ctx, error } = await supabase.rpc("session_context");
   // Si la base de datos falla, se muestra el error (no se echa al usuario)
-  if (error) throw new Error("No se ha podido cargar tu usuario. Revisa la conexión y vuelve a intentarlo.");
+  if (error) throw new Error(msg("No se ha podido cargar tu usuario. Revisa la conexión y vuelve a intentarlo."));
   const c = (ctx ?? {}) as {
     profile: { id: string; email: string; full_name: string | null; active: boolean } | null;
     org: OrgInfo | null;

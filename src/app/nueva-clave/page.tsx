@@ -1,14 +1,19 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { AuthLayout } from "@/components/auth-layout";
 import { requireSession } from "@/lib/auth";
 import { NewPasswordForm } from "./new-password-form";
 
-export const metadata: Metadata = { title: "Nueva contraseña" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nueva contraseña") };
+}
 
 export default async function NewPasswordPage() {
+  const t = await getT();
   const user = await requireSession();
   return (
-    <AuthLayout title="Nueva contraseña" subtitle={`Para ${user.email}.`}>
+    <AuthLayout title={t("Nueva contraseña")} subtitle={t("Para {email}.", { email: user.email })}>
       <NewPasswordForm />
     </AuthLayout>
   );

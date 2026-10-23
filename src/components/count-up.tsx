@@ -1,4 +1,5 @@
 "use client";
+import { useFormat } from "@/i18n/client";
 /**
  * Cifra que «cuenta» hasta su valor (0,7 s): al aparecer, desde 0; si el
  * valor cambia después (otro periodo, una venta nueva), desde el anterior.
@@ -6,10 +7,10 @@
  * con «reducir movimiento» se ve la cifra correcta directamente.
  */
 import { useEffect, useRef, useState } from "react";
-import { money, units } from "@/lib/format";
 
 export function CountUp({ value, format = "money" }: { value: number; format?: "money" | "units" }) {
-  const fmt = (n: number) => (format === "money" ? money(n) : units(Math.round(n)));
+  const f = useFormat();
+  const fmt = (n: number) => (format === "money" ? f.money(n) : f.units(Math.round(n)));
   const [shown, setShown] = useState(value);
   const from = useRef<number | null>(null); // null = primera vez (se cuenta desde 0)
 

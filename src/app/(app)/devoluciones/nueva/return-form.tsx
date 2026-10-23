@@ -1,13 +1,15 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Field, Input, Notice, Table, Td, Textarea, Th, clsx } from "@/components/ui";
-import { money } from "@/lib/format";
 import { createReturn } from "../actions";
 
 type Line = { id: string; label: string; quantity: number; already: number; unit_price: number; refunded: number };
 
 export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: string; saleNumber: string; lines: Line[]; today: string }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const [type, setType] = useState<"devolucion_producto" | "reembolso_sin_producto">("devolucion_producto");
   const [date, setDate] = useState(today);
@@ -27,12 +29,12 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
   return (
     <div className="flex flex-col gap-5">
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
-        <h2 className="mb-3 text-[15px] font-bold">¿Qué ha pasado?</h2>
+        <h2 className="mb-3 text-[15px] font-bold">{t("¿Qué ha pasado?")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
             [
-              ["devolucion_producto", "El cliente devuelve el producto", "Le devuelves el dinero y la unidad vuelve a su lote. Se reduce la facturación y se recalcula el beneficio."],
-              ["reembolso_sin_producto", "Reembolso sin devolver el producto", "Vinted o Wallapop devuelve el dinero y el cliente se queda el producto. No vuelve al stock y su coste se registra como pérdida."],
+              ["devolucion_producto", t("El cliente devuelve el producto"), t("Le devuelves el dinero y la unidad vuelve a su lote. Se reduce la facturación y se recalcula el beneficio.")],
+              ["reembolso_sin_producto", t("Reembolso sin devolver el producto"), t("Vinted o Wallapop devuelve el dinero y el cliente se queda el producto. No vuelve al stock y su coste se registra como pérdida.")],
             ] as const
           ).map(([value, title, text]) => (
             <label key={value} className={clsx("cursor-pointer rounded-[var(--radius-sm)] border p-3", type === value ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong")}>
@@ -47,15 +49,15 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
       </section>
 
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
-        <h2 className="mb-3 text-[15px] font-bold">Productos de la venta {saleNumber}</h2>
+        <h2 className="mb-3 text-[15px] font-bold">{t("Productos de la venta")}{" "}{saleNumber}</h2>
         <Table>
           <thead>
             <tr>
-              <Th>Producto</Th>
-              <Th num>Vendidas</Th>
-              <Th num>Ya devueltas</Th>
-              <Th num>Devuelve ahora</Th>
-              <Th num>Importe reembolsado (€)</Th>
+              <Th>{t("Producto")}</Th>
+              <Th num>{t("Vendidas")}</Th>
+              <Th num>{t("Ya devueltas")}</Th>
+              <Th num>{t("Devuelve ahora")}</Th>
+              <Th num>{t("Importe reembolsado (€)")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -69,7 +71,7 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
                 </Td>
                 <Td num>
                   <Input inputMode="decimal" className="ml-auto h-9 w-28 text-right" value={r.refund} onChange={(e) => setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, refund: e.target.value } : x)))} />
-                  <span className="mt-1 block text-xs text-muted">cobrado {money(r.unit_price * r.quantity - r.refunded)}</span>
+                  <span className="mt-1 block text-xs text-muted">{t("cobrado")}{" "}{f.money(r.unit_price * r.quantity - r.refunded)}</span>
                 </Td>
               </tr>
             ))}
@@ -79,13 +81,13 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
 
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Fecha" required>
+          <Field label={t("Fecha")} required>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
-          <Field label="Motivo" className="sm:col-span-2">
-            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Por ejemplo: no le quedaba bien, llegó roto…" />
+          <Field label={t("Motivo")} className="sm:col-span-2">
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("Por ejemplo: no le quedaba bien, llegó roto…")} />
           </Field>
-          <Field label="Notas" className="sm:col-span-3">
+          <Field label={t("Notas")} className="sm:col-span-3">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-12" />
           </Field>
         </div>
@@ -112,9 +114,9 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
             else router.push(`/ventas/${saleId}`);
           }}
         >
-          {pending ? "Guardando…" : `Registrar devolución (${money(total)})`}
+          {pending ? t("Guardando…") : t("Registrar devolución ({total})", { total: f.money(total) })}
         </Button>
-        <span className="text-[13px] text-muted">{type === "devolucion_producto" ? `${units} ud. volverán al stock.` : "No vuelve nada al stock."}</span>
+        <span className="text-[13px] text-muted">{type === "devolucion_producto" ? t("{units} ud. volverán al stock.", { units }) : t("No vuelve nada al stock.")}</span>
       </div>
     </div>
   );

@@ -4,14 +4,16 @@ import { CENTRAL_ACCOUNT, exchangeCode, Gmail, GMAIL_SCOPE } from "@/lib/email/g
 import { encryptSecret, safeEqual } from "@/lib/email/secret";
 import { runSync } from "@/lib/email/sync";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /** Paso 2: Google vuelve aquí con el permiso. Se guarda cifrado y solo en el servidor. */
 export async function GET(request: NextRequest) {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin" || !user.active || !user.orgId || !user.hasAccess) return new NextResponse("No autorizado", { status: 403 });
+  if (!user || user.role !== "admin" || !user.active || !user.orgId || !user.hasAccess) return new NextResponse(t("No autorizado"), { status: 403 });
   const org = user.orgId;
   const sp = request.nextUrl.searchParams;
   const back = new URL("/correos", request.nextUrl.origin);
@@ -24,20 +26,20 @@ export async function GET(request: NextRequest) {
 
   const [expected = "", cookieOrg = ""] = (request.cookies.get("gmail_oauth_state")?.value ?? "").split(".");
   const state = sp.get("state") ?? "";
-  if (cookieOrg !== org) return fail("Has cambiado de espacio durante la conexión. Vuelve a pulsar «Conectar Gmail».");
-  if (!expected || !state || !safeEqual(expected, state)) return fail("La conexión ha caducado. Pulsa otra vez «Conectar Gmail».");
-  if (sp.get("error")) return fail(sp.get("error") === "access_denied" ? "Has cancelado el permiso en Google." : `Google ha devuelto un error (${sp.get("error")}).`);
+  if (cookieOrg !== org) return fail(t("Has cambiado de espacio durante la conexión. Vuelve a pulsar «Conectar Gmail»."));
+  if (!expected || !state || !safeEqual(expected, state)) return fail(t("La conexión ha caducado. Pulsa otra vez «Conectar Gmail»."));
+  if (sp.get("error")) return fail(sp.get("error") === "access_denied" ? t("Has cancelado el permiso en Google.") : t("Google ha devuelto un error ({error}).", { error: sp.get("error") }));
   const code = sp.get("code");
-  if (!code) return fail("Google no ha devuelto el permiso.");
+  if (!code) return fail(t("Google no ha devuelto el permiso."));
 
   try {
     const redirectUri = `${request.nextUrl.origin}/api/correo/oauth`;
     const tok = await exchangeCode(code, redirectUri);
-    if (!tok.scope.split(" ").includes(GMAIL_SCOPE)) return fail("Hay que marcar la casilla de permiso para leer el correo de Gmail.");
-    if (!tok.refreshToken) return fail("Google no ha dado el permiso permanente. Quita el acceso de Resellap en tu cuenta de Google y vuelve a conectar.");
+    if (!tok.scope.split(" ").includes(GMAIL_SCOPE)) return fail(t("Hay que marcar la casilla de permiso para leer el correo de Gmail."));
+    if (!tok.refreshToken) return fail(t("Google no ha dado el permiso permanente. Quita el acceso de Resellap en tu cuenta de Google y vuelve a conectar."));
     const profile = await new Gmail(tok.accessToken).profile();
     if (CENTRAL_ACCOUNT && profile.emailAddress.toLowerCase() !== CENTRAL_ACCOUNT) {
-      return fail(`Has elegido ${profile.emailAddress}. Hay que conectar ${CENTRAL_ACCOUNT}.`);
+      return fail(t("Has elegido {chosen}. Hay que conectar {required}.", { chosen: profile.emailAddress, required: CENTRAL_ACCOUNT }));
     }
 
     const db = createAdminClient();
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
         updated_at: now,
       })
       .eq("organization_id", org);
-    if (error) return fail(`No se ha podido guardar la conexión: ${error.message}`);
+    if (error) return fail(t("No se ha podido guardar la conexión: {error}", { error: error.message }));
     await db.from("audit_log").insert({
       organization_id: org,
       user_id: user.id,
@@ -76,6 +78,6 @@ export async function GET(request: NextRequest) {
     r.cookies.delete({ name: "gmail_oauth_state", path: "/api/correo" });
     return r;
   } catch (e) {
-    return fail(e instanceof Error ? e.message : "No se ha podido conectar Gmail.");
+    return fail(e instanceof Error ? e.message : t("No se ha podido conectar Gmail."));
   }
 }

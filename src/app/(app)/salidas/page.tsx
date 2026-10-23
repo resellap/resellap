@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, Empty, Figures, LotTag, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -8,9 +9,13 @@ import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
 import { ExitReasonEditor, NewAdjustmentButton, NewExitButton, VoidExitButton } from "./stock-forms";
 
-export const metadata: Metadata = { title: "Salidas y ajustes" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Salidas y ajustes") };
+}
 
 export default async function ExitsPage() {
+  const t = await getT();
   await requirePerm("stock");
   const supabase = await createClient();
   const [{ data: exits }, { data: adjustments }, opts] = await Promise.all([
@@ -30,8 +35,8 @@ export default async function ExitsPage() {
   return (
     <>
       <PageHeader
-        title="Salidas sin venta y ajustes"
-        description="Regalos, pérdidas y correcciones de stock. Nada se borra: cada cambio queda registrado como movimiento."
+        title={t("Salidas sin venta y ajustes")}
+        description={t("Regalos, pérdidas y correcciones de stock. Nada se borra: cada cambio queda registrado como movimiento.")}
         actions={
           <>
             <NewAdjustmentButton today={todayIso()} />
@@ -42,25 +47,25 @@ export default async function ExitsPage() {
       <Figures
         className="mb-5"
         items={[
-          { label: "Salidas sin venta", value: units(active.reduce((a, e) => a + e.quantity, 0)), note: "unidades" },
-          { label: "Coste perdido", value: money(loss), tone: loss > 0 ? "bad" : "default" },
-          { label: "Con motivo pendiente", value: units(pending), tone: pending > 0 ? "bad" : "default" },
+          { label: t("Salidas sin venta"), value: units(active.reduce((a, e) => a + e.quantity, 0)), note: "unidades" },
+          { label: t("Coste perdido"), value: money(loss), tone: loss > 0 ? "bad" : "default" },
+          { label: t("Con motivo pendiente"), value: units(pending), tone: pending > 0 ? "bad" : "default" },
         ]}
       />
-      <Panel title="Salidas sin venta" padded={false} className="mb-5">
+      <Panel title={t("Salidas sin venta")} padded={false} className="mb-5">
         {(exits ?? []).length === 0 ? (
-          <Empty title="No hay salidas sin venta" />
+          <Empty title={t("No hay salidas sin venta")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Fecha</Th>
-                <Th>Producto</Th>
-                <Th>Lote</Th>
-                <Th num>Uds.</Th>
-                <Th num>Coste</Th>
-                <Th>Motivo</Th>
-                <Th>Responsable</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Producto")}</Th>
+                <Th>{t("Lote")}</Th>
+                <Th num>{t("Uds.")}</Th>
+                <Th num>{t("Coste")}</Th>
+                <Th>{t("Motivo")}</Th>
+                <Th>{t("Responsable")}</Th>
                 <Th />
               </tr>
             </thead>
@@ -73,14 +78,14 @@ export default async function ExitsPage() {
                       {variantDisplay(e.product_name, e.variant_name)}
                     </Link>
                     {e.notes && <span className="block text-xs text-muted">{e.notes}</span>}
-                    {e.source_ref && <span className="block text-xs text-faint">Excel: {e.source_ref}</span>}
+                    {e.source_ref && <span className="block text-xs text-faint">{t("Excel:")}{" "}{e.source_ref}</span>}
                   </Td>
                   <Td>
                     <LotTag label={e.lot_label} />
                   </Td>
                   <Td num>{e.quantity}</Td>
                   <Td num>{money(e.cost_amount)}</Td>
-                  <Td>{e.status === "activa" ? <ExitReasonEditor id={e.id} reason={e.reason} /> : <Badge>Anulada</Badge>}</Td>
+                  <Td>{e.status === "activa" ? <ExitReasonEditor id={e.id} reason={e.reason} /> : <Badge>{t("Anulada")}</Badge>}</Td>
                   <Td>{e.responsible_name ?? "—"}</Td>
                   <Td>{e.status === "activa" && <VoidExitButton id={e.id} />}</Td>
                 </Tr>
@@ -88,21 +93,21 @@ export default async function ExitsPage() {
             </tbody>
           </Table>
         )}
-        {pending > 0 && <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">Elige el motivo de las que están como «{EXIT_REASONS.pendiente}» y pulsa Guardar.</p>}
+        {pending > 0 && <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">{t("Elige el motivo de las que están como «{pendiente}» y pulsa Guardar.", { pendiente: t(EXIT_REASONS.pendiente) })}</p>}
       </Panel>
-      <Panel title="Ajustes de stock" padded={false}>
+      <Panel title={t("Ajustes de stock")} padded={false}>
         {(adjustments ?? []).length === 0 ? (
-          <Empty title="No hay ajustes" />
+          <Empty title={t("No hay ajustes")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Fecha</Th>
-                <Th>Producto</Th>
-                <Th>Tipo</Th>
-                <Th num>Uds.</Th>
-                <Th>Motivo</Th>
-                <Th>Usuario</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Producto")}</Th>
+                <Th>{t("Tipo")}</Th>
+                <Th num>{t("Uds.")}</Th>
+                <Th>{t("Motivo")}</Th>
+                <Th>{t("Usuario")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -110,7 +115,7 @@ export default async function ExitsPage() {
                 <Tr key={a.id}>
                   <Td className="num">{date(a.adjustment_date)}</Td>
                   <Td>{variantDisplay(a.product_variants?.products?.name ?? "", a.product_variants?.name)}</Td>
-                  <Td>{a.direction === "entrada" ? <Badge tone="good">Entrada</Badge> : <Badge tone="bad">Salida</Badge>}</Td>
+                  <Td>{a.direction === "entrada" ? <Badge tone="good">{t("Entrada")}</Badge> : <Badge tone="bad">{t("Salida")}</Badge>}</Td>
                   <Td num>{a.quantity}</Td>
                   <Td>{a.reason}</Td>
                   <Td>{a.profiles?.email ?? "—"}</Td>

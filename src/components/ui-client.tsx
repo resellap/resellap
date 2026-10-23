@@ -2,6 +2,7 @@
 /**
  * Componentes con interacción (ventanas, confirmaciones, envío de formularios).
  */
+import { useT } from "@/i18n/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import type { ActionResult } from "@/lib/errors";
@@ -23,6 +24,7 @@ export function Modal({
   footer?: ReactNode;
   wide?: boolean;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   // El contenido sigue visible mientras la ventana se cierra con su animación
   const [mounted, setMounted] = useState(open);
@@ -33,8 +35,8 @@ export function Modal({
     if (open && !d.open) d.showModal();
     if (!open && d.open) {
       d.close();
-      const t = setTimeout(() => setMounted(false), 300);
-      return () => clearTimeout(t);
+      const tm = setTimeout(() => setMounted(false), 300);
+      return () => clearTimeout(tm);
     }
   }, [open]);
   return (
@@ -59,7 +61,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               className="press -mr-2 flex h-11 w-11 items-center justify-center rounded-full text-xl leading-none text-muted hover:bg-subtle hover:text-ink"
-              aria-label="Cerrar"
+              aria-label={t("Cerrar")}
             >
               ×
             </button>
@@ -117,7 +119,7 @@ export function ConfirmAction({
   confirmLabel,
   requireReason,
   optionalReason,
-  reasonLabel = "Motivo",
+  reasonLabel,
   variant = "danger",
   size = "md",
   action,
@@ -136,6 +138,7 @@ export function ConfirmAction({
   action: (reason: string) => Promise<ActionResult<unknown>>;
   onDone?: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const { run, pending, error } = useServerAction(action);
@@ -151,7 +154,7 @@ export function ConfirmAction({
         footer={
           <>
             <Button onClick={() => setOpen(false)} disabled={pending}>
-              Volver
+              {t("Volver")}
             </Button>
             <Button
               variant={variant === "secondary" ? "primary" : variant}
@@ -165,20 +168,20 @@ export function ConfirmAction({
                 }
               }}
             >
-              {pending ? "Guardando…" : confirmLabel}
+              {pending ? t("Guardando…") : confirmLabel}
             </Button>
           </>
         }
       >
         {description && <div className="text-sm text-ink-soft">{description}</div>}
         {(requireReason || optionalReason) && (
-          <Field label={reasonLabel} className="mt-3" required={requireReason}>
+          <Field label={reasonLabel ?? t("Motivo")} className="mt-3" required={requireReason}>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
           </Field>
         )}
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>

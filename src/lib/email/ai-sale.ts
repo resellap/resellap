@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import { testOnlyEnv } from "@/lib/test-env";
 import { normalizeName, PLATFORM_LABEL, type Platform } from "./parse";
@@ -81,18 +82,18 @@ const str = (v: unknown, max = 200) => (typeof v === "string" && v.trim() ? v.tr
 
 /** Convierte la respuesta de la IA en los datos de la venta (con comprobaciones). Exportada para las pruebas. */
 export function toAiResult(raw: Raw, receivedAt: Date): AiResult {
-  if (!raw.es_venta) return { kind: "not_sale", reason: str(raw.motivo) ?? "No es una venta." };
+  if (!raw.es_venta) return { kind: "not_sale", reason: str(raw.motivo) ?? msg("No es una venta.") };
   const product = str(raw.producto);
   const price = num(raw.precio);
-  if (!product || !price) return { kind: "not_sale", reason: "La IA no ha encontrado el artículo o el precio." };
+  if (!product || !price) return { kind: "not_sale", reason: msg("La IA no ha encontrado el artículo o el precio.") };
   const shipping = num(raw.envio);
   const total = num(raw.total);
   const date = str(raw.fecha, 10);
   const validDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) && Math.abs(Date.parse(date) - receivedAt.getTime()) < 60 * 86_400_000 ? date : null;
   const units = num(raw.unidades);
-  const doubts: string[] = ["Leída con IA: revisa el producto y el precio."];
-  if (total !== null && Math.abs(price + (shipping ?? 0) - total) > 0.01) doubts.push("Los importes no cuadran (artículo + envío ≠ total).");
-  if (units && units > 1) doubts.push(`El correo habla de ${units} unidades: la venta se crea con 1; ajústala si hace falta.`);
+  const doubts: string[] = [msg("Leída con IA: revisa el producto y el precio.")];
+  if (total !== null && Math.abs(price + (shipping ?? 0) - total) > 0.01) doubts.push(msg("Los importes no cuadran (artículo + envío ≠ total)."));
+  if (units && units > 1) doubts.push(fmtMsg(msg("El correo habla de {0} unidades: la venta se crea con 1; ajústala si hace falta."), units));
   const account = str(raw.cuenta, 60);
   return {
     kind: "sale",
@@ -116,7 +117,7 @@ export function toAiResult(raw: Raw, receivedAt: Date): AiResult {
 
 export async function readSaleWithAi(platform: Platform, subject: string, text: string, receivedAt: Date): Promise<AiResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) return { kind: "unavailable", reason: "Falta la clave de Gemini (GEMINI_API_KEY) para leer correos de esta plataforma." };
+  if (!apiKey) return { kind: "unavailable", reason: msg("Falta la clave de Gemini (GEMINI_API_KEY) para leer correos de esta plataforma.") };
   const custom = process.env.GEMINI_MODEL?.trim();
   let last = "";
   for (const model of custom ? [custom] : MODELS) {
@@ -143,5 +144,5 @@ export async function readSaleWithAi(platform: Platform, subject: string, text: 
       last = e instanceof Error ? e.message : "error";
     }
   }
-  return { kind: "unavailable", reason: `No se ha podido leer el correo con IA (${last || "sin respuesta"}). Se reintentará.` };
+  return { kind: "unavailable", reason: fmtMsg(msg("No se ha podido leer el correo con IA ({0}). Se reintentará."), last || "—") };
 }

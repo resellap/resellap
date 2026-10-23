@@ -1,4 +1,6 @@
 "use client";
+import { msg } from "@/i18n/translate";
+import { useT } from "@/i18n/client";
 import { useState } from "react";
 import { Button, Field, Input, Notice, Select } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
@@ -8,6 +10,7 @@ import { changeRoleAction, inviteMemberAction, removeMemberAction, revokeInvitat
 type Role = "admin" | "vendedor" | "almacen";
 
 export function InviteButton({ mail }: { mail: boolean }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("vendedor");
@@ -17,15 +20,15 @@ export function InviteButton({ mail }: { mail: boolean }) {
   return (
     <>
       <Button variant="primary" onClick={() => { setOpen(true); setLink(null); }}>
-        Invitar
+        {t("Invitar")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Invitar al equipo"
+        title={t("Invitar al equipo")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cerrar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cerrar")}</Button>
             <Button
               variant="primary"
               disabled={pending || !email.includes("@")}
@@ -38,29 +41,29 @@ export function InviteButton({ mail }: { mail: boolean }) {
                 }
               }}
             >
-              {pending ? "Creando…" : "Crear invitación"}
+              {pending ? t("Creando…") : t("Crear invitación")}
             </Button>
           </>
         }
       >
         <div className="grid gap-3">
-          <Field label="Email" required>
+          <Field label={t("Email")} required>
             <Input type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
-          <Field label="Rol">
+          <Field label={t("Rol")}>
             <Select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              <option value="vendedor">Vendedor: registra y consulta sus ventas</option>
-              <option value="almacen">Almacén: stock y envíos, sin costes</option>
-              <option value="admin">Administrador: acceso completo</option>
+              <option value="vendedor">{t("Vendedor: registra y consulta sus ventas")}</option>
+              <option value="almacen">{t("Almacén: stock y envíos, sin costes")}</option>
+              <option value="admin">{t("Administrador: acceso completo")}</option>
             </Select>
           </Field>
-          {!mail && <p className="text-[13px] text-muted">El envío de correos no está configurado: tendrás que copiar el enlace y mandárselo tú.</p>}
+          {!mail && <p className="text-[13px] text-muted">{t("El envío de correos no está configurado: tendrás que copiar el enlace y mandárselo tú.")}</p>}
         </div>
         <ActionMessages error={error} message={message} />
         {link && (
-          <Notice tone="info" className="mt-3" title="Enlace de invitación (caduca en 7 días)">
+          <Notice tone="info" className="mt-3" title={t("Enlace de invitación (caduca en 7 días)")}>
             <div className="mt-1 flex gap-2">
-              <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label="Enlace de invitación" />
+              <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label={t("Enlace de invitación")} />
               <Button
                 onClick={async () => {
                   try {
@@ -71,10 +74,10 @@ export function InviteButton({ mail }: { mail: boolean }) {
                   }
                 }}
               >
-                {copied ? "Copiado" : "Copiar"}
+                {copied ? t("Copiado") : t("Copiar")}
               </Button>
             </div>
-            <p className="mt-1 text-xs">Solo funciona con el email invitado. Se muestra una vez: si lo pierdes, crea otra invitación.</p>
+            <p className="mt-1 text-xs">{t("Solo funciona con el email invitado. Se muestra una vez: si lo pierdes, crea otra invitación.")}</p>
           </Notice>
         )}
       </Modal>
@@ -89,16 +92,17 @@ export function MemberActions({
   member: { user_id: string; email: string; full_name?: string | null; role: Role; is_me: boolean; permissions: string[]; custom: boolean };
   lastAdmin: boolean;
 }) {
+  const t = useT();
   const [role, setRole] = useState<Role>(member.role);
   const { run, pending, error } = useServerAction(changeRoleAction);
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <Select
-        aria-label={`Rol de ${member.email}`}
+        aria-label={t("Rol de {email}", { email: member.email })}
         className="w-auto"
         value={role}
         disabled={pending || lastAdmin}
-        title={lastAdmin ? "Debe quedar al menos un administrador" : undefined}
+        title={lastAdmin ? t("Debe quedar al menos un administrador") : undefined}
         onChange={async (e) => {
           const next = e.target.value as Role;
           const prev = role;
@@ -107,40 +111,41 @@ export function MemberActions({
           if (!r.ok) setRole(prev);
         }}
       >
-        <option value="admin">Administrador</option>
-        <option value="vendedor">Vendedor</option>
-        <option value="almacen">Almacén</option>
+        <option value="admin">{t("Administrador")}</option>
+        <option value="vendedor">{t("Vendedor")}</option>
+        <option value="almacen">{t("Almacén")}</option>
       </Select>
       {member.role !== "admin" && <PermissionsButton member={member} />}
       {!member.is_me && !lastAdmin && (
         <ConfirmAction
-          label="Quitar"
+          label={t("Quitar")}
           size="sm"
-          title={`Quitar a ${member.email}`}
-          description="Dejará de tener acceso a este espacio. Sus ventas y su historial se conservan."
-          confirmLabel="Quitar del equipo"
+          title={t("Quitar a {email}", { email: member.email })}
+          description={t("Dejará de tener acceso a este espacio. Sus ventas y su historial se conservan.")}
+          confirmLabel={t("Quitar del equipo")}
           action={() => removeMemberAction(member.user_id)}
         />
       )}
-      {error && <span className="basis-full text-right text-xs text-danger">{error}</span>}
+      {error && <span className="basis-full text-right text-xs text-danger">{t(error)}</span>}
     </div>
   );
 }
 
 export function RevokeButton({ id, email }: { id: string; email: string }) {
+  const t = useT();
   return (
     <ConfirmAction
-      label="Revocar"
+      label={t("Revocar")}
       size="sm"
-      title="Revocar invitación"
-      description={`El enlace enviado a ${email} dejará de funcionar.`}
-      confirmLabel="Revocar"
+      title={t("Revocar invitación")}
+      description={t("El enlace enviado a {email} dejará de funcionar.", { email })}
+      confirmLabel={t("Revocar")}
       action={() => revokeInvitationAction(id)}
     />
   );
 }
 
-const GROUPS = ["Ventas", "Productos y almacén", "Negocio"] as const;
+const GROUPS = [msg("Ventas"), msg("Productos y almacén"), msg("Negocio")] as const;
 
 /** Qué ve y qué puede hacer un miembro. Lo aplica la base de datos. */
 export function PermissionsButton({
@@ -148,6 +153,7 @@ export function PermissionsButton({
 }: {
   member: { user_id: string; email: string; full_name?: string | null; role: Role; permissions: string[]; custom: boolean };
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [sel, setSel] = useState<Set<string>>(new Set(member.permissions));
   const { run, pending, error, message } = useServerAction(setPermissionsAction);
@@ -168,12 +174,12 @@ export function PermissionsButton({
           setOpen(true);
         }}
       >
-        Permisos{member.custom ? " ·" : ""}
+        {t("Permisos")}{member.custom ? " ·" : ""}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={`Permisos de ${member.full_name || member.email}`}
+        title={t("Permisos de {v}", { v: member.full_name || member.email })}
         footer={
           <>
             <Button
@@ -183,31 +189,30 @@ export function PermissionsButton({
                 if (r.ok) setSel(new Set(defaults));
               }}
             >
-              Los de su rol
+              {t("Los de su rol")}
             </Button>
             <Button variant="primary" disabled={pending} onClick={() => run(member.user_id, [...sel])}>
-              {pending ? "Guardando…" : "Guardar permisos"}
+              {pending ? t("Guardando…") : t("Guardar permisos")}
             </Button>
           </>
         }
       >
         <p className="text-sm text-ink-soft">
-          Marca lo que puede ver y hacer. Lo comprueba la base de datos, no solo la pantalla. El equipo, la suscripción, el historial de cambios y las copias de
-          seguridad son siempre solo del administrador.
+          {t("Marca lo que puede ver y hacer. Lo comprueba la base de datos, no solo la pantalla. El equipo, la suscripción, el historial de cambios y las copias de seguridad son siempre solo del administrador.")}
         </p>
         {GROUPS.map((g) => (
           <fieldset key={g} className="mt-4">
-            <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{g}</legend>
+            <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{t(g)}</legend>
             <div className="grid gap-1.5">
               {PERMISSIONS.filter((p) => p.group === g).map((p) => (
                 <label key={p.key} className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] border border-line px-3 py-2.5 hover:border-ink/30">
                   <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand)]" checked={sel.has(p.key)} onChange={() => toggle(p.key)} />
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold">
-                      {p.label}
-                      {(defaults as string[]).includes(p.key) && <span className="ml-1.5 text-xs font-normal text-muted">(de su rol)</span>}
+                      {t(p.label)}
+                      {(defaults as string[]).includes(p.key) && <span className="ml-1.5 text-xs font-normal text-muted">{t("(de su rol)")}</span>}
                     </span>
-                    <span className="block text-xs text-muted">{p.hint}</span>
+                    <span className="block text-xs text-muted">{t(p.hint)}</span>
                   </span>
                 </label>
               ))}

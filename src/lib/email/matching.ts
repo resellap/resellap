@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 /**
  * Identificación del producto de una venta detectada. Funciones puras
  * (sin red ni base de datos) para poder probarlas con ejemplos.
@@ -92,16 +93,16 @@ export function scoreVariant(email: { name: string; price: number | null; platfo
   const anyListing = v.listings.find((l) => normalizeName(l.title) === norm);
   if (v.aliases.includes(norm)) {
     score = 1;
-    reasons.push("Ya lo elegiste antes para este mismo título");
+    reasons.push(msg("Ya lo elegiste antes para este mismo título"));
   } else if (sameListing) {
     score = 0.98;
-    reasons.push(`Mismo título que tu anuncio de ${email.platform === "wallapop" ? "Wallapop" : "Vinted"}`);
+    reasons.push(fmtMsg(msg("Mismo título que tu anuncio de {0}"), email.platform === "wallapop" ? "Wallapop" : "Vinted"));
   } else if (exactKeys.includes(norm)) {
     score = 0.97;
-    reasons.push("Mismo nombre que en tu inventario");
+    reasons.push(msg("Mismo nombre que en tu inventario"));
   } else if (anyListing) {
     score = 0.93;
-    reasons.push("Mismo título que uno de tus anuncios");
+    reasons.push(msg("Mismo título que uno de tus anuncios"));
   } else {
     const et = tokens(email.name);
     const candidates = [
@@ -116,14 +117,14 @@ export function scoreVariant(email: { name: string; price: number | null; platfo
     score = best.score * 0.85;
     if (best.models.length) {
       score += 0.12;
-      reasons.push(`Mismo modelo (${best.models.join(", ")})`);
+      reasons.push(fmtMsg(msg("Mismo modelo ({0})"), best.models.join(", ")));
     }
     if (best.missingModel) {
       score -= 0.3;
-      reasons.push("El número de modelo no coincide");
+      reasons.push(msg("El número de modelo no coincide"));
     }
-    if (best.score >= 0.8) reasons.push("Nombre casi igual");
-    else if (best.score >= 0.5) reasons.push("Nombre parecido");
+    if (best.score >= 0.8) reasons.push(msg("Nombre casi igual"));
+    else if (best.score >= 0.5) reasons.push(msg("Nombre parecido"));
   }
 
   // Precio: el del anuncio en esa plataforma o el habitual
@@ -131,17 +132,17 @@ export function scoreVariant(email: { name: string; price: number | null; platfo
   if (email.price && ref) {
     if (near(email.price, ref, 0.12)) {
       score += 0.06;
-      reasons.push(`Precio parecido al habitual (${eur(ref)})`);
+      reasons.push(fmtMsg(msg("Precio parecido al habitual ({0})"), eur(ref)));
     } else if (!near(email.price, ref, 0.5)) {
       score -= 0.08;
-      reasons.push(`Precio distinto al habitual (${eur(ref)})`);
+      reasons.push(fmtMsg(msg("Precio distinto al habitual ({0})"), eur(ref)));
     }
   }
   if (v.stock <= 0) {
     score -= 0.15;
-    reasons.push("Sin stock");
+    reasons.push(msg("Sin stock"));
   } else {
-    reasons.push(v.stock === 1 ? "1 en stock" : `${v.stock} en stock`);
+    reasons.push(v.stock === 1 ? "1 en stock" : fmtMsg(msg("{0} en stock"), v.stock));
   }
   return { variant_id: v.id, label: v.label, score: Math.max(0, Math.min(1, Math.round(score * 100) / 100)), reasons, stock: v.stock };
 }
@@ -153,7 +154,7 @@ const SUGGEST_SCORE = 0.3;
 
 export function matchProduct(email: { name: string; price: number | null; platform: string | null }, variants: MatchVariant[]): MatchResult {
   if (!normalizeName(email.name)) {
-    return { variantId: null, confidence: 0, reasons: [], doubt: "El correo no trae el nombre del artículo.", candidates: [] };
+    return { variantId: null, confidence: 0, reasons: [], doubt: msg("El correo no trae el nombre del artículo."), candidates: [] };
   }
   const scored = variants
     .map((v) => scoreVariant(email, v))
@@ -165,7 +166,7 @@ export function matchProduct(email: { name: string; price: number | null; platfo
       variantId: null,
       confidence: 0,
       reasons: [],
-      doubt: `No hay ningún producto parecido a «${email.name.trim()}» en tu inventario. Elígelo o créalo.`,
+      doubt: fmtMsg(msg("No hay ningún producto parecido a «{0}» en tu inventario. Elígelo o créalo."), email.name.trim()),
       candidates: [],
     };
   }
@@ -174,11 +175,11 @@ export function matchProduct(email: { name: string; price: number | null; platfo
   if (clear) return { variantId: top.variant_id, confidence: top.score, reasons: top.reasons, doubt: null, candidates: scored.slice(1, 5) };
   let doubt: string;
   if (top.score >= AUTO_SCORE && second && margin < AUTO_MARGIN) {
-    doubt = `«${email.name.trim()}» se parece mucho a ${scored.filter((c) => top.score - c.score < AUTO_MARGIN).length} productos. Elige cuál es.`;
+    doubt = fmtMsg(msg("«{0}» se parece mucho a {1} productos. Elige cuál es."), email.name.trim(), scored.filter((c) => top.score - c.score < AUTO_MARGIN).length);
   } else if (top.score >= AUTO_SCORE && top.stock <= 0) {
-    doubt = `El producto más parecido (${top.label}) no tiene stock. Revisa cuál es.`;
+    doubt = fmtMsg(msg("El producto más parecido ({0}) no tiene stock. Revisa cuál es."), top.label);
   } else {
-    doubt = `No hay un producto claramente igual a «${email.name.trim()}». Te proponemos los más parecidos.`;
+    doubt = fmtMsg(msg("No hay un producto claramente igual a «{0}». Te proponemos los más parecidos."), email.name.trim());
   }
   return { variantId: null, confidence: top.score, reasons: top.reasons, doubt, candidates: scored.slice(0, 5) };
 }
@@ -205,36 +206,36 @@ export function scoreExistingSale(
   const reasons: string[] = [];
   let score = 0;
   if (email.reference && s.reference && email.reference === s.reference) {
-    return { id: s.id, score: 1, reasons: ["Mismo nº de transacción"] };
+    return { id: s.id, score: 1, reasons: [msg("Mismo nº de transacción")] };
   }
   if (email.variantId && s.variantIds.includes(email.variantId)) {
     score += 0.4;
-    reasons.push("Mismo producto");
+    reasons.push(msg("Mismo producto"));
   } else {
     const o = Math.max(0, ...s.productNames.map((n) => overlap(tokens(email.name), tokens(n)).score));
     if (o >= 0.6) {
       score += 0.3 * o;
-      reasons.push("Producto parecido");
+      reasons.push(msg("Producto parecido"));
     }
   }
   if (email.buyer && s.buyer && normalizeName(email.buyer) === normalizeName(s.buyer)) {
     score += 0.3;
-    reasons.push("Mismo comprador");
+    reasons.push(msg("Mismo comprador"));
   }
   if (email.price !== null && Math.abs(email.price - s.price) < 0.01) {
     score += 0.15;
-    reasons.push("Mismo precio");
+    reasons.push(msg("Mismo precio"));
   } else if (email.price !== null && near(email.price, s.price, 0.1)) {
     score += 0.07;
-    reasons.push("Precio parecido");
+    reasons.push(msg("Precio parecido"));
   }
   const days = Math.abs(Date.parse(email.date) - Date.parse(s.date)) / 86400_000;
   if (days <= 1) {
     score += 0.15;
-    reasons.push(days === 0 ? "Mismo día" : "Un día de diferencia");
+    reasons.push(days === 0 ? msg("Mismo día") : msg("Un día de diferencia"));
   } else if (days <= 3) {
     score += 0.08;
-    reasons.push(`${Math.round(days)} días de diferencia`);
+    reasons.push(fmtMsg(msg("{0} días de diferencia"), Math.round(days)));
   } else if (days > 10) {
     score -= 0.1;
   }

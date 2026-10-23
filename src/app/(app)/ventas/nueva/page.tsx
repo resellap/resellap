@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Notice, PageHeader } from "@/components/ui";
 import { redirect } from "next/navigation";
@@ -8,9 +9,13 @@ import { loadSaleOptions } from "@/lib/options";
 import { loadPrefs } from "@/lib/user-prefs";
 import { SaleForm } from "./sale-form";
 
-export const metadata: Metadata = { title: "Nueva venta" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nueva venta") };
+}
 
 export default async function NewSalePage() {
+  const t = await getT();
   const user = await requireUser();
   if (!can(user, "ventas_crear")) redirect("/?aviso=sin-permiso");
   const [opts, prefs] = await Promise.all([loadSaleOptions(), loadPrefs()]);
@@ -19,10 +24,10 @@ export default async function NewSalePage() {
   const isAdmin = user.role === "admin";
   return (
     <>
-      <PageHeader title="Nueva venta" description="Producto, lote de procedencia, unidades, precio y plataforma." back={{ href: "/ventas", label: "Ventas" }} />
+      <PageHeader title={t("Nueva venta")} description={t("Producto, lote de procedencia, unidades, precio y plataforma.")} back={{ href: "/ventas", label: t("Ventas") }} />
       {!isAdmin && !user.responsibleId ? (
-        <Notice tone="warn" title="Tu usuario no está vinculado a un responsable">
-          Pide al administrador que te vincule desde Responsables para poder registrar ventas.
+        <Notice tone="warn" title={t("Tu usuario no está vinculado a un responsable")}>
+          {t("Pide al administrador que te vincule desde Responsables para poder registrar ventas.")}
         </Notice>
       ) : (
         <SaleForm

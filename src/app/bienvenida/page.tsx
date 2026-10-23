@@ -1,3 +1,5 @@
+import { getT } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthLayout } from "@/components/auth-layout";
@@ -6,10 +8,14 @@ import { TRIAL_DAYS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { CreateOrgForm } from "./create-org-form";
 
-export const metadata: Metadata = { title: "Bienvenida" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Bienvenida") };
+}
 
 /** Primer paso tras registrarse: crear el espacio de trabajo (o esperar una invitación). */
 export default async function WelcomePage() {
+  const t = await getT();
   const user = await requireSession();
   if (user.orgId) redirect("/");
   const supabase = await createClient();
@@ -19,19 +25,19 @@ export default async function WelcomePage() {
   const suggested = (meta.user?.user_metadata?.business_name as string | undefined) ?? "";
   return (
     <AuthLayout
-      title={`Hola${user.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}`}
-      subtitle={suspended ? undefined : `Crea tu espacio de trabajo: ahí estarán tu inventario, tus ventas y tu equipo. Tienes ${TRIAL_DAYS} días gratis.`}
-      aside={<p className="font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[40px] lg:text-[52px]">Tu negocio, <span className="text-[#36C784]">tus datos</span>. Solo los ve tu equipo.</p>}
+      title={user.fullName ? t("Hola, {name}", { name: user.fullName.split(" ")[0] }) : t("Hola")}
+      subtitle={suspended ? undefined : t("Crea tu espacio de trabajo: ahí estarán tu inventario, tus ventas y tu equipo. Tienes {TRIAL_DAYS} días gratis.", { TRIAL_DAYS })}
+      aside={<p className="font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[40px] lg:text-[52px]">{rich(t("Tu negocio, <g>tus datos</g>. Solo los ve tu equipo."), { g: (c) => <span className="text-[#36C784]">{c}</span> })}</p>}
     >
       {suspended && (
         <p className="mb-5 rounded-[var(--radius-sm)] bg-warn-soft px-3 py-2 text-sm text-ink">
-          Tu espacio de trabajo está suspendido. Escríbenos para resolverlo; tus datos se conservan.
+          {t("Tu espacio de trabajo está suspendido. Escríbenos para resolverlo; tus datos se conservan.")}
         </p>
       )}
       <CreateOrgForm suggested={suggested} />
-      <p className="mt-5 text-[13px] text-muted">¿Te han invitado a un equipo? Abre el enlace de la invitación y entra con este mismo email ({user.email}).</p>
+      <p className="mt-5 text-[13px] text-muted">{t("¿Te han invitado a un equipo? Abre el enlace de la invitación y entra con este mismo email ({email}).", { email: user.email })}</p>
       <form action="/auth/salir" method="post" className="mt-4">
-        <button className="text-[13px] text-muted underline">Cerrar sesión</button>
+        <button className="text-[13px] text-muted underline">{t("Cerrar sesión")}</button>
       </form>
     </AuthLayout>
   );

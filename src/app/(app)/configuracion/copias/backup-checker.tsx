@@ -1,7 +1,7 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
 import { Notice, Table, Td, Th, Tr } from "@/components/ui";
-import { dateTime } from "@/lib/format";
 import { currentCounts } from "./actions";
 
 /** Formato actual y el anterior al cambio de marca: las dos copias son válidas. */
@@ -11,32 +11,34 @@ type Check = { generated: string; by: string; counts: Record<string, number>; no
 
 /** Lee el archivo en el dispositivo, comprueba que es una copia válida y lo compara con los datos actuales. */
 export function BackupChecker() {
+  const t = useT();
+  const f = useFormat();
   const [check, setCheck] = useState<Check | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function onFile(f: File | undefined) {
+  async function onFile(file: File | undefined) {
     setCheck(null);
     setError(null);
-    if (!f) return;
-    if (f.size > 200 * 1024 * 1024) return setError("El archivo es demasiado grande para ser una copia de Resellap.");
+    if (!file) return;
+    if (file.size > 200 * 1024 * 1024) return setError(t("El archivo es demasiado grande para ser una copia de Resellap."));
     setBusy(true);
     try {
       let j: { formato?: string; version?: number; generado?: string; generado_por?: string; recuentos?: Record<string, number>; tablas?: Record<string, unknown[]> };
       try {
-        j = JSON.parse(await f.text());
+        j = JSON.parse(await file.text());
       } catch {
-        return setError("Este archivo no es una copia válida (no se puede leer).");
+        return setError(t("Este archivo no es una copia válida (no se puede leer)."));
       }
       if (typeof j.formato !== "string" || !BACKUP_FORMATS.includes(j.formato) || typeof j.version !== "number" || !j.tablas || !j.recuentos) {
-        return setError("Este archivo no es una copia de seguridad de Resellap.");
+        return setError(t("Este archivo no es una copia de seguridad de Resellap."));
       }
-      if (j.version > 1) return setError("Esta copia es de una versión más nueva de la app.");
+      if (j.version > 1) return setError(t("Esta copia es de una versión más nueva de la app."));
       // Los recuentos deben cuadrar con las filas que trae
-      for (const [t, n] of Object.entries(j.recuentos)) {
-        if (!Array.isArray(j.tablas[t]) || j.tablas[t].length !== n) return setError(`La copia está dañada: la tabla «${t}» no está completa.`);
+      for (const [tb, n] of Object.entries(j.recuentos)) {
+        if (!Array.isArray(j.tablas[tb]) || j.tablas[tb].length !== n) return setError(t("La copia está dañada: la tabla «{table}» no está completa.", { table: tb }));
       }
-      const now = await currentCounts(`${f.name} (${j.generado ?? "sin fecha"})`);
+      const now = await currentCounts(`${file.name} (${j.generado ?? "—"})`);
       if (!now.ok) return setError(now.error);
       setCheck({ generated: j.generado ?? "", by: j.generado_por ?? "", counts: j.recuentos, now: now.data ?? {} });
     } finally {
@@ -52,33 +54,33 @@ export function BackupChecker() {
         accept="application/json,.json"
         onChange={(e) => onFile(e.target.files?.[0])}
         className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-[var(--radius-sm)] file:border file:border-line-strong file:bg-surface file:px-3 file:font-semibold"
-        aria-label="Archivo de copia de seguridad"
+        aria-label={t("Archivo de copia de seguridad")}
       />
-      {busy && <p className="text-sm text-muted">Comprobando…</p>}
+      {busy && <p className="text-sm text-muted">{t("Comprobando…")}</p>}
       {error && <Notice tone="bad">{error}</Notice>}
       {check && (
         <>
-          <Notice tone={diffs.length ? "warn" : "good"} title="Copia válida y completa">
-            Creada el {dateTime(check.generated)}
-            {check.by ? ` por ${check.by}` : ""}.{" "}
-            {diffs.length ? `${diffs.length} tablas tienen hoy un número de registros distinto (es normal si has trabajado después).` : "Coincide con los datos actuales."}
+          <Notice tone={diffs.length ? "warn" : "good"} title={t("Copia válida y completa")}>
+            {t("Creada el {generated}", { generated: f.dateTime(check.generated) })}
+            {check.by ? t(" por {by}", { by: check.by }) : ""}.{" "}
+            {diffs.length ? t("{length} tablas tienen hoy un número de registros distinto (es normal si has trabajado después).", { length: diffs.length }) : t("Coincide con los datos actuales.")}
           </Notice>
           <div className="max-h-80 overflow-auto rounded-[var(--radius-sm)] border border-line">
             <Table>
               <thead>
                 <tr>
-                  <Th>Tabla</Th>
-                  <Th num>En la copia</Th>
-                  <Th num>Ahora</Th>
+                  <Th>{t("Tabla")}</Th>
+                  <Th num>{t("En la copia")}</Th>
+                  <Th num>{t("Ahora")}</Th>
                 </tr>
               </thead>
               <tbody>
-                {Object.keys(check.counts).map((t) => (
-                  <Tr key={t}>
-                    <Td>{t}</Td>
-                    <Td num>{check.counts[t].toLocaleString("es-ES")}</Td>
-                    <Td num className={(check.now[t] ?? 0) !== check.counts[t] ? "font-semibold text-warn" : undefined}>
-                      {(check.now[t] ?? 0).toLocaleString("es-ES")}
+                {Object.keys(check.counts).map((tb) => (
+                  <Tr key={tb}>
+                    <Td>{tb}</Td>
+                    <Td num>{f.units(check.counts[tb])}</Td>
+                    <Td num className={(check.now[tb] ?? 0) !== check.counts[tb] ? "font-semibold text-warn" : undefined}>
+                      {f.units(check.now[tb] ?? 0)}
                     </Td>
                   </Tr>
                 ))}

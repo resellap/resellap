@@ -1,5 +1,6 @@
 "use client";
 /** Piezas comunes de las pantallas de Ajustes. */
+import { useT } from "@/i18n/client";
 import { Check, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button, Notice, clsx } from "@/components/ui";
@@ -24,21 +25,22 @@ export function SaveBar({
   message?: string | null;
   reset?: { label: string; description: string; action: () => Promise<ActionResult<unknown>>; onDone?: () => void };
 }) {
+  const t = useT();
   return (
     // Solo queda fija abajo cuando hay algo pendiente de guardar (o un error)
     <div className={clsx("z-20 mt-5", (dirty || error) && "sticky bottom-[calc(5.2rem+env(safe-area-inset-bottom))] md:bottom-4")}>
       <div className="flex flex-wrap items-center gap-2 rs-card rounded-[var(--radius-md)] bg-surface/95 p-3 shadow-[var(--shadow-pop)] backdrop-blur">
         <p className="min-w-0 flex-1 text-[13px] text-muted" role="status" aria-live="polite">
           {error ? (
-            <span className="font-semibold text-danger">{error}</span>
+            <span className="font-semibold text-danger">{t(error)}</span>
           ) : dirty ? (
-            "Tienes cambios sin guardar."
+            t("Tienes cambios sin guardar.")
           ) : message ? (
             <span className="inline-flex items-center gap-1 font-semibold text-good">
-              <Check size={15} strokeWidth={3} /> {message}
+              <Check size={15} strokeWidth={3} /> {t(message)}
             </span>
           ) : (
-            "Todo guardado."
+            t("Todo guardado.")
           )}
         </p>
         {reset && (
@@ -50,7 +52,7 @@ export function SaveBar({
             }
             title={reset.label}
             description={reset.description}
-            confirmLabel="Restablecer"
+            confirmLabel={t("Restablecer")}
             variant="secondary"
             size="sm"
             action={reset.action}
@@ -58,10 +60,10 @@ export function SaveBar({
           />
         )}
         <Button size="sm" onClick={onDiscard} disabled={!dirty || pending}>
-          Descartar
+          {t("Descartar")}
         </Button>
         <Button size="sm" variant="primary" onClick={onSave} disabled={!dirty || pending}>
-          {pending ? "Guardando…" : "Guardar cambios"}
+          {pending ? t("Guardando…") : t("Guardar cambios")}
         </Button>
       </div>
     </div>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, Figures, Notice, PageHeader, Panel } from "@/components/ui";
 import { date } from "@/lib/format";
-import { PRICE_LABEL } from "@/lib/site";
+import { priceLabel } from "@/lib/site";
 import { loadPlatform } from "./data";
 
 export const metadata: Metadata = { title: "Resumen" };
@@ -21,7 +21,7 @@ export default async function AdminHome() {
   const recent = [...orgs].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
   return (
     <>
-      <PageHeader title="Resumen del negocio" description={`Cifras agregadas de Resellap (${PRICE_LABEL} al mes por espacio). Desde aquí no se puede ver el inventario, las ventas ni los archivos de ningún cliente.`} />
+      <PageHeader title="Resumen del negocio" description={`Cifras agregadas de Resellap (${priceLabel()} al mes por espacio). Desde aquí no se puede ver el inventario, las ventas ni los archivos de ningún cliente.`} />
       {error && <Notice tone="bad" className="mb-4">{error}</Notice>}
       <Figures
         items={[

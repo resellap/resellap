@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui";
@@ -7,10 +8,14 @@ import { createClient } from "@/lib/supabase/server";
 import { isGeneratorConfigured } from "../../../descripciones/actions";
 import { ListingStudio, type ListingDraft, type PriceHistory } from "./listing-studio";
 
-export const metadata: Metadata = { title: "Preparar anuncio" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Preparar anuncio") };
+}
 export const maxDuration = 60;
 
 export default async function PrepareListing({ params }: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   await requirePerm("anuncios");
   const { id } = await params;
   const supabase = await createClient();
@@ -28,9 +33,9 @@ export default async function PrepareListing({ params }: { params: Promise<{ id:
   return (
     <>
       <PageHeader
-        title="Preparar anuncio"
+        title={t("Preparar anuncio")}
         description={product.name}
-        back={{ href: `/productos/${id}`, label: "Volver al producto" }}
+        back={{ href: `/productos/${id}`, label: t("Volver al producto") }}
       />
       <ListingStudio
         productId={id}

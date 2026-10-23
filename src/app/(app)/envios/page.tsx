@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, MapPinned } from "lucide-react";
@@ -10,9 +11,13 @@ import { trackingConfigured } from "@/lib/tracking/seventeen";
 import { RefreshAllButton } from "../seguimiento/tracking-actions";
 import { groupByCarrier, loadPendingShipments, NO_CARRIER } from "./data";
 
-export const metadata: Metadata = { title: "Pendientes de envío" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Pendientes de envío") };
+}
 
 export default async function ShipmentsPage() {
+  const t = await getT();
   const user = await requireUser();
   const { rows, error } = await loadPendingShipments();
   const groups = groupByCarrier(rows);
@@ -22,10 +27,10 @@ export default async function ShipmentsPage() {
   return (
     <>
       <PageHeader
-        title="Pendientes de envío"
+        title={t("Pendientes de envío")}
         description={
           total > 0
-            ? `${total} ${total === 1 ? "paquete" : "paquetes"} por enviar${user.role === "admin" ? "" : " de tus ventas"}, separados por transportista. Al marcar uno como enviado empieza su seguimiento.`
+            ? t("{total} {v} por enviar{v2}, separados por transportista. Al marcar uno como enviado empieza su seguimiento.", { total, v: total === 1 ? "paquete" : "paquetes", v2: user.role === "admin" ? "" : " de tus ventas" })
             : undefined
         }
         actions={
@@ -33,7 +38,7 @@ export default async function ShipmentsPage() {
             {trackingConfigured() && <RefreshAllButton />}
             <LinkButton href="/seguimiento">
               <MapPinned size={17} strokeWidth={1.75} />
-              Seguimiento
+              {t("Seguimiento")}
             </LinkButton>
           </div>
         }
@@ -41,14 +46,14 @@ export default async function ShipmentsPage() {
       {error && <Notice tone="bad">{error}</Notice>}
       {urgent > 0 && (
         <Notice tone="warn" className="mb-4">
-          {urgent === 1 ? "1 paquete tiene" : `${urgent} paquetes tienen`} la fecha límite de envío en menos de 36 horas.
+          {urgent === 1 ? t("1 paquete tiene la fecha límite de envío en menos de 36 horas.") : t("{n} paquetes tienen la fecha límite de envío en menos de 36 horas.", { n: urgent })}
         </Notice>
       )}
 
       {!error && total === 0 && (
         <div className="rs-card rounded-[var(--radius-md)] bg-surface">
-          <Empty title="Todo enviado" action={<LinkButton href="/seguimiento">Ver el seguimiento</LinkButton>}>
-            No queda ningún paquete pendiente. Cuando confirmes una venta con envío, aparecerá aquí hasta que la marques como enviada.
+          <Empty title={t("Todo enviado")} action={<LinkButton href="/seguimiento">{t("Ver el seguimiento")}</LinkButton>}>
+            {t("No queda ningún paquete pendiente. Cuando confirmes una venta con envío, aparecerá aquí hasta que la marques como enviada.")}
           </Empty>
         </div>
       )}
@@ -70,7 +75,7 @@ export default async function ShipmentsPage() {
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-[17px] font-semibold text-ink">{g.name}</h2>
                     <p className="text-[13px] text-faint">
-                      {g.count} {g.count === 1 ? "pedido pendiente" : "pedidos pendientes"}
+                      {g.count} {g.count === 1 ? t("pedido pendiente") : t("pedidos pendientes")}
                     </p>
                   </div>
                   <span className="num flex h-9 min-w-9 items-center justify-center rounded-full bg-brand px-2.5 text-[16px] font-semibold text-on-brand">{g.count}</span>
@@ -88,19 +93,19 @@ export default async function ShipmentsPage() {
                   </div>
                 )}
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
-                  <dt className="text-faint">El más antiguo</dt>
+                  <dt className="text-faint">{t("El más antiguo")}</dt>
                   <dd className="num">{date(g.oldest)}</dd>
                   {g.deadline && (
                     <>
-                      <dt className="text-faint">Enviar antes de</dt>
+                      <dt className="text-faint">{t("Enviar antes de")}</dt>
                       <dd className={clsx("num", Date.parse(g.deadline) - Date.now() < 36 * 3600_000 && "font-semibold text-warn")}>{dateTime(g.deadline)}</dd>
                     </>
                   )}
-                  <dt className="text-faint">Etiquetas</dt>
-                  <dd className={g.withoutLabel ? "font-semibold text-warn" : "text-good-ink"}>{g.withoutLabel ? `${g.withoutLabel} sin etiqueta` : "Todas preparadas"}</dd>
+                  <dt className="text-faint">{t("Etiquetas")}</dt>
+                  <dd className={g.withoutLabel ? "font-semibold text-warn" : "text-good-ink"}>{g.withoutLabel ? t("{withoutLabel} sin etiqueta", { withoutLabel: g.withoutLabel }) : t("Todas preparadas")}</dd>
                 </dl>
                 <span className="mt-auto inline-flex items-center gap-1 text-[13.5px] font-semibold text-brand-ink">
-                  Ver pedidos <ChevronRight size={16} strokeWidth={2} className="transition-transform group-hover:translate-x-0.5" />
+                  {t("Ver pedidos")}{" "}<ChevronRight size={16} strokeWidth={2} className="transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
             </li>

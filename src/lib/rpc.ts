@@ -1,6 +1,7 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
 import { friendlyError, type ActionResult } from "./errors";
+import { getT } from "@/i18n/server";
 import { createClient } from "./supabase/server";
 
 /**
@@ -10,7 +11,8 @@ import { createClient } from "./supabase/server";
 export async function callRpc<T = unknown>(fn: string, args: Record<string, unknown>, revalidate: string[] = [], message?: string): Promise<ActionResult<T>> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc(fn, args);
-  if (error) return { ok: false, error: friendlyError(error) };
+  const t = await getT();
+  if (error) return { ok: false, error: t(friendlyError(error)) };
   for (const p of revalidate) revalidatePath(p, "layout");
-  return { ok: true, data: data as T, message };
+  return { ok: true, data: data as T, message: message ? t(message) : undefined };
 }

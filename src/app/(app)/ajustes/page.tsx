@@ -1,12 +1,17 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader, Panel } from "@/components/ui";
 import { requirePerm } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ListEditor } from "./list-editor";
 
-export const metadata: Metadata = { title: "Listas" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Listas") };
+}
 
 export default async function SettingsPage() {
+  const t = await getT();
   await requirePerm("configuracion");
   const supabase = await createClient();
   const [platforms, carriers, mobiles, accounts, categories, brands, products] = await Promise.all([
@@ -27,25 +32,25 @@ export default async function SettingsPage() {
   }
   return (
     <>
-      <PageHeader title="Listas" back={{ href: "/configuracion", label: "Ajustes" }} description="Las opciones que aparecen en los desplegables de ventas y productos." />
+      <PageHeader title={t("Listas")} back={{ href: "/configuracion", label: t("Ajustes") }} description={t("Las opciones que aparecen en los desplegables de ventas y productos.")} />
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel title="Plataformas de venta" description="«Con envío» muestra transportista, etiqueta y estado del envío al vender." padded={false}>
+        <Panel title={t("Plataformas de venta")} description={t("«Con envío» muestra transportista, etiqueta y estado del envío al vender.")} padded={false}>
           <ListEditor list="platforms" kind="platform" rows={platforms.data ?? []} />
         </Panel>
-        <Panel title="Empresas de transporte" padded={false}>
+        <Panel title={t("Empresas de transporte")} padded={false}>
           <ListEditor list="carriers" kind="active" rows={carriers.data ?? []} />
         </Panel>
-        <Panel title="Móviles" description="El correo y el teléfono solo los ven los administradores." padded={false} className="lg:col-span-2">
+        <Panel title={t("Móviles")} description={t("El correo y el teléfono solo los ven los administradores.")} padded={false} className="lg:col-span-2">
           <ListEditor
             list="mobile_devices"
             kind="mobile"
             rows={(mobiles.data ?? []).map((m) => ({ ...m, email: acc.get(m.id)?.email ?? null, phone: acc.get(m.id)?.phone ?? null }))}
           />
         </Panel>
-        <Panel title="Categorías" padded={false}>
+        <Panel title={t("Categorías")} padded={false}>
           <ListEditor list="categories" kind="simple" rows={(categories.data ?? []).map((c) => ({ ...c, uses: usesCat.get(c.id) ?? 0 }))} />
         </Panel>
-        <Panel title="Marcas" padded={false}>
+        <Panel title={t("Marcas")} padded={false}>
           <ListEditor list="brands" kind="simple" rows={(brands.data ?? []).map((c) => ({ ...c, uses: usesBrand.get(c.id) ?? 0 }))} />
         </Panel>
       </div>

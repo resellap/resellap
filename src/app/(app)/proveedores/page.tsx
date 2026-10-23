@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, Empty, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -6,9 +7,13 @@ import { money, units } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { SupplierButton } from "./supplier-form";
 
-export const metadata: Metadata = { title: "Proveedores" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Proveedores") };
+}
 
 export default async function SuppliersPage() {
+  const t = await getT();
   await requirePerm("compras");
   const supabase = await createClient();
   const [{ data: suppliers }, { data: pos }] = await Promise.all([
@@ -25,20 +30,20 @@ export default async function SuppliersPage() {
   }
   return (
     <>
-      <PageHeader title="Proveedores" description="A quién compras, con su historial de pedidos e importe total." actions={<SupplierButton />} />
+      <PageHeader title={t("Proveedores")} description={t("A quién compras, con su historial de pedidos e importe total.")} actions={<SupplierButton />} />
       <Panel padded={false}>
         {(suppliers ?? []).length === 0 ? (
-          <Empty title="Aún no hay proveedores" action={<SupplierButton label="Crear el primero" />} />
+          <Empty title={t("Aún no hay proveedores")} action={<SupplierButton label={t("Crear el primero")} />} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Proveedor</Th>
-                <Th>Contacto</Th>
-                <Th>Email</Th>
-                <Th>Teléfono</Th>
-                <Th num>Pedidos</Th>
-                <Th num>Total comprado</Th>
+                <Th>{t("Proveedor")}</Th>
+                <Th>{t("Contacto")}</Th>
+                <Th>{t("Email")}</Th>
+                <Th>{t("Teléfono")}</Th>
+                <Th num>{t("Pedidos")}</Th>
+                <Th num>{t("Total comprado")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -50,7 +55,7 @@ export default async function SuppliersPage() {
                     </Link>
                     {s.is_placeholder && (
                       <span className="ml-2">
-                        <Badge tone="warn">Sustituir por el real</Badge>
+                        <Badge tone="warn">{t("Sustituir por el real")}</Badge>
                       </span>
                     )}
                   </Td>

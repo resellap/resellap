@@ -1,5 +1,7 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { after } from "next/server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { carrierMark, platformMark } from "@/lib/carriers";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,16 +42,17 @@ export type NewSale = {
 };
 
 export async function createSale(sale: NewSale): Promise<ActionResult<string>> {
-  return callRpc<string>("create_sale", { p: sale }, ["/ventas", "/"], "Venta registrada.");
+  return callRpc<string>("create_sale", { p: sale }, ["/ventas", "/"], msg("Venta registrada."));
 }
 
 export async function updateSale(patch: Record<string, unknown> & { id: string }): Promise<ActionResult> {
-  const res = await callRpc<undefined>("update_sale", { p: patch }, ["/ventas"], "Cambios guardados.");
+  const res = await callRpc<undefined>("update_sale", { p: patch }, ["/ventas"], msg("Cambios guardados."));
   // Marcada como enviada a mano: empieza el seguimiento (si tiene código)
   if (res.ok && patch.shipping_status === "enviado") after(() => runTracking({ saleIds: [patch.id] }).catch(() => undefined));
   if (res.ok && typeof patch.shipping_label_path === "string" && patch.shipping_label_path) {
     const code = await codeFromWallapopLabel(patch.id).catch(() => null);
-    res.message = code ? `Etiqueta guardada. Código de seguimiento de Correos detectado: ${code}.` : "Etiqueta guardada.";
+    const t = await getT();
+    res.message = code ? t("Etiqueta guardada. Código de seguimiento de Correos detectado: {code}.", { code }) : t("Etiqueta guardada.");
     if (code) revalidatePath("/ventas", "layout");
   }
   return res;
@@ -106,20 +109,25 @@ export async function setShippingStatusBulk(saleIds: string[], status: "pendient
   }
   if (res.ok) {
     const n = res.data;
+    const t = await getT();
     res.message =
       status === "enviado"
-        ? `${n} ${n === 1 ? "venta marcada como enviada" : "ventas marcadas como enviadas"}. Seguimiento iniciado.`
-        : `${n} ${n === 1 ? "venta marcada como pendiente" : "ventas marcadas como pendientes"}.`;
+        ? n === 1
+          ? t("1 venta marcada como enviada. Seguimiento iniciado.")
+          : t("{n} ventas marcadas como enviadas. Seguimiento iniciado.", { n })
+        : n === 1
+          ? t("1 venta marcada como pendiente.")
+          : t("{n} ventas marcadas como pendientes.", { n });
   }
   return res;
 }
 
 export async function updateSaleItem(patch: { id: string; unit_price?: number; notes?: string | null }): Promise<ActionResult> {
-  return callRpc("update_sale_item", { p: patch }, ["/ventas"], "Línea actualizada.");
+  return callRpc("update_sale_item", { p: patch }, ["/ventas"], msg("Línea actualizada."));
 }
 
 export async function voidSale(id: string, reason: string): Promise<ActionResult> {
-  return callRpc("void_sale", { p_sale_id: id, p_reason: reason }, ["/ventas", "/"], "Venta anulada. Las unidades han vuelto a su lote.");
+  return callRpc("void_sale", { p_sale_id: id, p_reason: reason }, ["/ventas", "/"], msg("Venta anulada. Las unidades han vuelto a su lote."));
 }
 
 export async function quickCreateProduct(p: {
@@ -129,5 +137,5 @@ export async function quickCreateProduct(p: {
   normal_sale_price?: string;
   variants?: { name: string }[];
 }): Promise<ActionResult<string>> {
-  return callRpc<string>("create_product", { p }, ["/productos"], "Producto creado. Recuerda: no tiene stock hasta que entre en una compra.");
+  return callRpc<string>("create_product", { p }, ["/productos"], msg("Producto creado. Recuerda: no tiene stock hasta que entre en una compra."));
 }

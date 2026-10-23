@@ -5,6 +5,8 @@
  * Este archivo no depende del servidor: lo usan también las pantallas.
  */
 import { z } from "zod";
+import { LOCALES } from "@/i18n/config";
+import { msg } from "@/i18n/translate";
 
 // ---------------------------------------------------------------------
 // Widgets del inicio
@@ -23,36 +25,36 @@ export type WidgetDef = {
 };
 
 export const WIDGETS: WidgetDef[] = [
-  { id: "ventas", title: "Ventas", group: "Indicadores", description: "Número de ventas y unidades del periodo.", sizes: ["1x1", "2x1"] },
-  { id: "ingresos", title: "Ingresos", group: "Indicadores", description: "Lo vendido en el periodo, descontando devoluciones.", sizes: ["1x1", "2x1"] },
-  { id: "beneficio_bruto", title: "Beneficio bruto", group: "Indicadores", description: "Ingresos menos el coste real de cada unidad (su lote).", sizes: ["1x1", "2x1"] },
+  { id: "ventas", title: msg("Ventas"), group: "Indicadores", description: msg("Número de ventas y unidades del periodo."), sizes: ["1x1", "2x1"] },
+  { id: "ingresos", title: msg("Ingresos"), group: "Indicadores", description: msg("Lo vendido en el periodo, descontando devoluciones."), sizes: ["1x1", "2x1"] },
+  { id: "beneficio_bruto", title: msg("Beneficio bruto"), group: "Indicadores", description: msg("Ingresos menos el coste real de cada unidad (su lote)."), sizes: ["1x1", "2x1"] },
   {
     id: "beneficio_neto",
-    title: "Beneficio neto",
+    title: msg("Beneficio neto"),
     group: "Indicadores",
-    description: "Beneficio después de todos los gastos del negocio.",
+    description: msg("Beneficio después de todos los gastos del negocio."),
     sizes: ["1x1"],
-    unavailable: "La app no registra los gastos del negocio (envíos, comisiones, cuotas…). Sin ellos el beneficio neto no se puede calcular de verdad; usa «Beneficio bruto».",
+    unavailable: msg("La app no registra los gastos del negocio (envíos, comisiones, cuotas…). Sin ellos el beneficio neto no se puede calcular de verdad; usa «Beneficio bruto»."),
   },
-  { id: "margen", title: "Margen bruto", group: "Indicadores", description: "Beneficio bruto ÷ ingresos, en porcentaje.", sizes: ["1x1", "2x1"] },
-  { id: "ticket", title: "Ticket medio", group: "Indicadores", description: "Ingresos ÷ número de ventas.", sizes: ["1x1", "2x1"] },
-  { id: "stock", title: "Stock disponible", group: "Indicadores", description: "Unidades en el almacén hoy.", sizes: ["1x1", "2x1"] },
-  { id: "valor_inventario", title: "Valor del inventario", group: "Indicadores", description: "Capital invertido en stock (coste medio) y valor potencial de venta.", sizes: ["1x1", "2x1"] },
+  { id: "margen", title: msg("Margen bruto"), group: "Indicadores", description: msg("Beneficio bruto ÷ ingresos, en porcentaje."), sizes: ["1x1", "2x1"] },
+  { id: "ticket", title: msg("Ticket medio"), group: "Indicadores", description: msg("Ingresos ÷ número de ventas."), sizes: ["1x1", "2x1"] },
+  { id: "stock", title: msg("Stock disponible"), group: "Indicadores", description: msg("Unidades en el almacén hoy."), sizes: ["1x1", "2x1"] },
+  { id: "valor_inventario", title: msg("Valor del inventario"), group: "Indicadores", description: msg("Capital invertido en stock (coste medio) y valor potencial de venta."), sizes: ["1x1", "2x1"] },
   {
     id: "gastos",
-    title: "Gastos del negocio",
+    title: msg("Gastos del negocio"),
     group: "Indicadores",
-    description: "Gastos que no son compra de producto.",
+    description: msg("Gastos que no son compra de producto."),
     sizes: ["1x1"],
-    unavailable: "La app todavía no tiene un registro de gastos, así que no hay datos reales que mostrar.",
+    unavailable: msg("La app todavía no tiene un registro de gastos, así que no hay datos reales que mostrar."),
   },
-  { id: "evolucion", title: "Evolución de las ventas", group: "Análisis comercial", description: "Ingresos y beneficio bruto por día, semana o mes.", sizes: ["2x1", "2x2"] },
-  { id: "mas_vendidos", title: "Artículos más vendidos", group: "Análisis comercial", description: "Por unidades vendidas en el periodo.", sizes: ["2x1", "2x2"] },
-  { id: "por_plataforma", title: "Ventas por plataforma", group: "Análisis comercial", description: "Ingresos y ventas de cada plataforma en el periodo.", sizes: ["2x1", "2x2"] },
-  { id: "rentabilidad", title: "Rentabilidad por artículo", group: "Análisis comercial", description: "Beneficio bruto y margen de cada artículo en el periodo.", sizes: ["2x1", "2x2"] },
-  { id: "envios_pendientes", title: "Ventas pendientes de envío", group: "Análisis comercial", description: "Paquetes por enviar ahora mismo.", sizes: ["1x1", "2x1"] },
-  { id: "antiguedad", title: "Más tiempo en stock", group: "Inventario y actividad", description: "Lotes que más tiempo llevan en el almacén.", sizes: ["2x1", "2x2"] },
-  { id: "actividad", title: "Actividad reciente", group: "Inventario y actividad", description: "Últimos movimientos de stock.", sizes: ["2x1", "2x2"] },
+  { id: "evolucion", title: msg("Evolución de las ventas"), group: "Análisis comercial", description: msg("Ingresos y beneficio bruto por día, semana o mes."), sizes: ["2x1", "2x2"] },
+  { id: "mas_vendidos", title: msg("Artículos más vendidos"), group: "Análisis comercial", description: msg("Por unidades vendidas en el periodo."), sizes: ["2x1", "2x2"] },
+  { id: "por_plataforma", title: msg("Ventas por plataforma"), group: "Análisis comercial", description: msg("Ingresos y ventas de cada plataforma en el periodo."), sizes: ["2x1", "2x2"] },
+  { id: "rentabilidad", title: msg("Rentabilidad por artículo"), group: "Análisis comercial", description: msg("Beneficio bruto y margen de cada artículo en el periodo."), sizes: ["2x1", "2x2"] },
+  { id: "envios_pendientes", title: msg("Ventas pendientes de envío"), group: "Análisis comercial", description: msg("Paquetes por enviar ahora mismo."), sizes: ["1x1", "2x1"] },
+  { id: "antiguedad", title: msg("Más tiempo en stock"), group: "Inventario y actividad", description: msg("Lotes que más tiempo llevan en el almacén."), sizes: ["2x1", "2x2"] },
+  { id: "actividad", title: msg("Actividad reciente"), group: "Inventario y actividad", description: msg("Últimos movimientos de stock."), sizes: ["2x1", "2x2"] },
 ];
 export const WIDGET_BY_ID = new Map(WIDGETS.map((w) => [w.id, w]));
 
@@ -75,62 +77,62 @@ export const DEFAULT_WIDGETS: WidgetItem[] = [
   { id: "actividad", size: "2x2" },
 ];
 
-export const PERIODS = { dia: "Hoy", semana: "Esta semana", mes: "Este mes", anio: "Este año" } as const;
+export const PERIODS = { dia: msg("Hoy"), semana: msg("Esta semana"), mes: msg("Este mes"), anio: msg("Este año") } as const;
 export type Period = keyof typeof PERIODS;
-export const GRANULARITIES = { dia: "Por día", semana: "Por semana", mes: "Por mes" } as const;
+export const GRANULARITIES = { dia: msg("Por día"), semana: msg("Por semana"), mes: msg("Por mes") } as const;
 
 // ---------------------------------------------------------------------
 // Aspecto
 // ---------------------------------------------------------------------
 export const PALETTES = {
-  vinted: { label: "Verde Vinted", swatch: "#007782" },
-  oceano: { label: "Océano", swatch: "#1d5fa8" },
-  bosque: { label: "Bosque", swatch: "#2f6b3f" },
-  ciruela: { label: "Ciruela", swatch: "#7a3e8f" },
-  teja: { label: "Teja", swatch: "#b5471b" },
-  grafito: { label: "Grafito", swatch: "#3d4650" },
+  vinted: { label: msg("Verde Vinted"), swatch: "#007782" },
+  oceano: { label: msg("Océano"), swatch: "#1d5fa8" },
+  bosque: { label: msg("Bosque"), swatch: "#2f6b3f" },
+  ciruela: { label: msg("Ciruela"), swatch: "#7a3e8f" },
+  teja: { label: msg("Teja"), swatch: "#b5471b" },
+  grafito: { label: msg("Grafito"), swatch: "#3d4650" },
 } as const;
 export type Palette = keyof typeof PALETTES;
-export const MODES = { auto: "Automático (como el dispositivo)", light: "Claro", dark: "Oscuro" } as const;
+export const MODES = { auto: msg("Automático (como el dispositivo)"), light: msg("Claro"), dark: msg("Oscuro") } as const;
 
 // ---------------------------------------------------------------------
 // Tablas
 // ---------------------------------------------------------------------
 export const SALES_COLUMNS = {
-  fecha: "Fecha",
-  venta: "Venta",
-  producto: "Producto",
-  lote: "Lote",
-  uds: "Uds.",
-  precio: "Precio",
-  importe: "Importe",
-  beneficio: "Beneficio",
-  responsable: "Responsable",
-  plataforma: "Plataforma",
-  envio: "Envío",
+  fecha: msg("Fecha"),
+  venta: msg("Venta"),
+  producto: msg("Producto"),
+  lote: msg("Lote"),
+  uds: msg("Uds."),
+  precio: msg("Precio"),
+  importe: msg("Importe"),
+  beneficio: msg("Beneficio"),
+  responsable: msg("Responsable"),
+  plataforma: msg("Plataforma"),
+  envio: msg("Envío"),
 } as const;
 export type SalesColumn = keyof typeof SALES_COLUMNS;
 
 export const PRODUCT_COLUMNS = {
-  producto: "Producto",
-  categoria: "Categoría",
-  stock: "Stock",
-  coste: "Coste medio",
-  precio: "Precio normal",
-  precio_medio: "Precio medio venta",
-  vendidas: "Vendidas",
-  valor: "Valor almacén",
+  producto: msg("Producto"),
+  categoria: msg("Categoría"),
+  stock: msg("Stock"),
+  coste: msg("Coste medio"),
+  precio: msg("Precio normal"),
+  precio_medio: msg("Precio medio venta"),
+  vendidas: msg("Vendidas"),
+  valor: msg("Valor almacén"),
 } as const;
 /** Columnas que no se pueden ocultar (identifican la fila). */
 export const FIXED_COLUMNS = new Set<string>(["producto", "venta"]);
 export type ProductColumn = keyof typeof PRODUCT_COLUMNS;
 
 export const PRODUCT_SORTS = {
-  stock: "Más stock primero",
-  nombre: "Nombre (A-Z)",
-  recientes: "Añadidos recientemente",
-  valor: "Más valor en stock",
-  vendidas: "Más vendidos",
+  stock: msg("Más stock primero"),
+  nombre: msg("Nombre (A-Z)"),
+  recientes: msg("Añadidos recientemente"),
+  valor: msg("Más valor en stock"),
+  vendidas: msg("Más vendidos"),
 } as const;
 export type ProductSort = keyof typeof PRODUCT_SORTS;
 
@@ -193,6 +195,8 @@ export const prefsSchema = z.object({
     })
     .optional(),
   sales: z.object({ defaultPlatformId: z.uuid().nullable().optional() }).optional(),
+  /** Idioma de la app (también en la cookie del idioma). */
+  language: z.enum(LOCALES).optional(),
 });
 export type StoredPrefs = z.infer<typeof prefsSchema>;
 

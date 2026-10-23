@@ -1,10 +1,11 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
 import { getLots } from "@/app/(app)/ventas/actions";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, Notice, Select, Textarea, clsx } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
-import { EXIT_REASONS, money } from "@/lib/format";
+import { EXIT_REASONS } from "@/lib/format";
 import type { AvailableLot, Option, SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
 import { createAdjustment, createStockExit, updateStockExit, voidStockExit } from "./actions";
@@ -26,14 +27,16 @@ function useVariantWithLots() {
 }
 
 function LotSelect({ lots, lotId, setLotId }: { lots: AvailableLot[] | null; lotId: string; setLotId: (v: string) => void }) {
-  if (lots === null) return <p className="text-sm text-muted">Cargando lotes…</p>;
-  if (lots.length === 0) return <p className="text-sm text-danger">No hay stock en ningún lote.</p>;
+  const t = useT();
+  const f = useFormat();
+  if (lots === null) return <p className="text-sm text-muted">{t("Cargando lotes…")}</p>;
+  if (lots.length === 0) return <p className="text-sm text-danger">{t("No hay stock en ningún lote.")}</p>;
   return (
     <Select value={lotId} onChange={(e) => setLotId(e.target.value)}>
-      <option value="">Elige el lote…</option>
+      <option value="">{t("Elige el lote…")}</option>
       {lots.map((l) => (
         <option key={l.lot_id} value={l.lot_id}>
-          {l.label}: {l.quantity_available} uds., coste {money(l.unit_cost)}
+          {l.label}: {l.quantity_available}{" "}{t("uds., coste {unit_cost}", { unit_cost: f.money(l.unit_cost) })}
         </option>
       ))}
     </Select>
@@ -41,6 +44,8 @@ function LotSelect({ lots, lotId, setLotId }: { lots: AvailableLot[] | null; lot
 }
 
 export function NewExitButton({ responsibles, today }: { responsibles: Option[]; today: string }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const pv = useVariantWithLots();
   const [qty, setQty] = useState("1");
@@ -53,15 +58,15 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
-        Salida sin venta
+        {t("Salida sin venta")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Salida sin venta"
+        title={t("Salida sin venta")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending || !pv.variant || !pv.lotId || !(Number(qty) > 0)}
@@ -74,19 +79,19 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
                 }
               }}
             >
-              Registrar salida
+              {t("Registrar salida")}
             </Button>
           </>
         }
       >
-        <p className="mb-3 text-sm text-ink-soft">Regalos, pérdidas, roturas… La unidad sale del stock sin contar como venta, y su coste se registra como pérdida.</p>
+        <p className="mb-3 text-sm text-ink-soft">{t("Regalos, pérdidas, roturas… La unidad sale del stock sin contar como venta, y su coste se registra como pérdida.")}</p>
         <div className="grid gap-3">
-          <Field label="Producto" required htmlFor="">
+          <Field label={t("Producto")} required htmlFor="">
             {pv.variant ? (
               <div className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-line px-3 py-2 text-sm">
                 <span className="font-semibold">{variantDisplay(pv.variant.product_name, pv.variant.variant_name, pv.variant.variant_count)}</span>
                 <Button size="sm" variant="ghost" onClick={pv.reset}>
-                  Cambiar
+                  {t("Cambiar")}
                 </Button>
               </div>
             ) : (
@@ -94,31 +99,31 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
             )}
           </Field>
           {pv.variant && (
-            <Field label="Pedido / lote" required htmlFor="">
+            <Field label={t("Pedido / lote")} required htmlFor="">
               <LotSelect lots={pv.lots} lotId={pv.lotId} setLotId={pv.setLotId} />
             </Field>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Unidades" required>
+            <Field label={t("Unidades")} required>
               <Input type="number" min={1} max={lot?.quantity_available} value={qty} onChange={(e) => setQty(e.target.value)} />
             </Field>
-            <Field label="Motivo" required>
+            <Field label={t("Motivo")} required>
               <Select value={reason} onChange={(e) => setReason(e.target.value)}>
                 {Object.entries(EXIT_REASONS)
                   .filter(([k]) => k !== "pendiente")
                   .map(([k, v]) => (
                     <option key={k} value={k}>
-                      {v}
+                      {t(v)}
                     </option>
                   ))}
               </Select>
             </Field>
-            <Field label="Fecha">
+            <Field label={t("Fecha")}>
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </Field>
-            <Field label="Responsable">
+            <Field label={t("Responsable")}>
               <Select value={resp} onChange={(e) => setResp(e.target.value)}>
-                <option value="">Sin indicar</option>
+                <option value="">{t("Sin indicar")}</option>
                 {responsibles.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -127,10 +132,10 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
               </Select>
             </Field>
           </div>
-          <Field label="Notas">
+          <Field label={t("Notas")}>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-12" />
           </Field>
-          {lot && Number(qty) > 0 && <p className="text-[13px] text-muted">Pérdida: {money(Number(qty) * Number(lot.unit_cost ?? 0))}</p>}
+          {lot && Number(qty) > 0 && <p className="text-[13px] text-muted">{t("Pérdida:")}{" "}{f.money(Number(qty) * Number(lot.unit_cost ?? 0))}</p>}
         </div>
         <ActionMessages error={error} />
       </Modal>
@@ -139,6 +144,8 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
 }
 
 export function NewAdjustmentButton({ today }: { today: string }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [dir, setDir] = useState<"entrada" | "salida">("salida");
   const pv = useVariantWithLots();
@@ -150,14 +157,14 @@ export function NewAdjustmentButton({ today }: { today: string }) {
   const ok = !!pv.variant && Number(qty) > 0 && reason.trim() && (dir === "salida" ? !!pv.lotId : cost.trim() !== "" && Number(cost.replace(",", ".")) >= 0);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Ajuste de stock</Button>
+      <Button onClick={() => setOpen(true)}>{t("Ajuste de stock")}</Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Ajuste de stock"
+        title={t("Ajuste de stock")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending || !ok}
@@ -178,13 +185,13 @@ export function NewAdjustmentButton({ today }: { today: string }) {
                 }
               }}
             >
-              Registrar ajuste
+              {t("Registrar ajuste")}
             </Button>
           </>
         }
       >
         <Notice tone="info" className="mb-3">
-          Usa los ajustes solo para corregir recuentos. No se borra nada: el ajuste queda como un movimiento con su motivo.
+          {t("Usa los ajustes solo para corregir recuentos. No se borra nada: el ajuste queda como un movimiento con su motivo.")}
         </Notice>
         <div className="mb-3 grid grid-cols-2 gap-2">
           {(["salida", "entrada"] as const).map((d) => (
@@ -194,17 +201,17 @@ export function NewAdjustmentButton({ today }: { today: string }) {
               onClick={() => setDir(d)}
               className={clsx("rounded-[var(--radius-sm)] border px-3 py-2 text-sm font-semibold", dir === d ? "border-brand bg-brand-soft text-ink" : "border-line text-ink-soft")}
             >
-              {d === "salida" ? "Quitar unidades" : "Añadir unidades"}
+              {d === "salida" ? t("Quitar unidades") : t("Añadir unidades")}
             </button>
           ))}
         </div>
         <div className="grid gap-3">
-          <Field label="Producto" required htmlFor="">
+          <Field label={t("Producto")} required htmlFor="">
             {pv.variant ? (
               <div className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-line px-3 py-2 text-sm">
                 <span className="font-semibold">{variantDisplay(pv.variant.product_name, pv.variant.variant_name, pv.variant.variant_count)}</span>
                 <Button size="sm" variant="ghost" onClick={pv.reset}>
-                  Cambiar
+                  {t("Cambiar")}
                 </Button>
               </div>
             ) : (
@@ -212,26 +219,26 @@ export function NewAdjustmentButton({ today }: { today: string }) {
             )}
           </Field>
           {pv.variant && dir === "salida" && (
-            <Field label="Pedido / lote del que salen" required htmlFor="">
+            <Field label={t("Pedido / lote del que salen")} required htmlFor="">
               <LotSelect lots={pv.lots} lotId={pv.lotId} setLotId={pv.setLotId} />
             </Field>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Unidades" required>
+            <Field label={t("Unidades")} required>
               <Input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} />
             </Field>
             {dir === "entrada" ? (
-              <Field label="Coste por unidad (€)" required hint="Las unidades entran como un lote nuevo con este coste.">
+              <Field label={t("Coste por unidad (€)")} required hint={t("Las unidades entran como un lote nuevo con este coste.")}>
                 <Input inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} />
               </Field>
             ) : (
-              <Field label="Fecha">
+              <Field label={t("Fecha")}>
                 <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </Field>
             )}
           </div>
-          <Field label="Motivo" required>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} className="min-h-12" placeholder="Por ejemplo: recuento físico del 08/10" />
+          <Field label={t("Motivo")} required>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} className="min-h-12" placeholder={t("Por ejemplo: recuento físico del 08/10")} />
           </Field>
         </div>
         <ActionMessages error={error} />
@@ -241,35 +248,39 @@ export function NewAdjustmentButton({ today }: { today: string }) {
 }
 
 export function ExitReasonEditor({ id, reason }: { id: string; reason: string }) {
+  const t = useT();
+  const f = useFormat();
   const [value, setValue] = useState(reason);
   const { run, pending, error } = useServerAction(updateStockExit);
   return (
     <span className="flex items-center gap-1.5">
-      <select value={value} onChange={(e) => setValue(e.target.value)} className="h-11 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-2 text-base sm:h-8 sm:text-[13px]" aria-label="Motivo">
+      <select value={value} onChange={(e) => setValue(e.target.value)} className="h-11 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-2 text-base sm:h-8 sm:text-[13px]" aria-label={t("Motivo")}>
         {Object.entries(EXIT_REASONS).map(([k, v]) => (
           <option key={k} value={k}>
-            {v}
+            {t(v)}
           </option>
         ))}
       </select>
       {value !== reason && (
         <Button size="sm" variant="primary" disabled={pending} onClick={() => run(id, value)}>
-          Guardar
+          {t("Guardar")}
         </Button>
       )}
-      {error && <span className="text-xs text-danger">{error}</span>}
+      {error && <span className="text-xs text-danger">{t(error)}</span>}
     </span>
   );
 }
 
 export function VoidExitButton({ id }: { id: string }) {
+  const t = useT();
+  const f = useFormat();
   return (
     <ConfirmAction
       size="sm"
-      label="Anular"
-      title="Anular salida sin venta"
-      description="Las unidades vuelven a su lote. La salida queda anulada en el historial."
-      confirmLabel="Anular salida"
+      label={t("Anular")}
+      title={t("Anular salida sin venta")}
+      description={t("Las unidades vuelven a su lote. La salida queda anulada en el historial.")}
+      confirmLabel={t("Anular salida")}
       requireReason
       action={(reason) => voidStockExit(id, reason)}
     />

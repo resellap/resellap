@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
@@ -9,7 +10,10 @@ import { loadCatalogOptions } from "@/lib/options";
 import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Inventario" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Inventario") };
+}
 
 type Row = {
   variant_id: string;
@@ -34,6 +38,7 @@ type Row = {
 };
 
 export default async function InventoryPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("costes");
   const sp = await searchParams;
   const filters = filtersFrom(sp);
@@ -50,19 +55,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
   return (
     <>
       <PageHeader
-        title="Inventario y lotes"
-        description="El valor del almacén usa el coste medio ponderado de las unidades que quedan. El beneficio de cada venta usa el coste real de su lote."
-        actions={<LinkButton href="/salidas">Ajustes y salidas sin venta</LinkButton>}
+        title={t("Inventario y lotes")}
+        description={t("El valor del almacén usa el coste medio ponderado de las unidades que quedan. El beneficio de cada venta usa el coste real de su lote.")}
+        actions={<LinkButton href="/salidas">{t("Ajustes y salidas sin venta")}</LinkButton>}
       />
       <FilterBar
         basePath="/inventario"
         values={filters}
         fields={[
-          { type: "text", name: "search", label: "Producto o variante", placeholder: "Nombre o SKU" },
-          { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
-          { type: "select", name: "brand_id", label: "Marca", empty: "Todas", options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
-          { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
-          { type: "checkbox", name: "only_in_stock", label: "Solo con stock" },
+          { type: "text", name: "search", label: t("Producto o variante"), placeholder: t("Nombre o SKU") },
+          { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
+          { type: "select", name: "brand_id", label: t("Marca"), empty: t("Todas"), options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
+          { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
+          { type: "checkbox", name: "only_in_stock", label: t("Solo con stock") },
         ]}
         extra={<ExportLinks type="inventario" filters={filters} />}
       />
@@ -71,35 +76,35 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
         <Figures
           className="mb-4"
           items={[
-            { label: "Unidades", value: units(s.units), note: `${units(s.products_with_stock)} productos con stock` },
-            { label: "Coste medio ponderado", value: money(s.weighted_avg_cost, { precise: true }) },
-            { label: "Valor del almacén", value: money(s.stock_value) },
+            { label: t("Unidades"), value: units(s.units), note: t("{products_with_stock} productos con stock", { products_with_stock: units(s.products_with_stock) }) },
+            { label: t("Coste medio ponderado"), value: money(s.weighted_avg_cost, { precise: true }) },
+            { label: t("Valor del almacén"), value: money(s.stock_value) },
             {
-              label: "Valor potencial de venta",
+              label: t("Valor potencial de venta"),
               value: money(s.potential_value),
-              note: s.estimated_units || s.unpriced_units ? `${s.estimated_units} uds. con precio medio, ${s.unpriced_units} sin precio` : undefined,
+              note: s.estimated_units || s.unpriced_units ? t("{estimated_units} uds. con precio medio, {unpriced_units} sin precio", { estimated_units: s.estimated_units, unpriced_units: s.unpriced_units }) : undefined,
             },
-            { label: "Beneficio potencial", value: money(s.potential_profit), tone: "good" },
+            { label: t("Beneficio potencial"), value: money(s.potential_profit), tone: "good" },
           ]}
         />
       )}
       <Panel padded={false}>
         {rows.length === 0 ? (
-          <Empty title="No hay productos con estos filtros" />
+          <Empty title={t("No hay productos con estos filtros")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Producto</Th>
-                <Th>SKU</Th>
-                <Th num>Stock</Th>
-                <Th num>Coste medio</Th>
-                <Th num>Valor almacén</Th>
-                <Th num>Precio venta</Th>
-                <Th num>Valor potencial</Th>
-                <Th num>Beneficio pot.</Th>
-                <Th num>Vendidas</Th>
-                <Th>Lotes con stock</Th>
+                <Th>{t("Producto")}</Th>
+                <Th>{t("SKU")}</Th>
+                <Th num>{t("Stock")}</Th>
+                <Th num>{t("Coste medio")}</Th>
+                <Th num>{t("Valor almacén")}</Th>
+                <Th num>{t("Precio venta")}</Th>
+                <Th num>{t("Valor potencial")}</Th>
+                <Th num>{t("Beneficio pot.")}</Th>
+                <Th num>{t("Vendidas")}</Th>
+                <Th>{t("Lotes con stock")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -118,8 +123,8 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <Td num>{money(r.weighted_avg_cost, { precise: true })}</Td>
                   <Td num>{money(r.stock_value)}</Td>
                   <Td num>
-                    {r.potential_unit_price !== null ? money(r.potential_unit_price) : <span className="text-faint">Sin precio</span>}
-                    {r.potential_is_estimated && <span className="block text-xs text-muted">precio medio</span>}
+                    {r.potential_unit_price !== null ? money(r.potential_unit_price) : <span className="text-faint">{t("Sin precio")}</span>}
+                    {r.potential_is_estimated && <span className="block text-xs text-muted">{t("precio medio")}</span>}
                   </Td>
                   <Td num>{money(r.potential_value)}</Td>
                   <Td num>{money(r.potential_profit)}</Td>

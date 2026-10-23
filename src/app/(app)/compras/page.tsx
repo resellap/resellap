@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
@@ -9,9 +10,13 @@ import { PO_STATUS, date, money, units } from "@/lib/format";
 import { loadSuppliers } from "@/lib/options";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Compras" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Compras") };
+}
 
 export default async function PurchasesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("compras");
   const sp = await searchParams;
   const filters = filtersFrom(sp);
@@ -29,40 +34,40 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
   return (
     <>
       <PageHeader
-        title="Compras"
-        description="Pedidos de compra. Cada línea recibida se convierte en un lote con su coste real."
-        actions={<LinkButton href="/compras/nuevo" variant="primary">Nuevo pedido</LinkButton>}
+        title={t("Compras")}
+        description={t("Pedidos de compra. Cada línea recibida se convierte en un lote con su coste real.")}
+        actions={<LinkButton href="/compras/nuevo" variant="primary">{t("Nuevo pedido")}</LinkButton>}
       />
       <FilterBar
         basePath="/compras"
         values={filters}
         fields={[
-          { type: "number", name: "purchase_order_number", label: "Nº pedido" },
-          { type: "date", name: "from", label: "Desde" },
-          { type: "date", name: "to", label: "Hasta" },
-          { type: "select", name: "supplier_id", label: "Proveedor", options: suppliers.map((s) => ({ value: s.id, label: s.name })) },
-          { type: "select", name: "status", label: "Estado", options: Object.entries(PO_STATUS).map(([value, label]) => ({ value, label })) },
+          { type: "number", name: "purchase_order_number", label: t("Nº pedido") },
+          { type: "date", name: "from", label: t("Desde") },
+          { type: "date", name: "to", label: t("Hasta") },
+          { type: "select", name: "supplier_id", label: t("Proveedor"), options: suppliers.map((s) => ({ value: s.id, label: s.name })) },
+          { type: "select", name: "status", label: t("Estado"), options: Object.entries(PO_STATUS).map(([value, label]) => ({ value, label: t(label) })) },
         ]}
         extra={<ExportLinks type="compras" filters={filters} />}
       />
       {error && <Notice tone="bad">{error.message}</Notice>}
       <Panel padded={false}>
         {(data ?? []).length === 0 ? (
-          <Empty title="No hay pedidos de compra" action={<LinkButton href="/compras/nuevo">Crear el primero</LinkButton>} />
+          <Empty title={t("No hay pedidos de compra")} action={<LinkButton href="/compras/nuevo">{t("Crear el primero")}</LinkButton>} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Pedido</Th>
-                <Th>Fecha</Th>
-                <Th>Proveedor</Th>
-                <Th>Estado</Th>
-                <Th num>Líneas</Th>
-                <Th num>Uds. pedidas</Th>
-                <Th num>Uds. recibidas</Th>
-                <Th num>Mercancía</Th>
-                <Th num>Costes extra</Th>
-                <Th num>Coste total</Th>
+                <Th>{t("Pedido")}</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Proveedor")}</Th>
+                <Th>{t("Estado")}</Th>
+                <Th num>{t("Líneas")}</Th>
+                <Th num>{t("Uds. pedidas")}</Th>
+                <Th num>{t("Uds. recibidas")}</Th>
+                <Th num>{t("Mercancía")}</Th>
+                <Th num>{t("Costes extra")}</Th>
+                <Th num>{t("Coste total")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -70,11 +75,11 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
                 <Tr key={po.id} muted={po.status === "cancelado"}>
                   <Td>
                     <Link href={`/compras/${po.id}`}>
-                      <LotTag label={`Pedido #${po.order_number}`} />
+                      <LotTag label={t("Pedido #{order_number}", { order_number: po.order_number })} />
                     </Link>
                   </Td>
                   <Td className="num">{date(po.order_date)}</Td>
-                  <Td>{po.supplier_is_placeholder ? <Badge tone="warn">Proveedor pendiente</Badge> : po.supplier_name}</Td>
+                  <Td>{po.supplier_is_placeholder ? <Badge tone="warn">{t("Proveedor pendiente")}</Badge> : po.supplier_name}</Td>
                   <Td>
                     <POStatus status={po.status} />
                   </Td>

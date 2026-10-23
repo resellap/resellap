@@ -1,14 +1,15 @@
 "use client";
+import { msg } from "@/i18n/translate";
 /**
  * Buscador de productos/variantes. Si no existe y el usuario es admin,
  * permite crearlo en el momento (sin stock: el stock solo entra con
  * compras o ajustes autorizados).
  */
+import { useFormat, useT } from "@/i18n/client";
 import { useEffect, useId, useRef, useState } from "react";
 import { quickCreateProduct } from "@/app/(app)/ventas/actions";
 import type { SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
-import { money } from "@/lib/format";
 import { Button, Field, Input, Notice, clsx } from "./ui";
 import { Modal } from "./ui-client";
 import { ProductThumb } from "@/app/(app)/productos/product-cards";
@@ -18,10 +19,10 @@ async function searchVariants(term: string, onlyInStock: boolean, signal?: Abort
   try {
     const res = await fetch(`/api/buscar?q=${encodeURIComponent(term)}${onlyInStock ? "&stock=1" : ""}`, { signal });
     const j = await res.json();
-    return res.ok ? { ok: true, data: j.data ?? [] } : { ok: false, error: j.error ?? "No se ha podido buscar." };
+    return res.ok ? { ok: true, data: j.data ?? [] } : { ok: false, error: j.error ?? msg("No se ha podido buscar.") };
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw e;
-    return { ok: false, error: "No se puede conectar. Revisa tu conexión." };
+    return { ok: false, error: msg("No se puede conectar. Revisa tu conexión.") };
   }
 }
 
@@ -29,7 +30,7 @@ export function ProductPicker({
   onSelect,
   onlyInStock = false,
   allowCreate = false,
-  placeholder = "Busca por nombre, marca o SKU",
+  placeholder,
   autoFocus,
 }: {
   onSelect: (v: SellableVariant) => void;
@@ -38,6 +39,8 @@ export function ProductPicker({
   placeholder?: string;
   autoFocus?: boolean;
 }) {
+  const t = useT();
+  const f = useFormat();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<SellableVariant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +62,7 @@ export function ProductPicker({
     if (term.length < 2) return;
     const id = ++reqId.current;
     const ctrl = new AbortController();
-    const t = setTimeout(async () => {
+    const tm = setTimeout(async () => {
       let res;
       try {
         res = await searchVariants(term, onlyInStock, ctrl.signal);
@@ -75,7 +78,7 @@ export function ProductPicker({
       setActive(0);
     }, 180);
     return () => {
-      clearTimeout(t);
+      clearTimeout(tm);
       ctrl.abort();
     };
   }, [q, onlyInStock]);
@@ -99,7 +102,7 @@ export function ProductPicker({
         aria-autocomplete="list"
         value={q}
         autoFocus={autoFocus}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("Busca por nombre, marca o SKU")}
         onChange={(e) => {
           setQ(e.target.value);
           keepOpen();
@@ -129,12 +132,12 @@ export function ProductPicker({
           role="listbox"
           className="absolute z-20 mt-1 max-h-[min(24rem,55dvh)] w-full animate-rise overflow-y-auto rounded-[var(--radius-md)] border border-line-strong bg-surface shadow-[var(--shadow-pop)]"
         >
-          {loading && <p className="px-3 py-2.5 text-sm text-muted">Buscando…</p>}
-          {!loading && error && <p className="px-3 py-2.5 text-sm text-danger">{error}</p>}
+          {loading && <p className="px-3 py-2.5 text-sm text-muted">{t("Buscando…")}</p>}
+          {!loading && error && <p className="px-3 py-2.5 text-sm text-danger">{t(error)}</p>}
           {!loading && !error && results.length === 0 && (
             <div className="px-3 py-2.5 text-sm">
               <p className="text-muted">
-                No hay ningún producto con «{q.trim()}»{onlyInStock ? " con stock" : ""}.
+                {t("No hay ningún producto con «{trim}»", { trim: q.trim() })}{onlyInStock ? t(" con stock") : ""}.
               </p>
               {allowCreate && (
                 <Button
@@ -147,7 +150,7 @@ export function ProductPicker({
                     setOpen(false);
                   }}
                 >
-                  Crear producto «{q.trim()}»
+                  {t("Crear producto «{trim}»", { trim: q.trim() })}
                 </Button>
               )}
             </div>
@@ -168,12 +171,12 @@ export function ProductPicker({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{variantDisplay(v.product_name, v.variant_name, v.variant_count)}</span>
                   <span className="block truncate text-xs text-muted">
-                    {[v.brand_name, v.category_name, v.sku].filter(Boolean).join(", ") || "Sin marca ni categoría"}
+                    {[v.brand_name, v.category_name, v.sku].filter(Boolean).join(", ") || t("Sin marca ni categoría")}
                   </span>
                 </span>
                 <span className="shrink-0 text-right text-xs">
-                  <span className={clsx("num block font-semibold", v.stock <= 0 && "text-muted")}>{v.stock > 0 ? `${v.stock} en stock` : "Sin stock"}</span>
-                  {v.normal_sale_price !== null && <span className="num block text-muted">{money(v.normal_sale_price)}</span>}
+                  <span className={clsx("num block font-semibold", v.stock <= 0 && "text-muted")}>{v.stock > 0 ? t("{stock} en stock", { stock: v.stock }) : t("Sin stock")}</span>
+                  {v.normal_sale_price !== null && <span className="num block text-muted">{f.money(v.normal_sale_price)}</span>}
                 </span>
               </button>
             ))}
@@ -208,6 +211,8 @@ function QuickCreate({
   onClose: () => void;
   onCreated: (name: string) => void;
 }) {
+  const t = useT();
+  const f = useFormat();
   const [name, setName] = useState(initialName);
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
@@ -220,10 +225,10 @@ function QuickCreate({
     <Modal
       open={open}
       onClose={onClose}
-      title="Crear producto"
+      title={t("Crear producto")}
       footer={
         <>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button onClick={onClose}>{t("Cancelar")}</Button>
           <Button
             variant="primary"
             disabled={pending || !name.trim()}
@@ -245,34 +250,34 @@ function QuickCreate({
               else onCreated(name.trim());
             }}
           >
-            {pending ? "Creando…" : "Crear producto"}
+            {pending ? t("Creando…") : t("Crear producto")}
           </Button>
         </>
       }
     >
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Nombre" required className="sm:col-span-2">
+        <Field label={t("Nombre")} required className="sm:col-span-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </Field>
-        <Field label="Marca">
+        <Field label={t("Marca")}>
           <Input value={brand} onChange={(e) => setBrand(e.target.value)} />
         </Field>
-        <Field label="Categoría">
+        <Field label={t("Categoría")}>
           <Input value={category} onChange={(e) => setCategory(e.target.value)} />
         </Field>
-        <Field label="Precio normal de venta (€)">
+        <Field label={t("Precio normal de venta (€)")}>
           <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
         </Field>
-        <Field label="Variantes" hint="Separadas por comas, por ejemplo: Negro, Blanco. Déjalo vacío si no tiene.">
+        <Field label={t("Variantes")} hint={t("Separadas por comas, por ejemplo: Negro, Blanco. Déjalo vacío si no tiene.")}>
           <Input value={variants} onChange={(e) => setVariants(e.target.value)} />
         </Field>
       </div>
       <Notice tone="info" className="mt-4">
-        El producto se crea sin stock. Las unidades solo entran al recibir una compra o con un ajuste autorizado.
+        {t("El producto se crea sin stock. Las unidades solo entran al recibir una compra o con un ajuste autorizado.")}
       </Notice>
       {error && (
         <Notice tone="bad" className="mt-3">
-          {error}
+          {t(error)}
         </Notice>
       )}
     </Modal>

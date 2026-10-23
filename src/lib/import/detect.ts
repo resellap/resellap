@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 /**
  * Detección automática: en qué fila están las cabeceras, qué tipo de
  * hoja es y qué columna corresponde a cada campo.
@@ -97,11 +98,11 @@ export function headersOf(sheet: ParsedSheet, headerRow: number): string[] {
 
 export function detectSheet(sheet: ParsedSheet): SheetConfig {
   const base: SheetConfig = { sheetName: sheet.name, type: "ignorar", headerRow: 0, mapping: {}, reason: "" };
-  if (sheet.rows.length < 2) return { ...base, reason: "La hoja está vacía." };
+  if (sheet.rows.length < 2) return { ...base, reason: msg("La hoja está vacía.") };
 
   const sheetKey = normKey(sheet.name);
   if (IGNORE_HINTS.some((h) => sheetKey.includes(h))) {
-    return { ...base, reason: "Por su nombre, parece una hoja de cálculos o resúmenes, no de datos." };
+    return { ...base, reason: msg("Por su nombre, parece una hoja de cálculos o resúmenes, no de datos.") };
   }
 
   const headerRow = findHeaderRow(sheet);
@@ -120,7 +121,7 @@ export function detectSheet(sheet: ParsedSheet): SheetConfig {
   }
 
   if (!best) {
-    return { ...base, headerRow, reason: "No se han reconocido las columnas necesarias." };
+    return { ...base, headerRow, reason: msg("No se han reconocido las columnas necesarias.") };
   }
   const label = SHEET_TYPES.find((s) => s.type === best.type)?.label ?? best.type;
   return {
@@ -128,7 +129,7 @@ export function detectSheet(sheet: ParsedSheet): SheetConfig {
     type: best.type,
     headerRow,
     mapping: best.mapping,
-    reason: `Detectada como «${label}» por sus columnas${nameHint(best.type, sheet.name) ? " y su nombre" : ""}.`,
+    reason: nameHint(best.type, sheet.name) ? fmtMsg(msg("Detectada como «{0}» por sus columnas y su nombre."), label) : fmtMsg(msg("Detectada como «{0}» por sus columnas."), label),
   };
 }
 
@@ -136,7 +137,7 @@ export function detectSheet(sheet: ParsedSheet): SheetConfig {
 export function withType(sheet: ParsedSheet, cfg: SheetConfig, type: SheetType): SheetConfig {
   const headerRow = cfg.headerRow;
   const { mapping } = autoMap(type, headersOf(sheet, headerRow));
-  return { ...cfg, type, mapping, reason: "Tipo elegido manualmente." };
+  return { ...cfg, type, mapping, reason: msg("Tipo elegido manualmente.") };
 }
 
 export function withHeaderRow(sheet: ParsedSheet, cfg: SheetConfig, headerRow: number): SheetConfig {

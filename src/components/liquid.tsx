@@ -13,6 +13,7 @@
  * `data-[on=true]:`).
  */
 import clsx from "clsx";
+import { useT } from "@/i18n/client";
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -125,6 +126,7 @@ export function BubbleGroup({
   /** Si se indica, el grupo es un <nav> con ese nombre. */
   label?: string;
 }) {
+  const t = useT();
   const ref = useRef<HTMLElement>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [seen, setSeen] = useState(active);
@@ -136,7 +138,7 @@ export function BubbleGroup({
   return (
     <Tag
       ref={ref as never}
-      aria-label={label}
+      aria-label={label ? t(label) : undefined}
       className={clsx("relative", className)}
       onClickCapture={(e: React.MouseEvent) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;

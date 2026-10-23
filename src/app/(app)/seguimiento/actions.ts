@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -19,22 +20,24 @@ const schema = z.object({
 
 /** Código de seguimiento, transportista o estado puesto a mano. La base de datos comprueba los permisos. */
 export async function updateTracking(input: z.input<typeof schema>): Promise<ActionResult> {
+  const t = await getT();
   const v = schema.safeParse(input);
-  if (!v.success) return { ok: false, error: "Revisa los datos del envío." };
+  if (!v.success) return { ok: false, error: t("Revisa los datos del envío.") };
   const supabase = await createClient();
   const { error } = await supabase.rpc("update_tracking", { p: v.data });
   if (error) return { ok: false, error: friendlyError(error) };
   // Con código nuevo, se da de alta y se consulta ya si la venta ya está enviada (si no, al marcarla como enviada)
   if (v.data.tracking_number && trackingConfigured()) await runTracking({ saleIds: [v.data.id] }).catch(() => undefined);
   revalidatePath("/", "layout");
-  return { ok: true, message: v.data.status ? "Estado actualizado." : "Envío actualizado." };
+  return { ok: true, message: v.data.status ? t("Estado actualizado.") : t("Envío actualizado.") };
 }
 
 /** Consultar ahora al transportista: un envío o todos los abiertos (solo los que ve este usuario). */
 export async function refreshTracking(saleId?: string): Promise<ActionResult> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.orgId || !user.active) return { ok: false, error: "No tienes acceso." };
-  if (!trackingConfigured()) return { ok: false, error: "El seguimiento automático no está activado (falta la clave del servicio). Puedes actualizar el estado a mano." };
+  if (!user?.orgId || !user.active) return { ok: false, error: t("No tienes acceso.") };
+  if (!trackingConfigured()) return { ok: false, error: t("El seguimiento automático no está activado (falta la clave del servicio). Puedes actualizar el estado a mano.") };
   const supabase = await createClient();
   // Solo ventas que el usuario puede ver (las reglas de acceso filtran) y ya marcadas como enviadas
   let q = supabase
@@ -50,11 +53,13 @@ export async function refreshTracking(saleId?: string): Promise<ActionResult> {
   if (saleId) q = q.eq("id", saleId);
   const { data } = await q;
   const ids = (data ?? []).map((r) => r.id as string);
-  if (!ids.length) return { ok: true, message: "No hay envíos con código por consultar." };
+  if (!ids.length) return { ok: true, message: t("No hay envíos con código por consultar.") };
   const r = await runTracking({ saleIds: ids });
   revalidatePath("/", "layout");
-  if (!r.checked && r.errors) return { ok: false, error: `No se ha podido consultar ${ids.length === 1 ? "el envío" : "ningún envío"} (${r.errors} con problemas). Revisa el código y el transportista.` };
-  return { ok: true, message: `${r.checked} ${r.checked === 1 ? "envío actualizado" : "envíos actualizados"}${r.updated ? `, ${r.updated} con novedades` : ""}${r.errors ? ` (${r.errors} con problemas)` : ""}.` };
+  if (!r.checked && r.errors) return { ok: false, error: t("No se ha podido consultar {v} ({errors} con problemas). Revisa el código y el transportista.", { v: ids.length === 1 ? t("el envío") : t("ningún envío"), errors: r.errors }) };
+  const parts = [r.checked === 1 ? t("1 envío actualizado") : t("{n} envíos actualizados", { n: r.checked })];
+  if (r.updated) parts.push(t("{n} con novedades", { n: r.updated }));
+  return { ok: true, message: `${parts.join(", ")}${r.errors ? ` ${t("({n} con problemas)", { n: r.errors })}` : ""}.` };
 }
 
 export async function markAlertsRead(ids: number[] | null): Promise<ActionResult> {

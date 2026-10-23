@@ -2,21 +2,24 @@
  * Piezas visuales del seguimiento de envíos: estado, barra de progreso e
  * historial (línea de tiempo). Sin estado: sirven en servidor y cliente.
  */
+import { msg } from "@/i18n/translate";
+import { Fmt } from "@/i18n/fmt";
+import { Tx } from "@/i18n/tx";
 import { Check } from "lucide-react";
 import { Badge, clsx } from "./ui";
 
 export type TrackingStatus = "pendiente" | "enviado" | "en_transito" | "en_reparto" | "entregado" | "incidencia" | "devuelto" | "cancelado" | "desconocido";
 
 export const TRACKING_LABEL: Record<TrackingStatus, string> = {
-  pendiente: "Pendiente",
-  enviado: "Enviado",
-  en_transito: "En tránsito",
-  en_reparto: "En reparto",
-  entregado: "Entregado",
-  incidencia: "Incidencia",
-  devuelto: "Devuelto",
-  cancelado: "Cancelado",
-  desconocido: "Desconocido",
+  pendiente: msg("Pendiente"),
+  enviado: msg("Enviado"),
+  en_transito: msg("En tránsito"),
+  en_reparto: msg("En reparto"),
+  entregado: msg("Entregado"),
+  incidencia: msg("Incidencia"),
+  devuelto: msg("Devuelto"),
+  cancelado: msg("Cancelado"),
+  desconocido: msg("Desconocido"),
 };
 
 const TONE: Record<TrackingStatus, "neutral" | "good" | "warn" | "bad" | "info"> = {
@@ -35,7 +38,7 @@ export function TrackingBadge({ status }: { status: string | null | undefined })
   const s = (status ?? "pendiente") as TrackingStatus;
   return (
     <Badge tone={TONE[s] ?? "neutral"} dot>
-      {TRACKING_LABEL[s] ?? s}
+      <Tx>{TRACKING_LABEL[s] ?? s}</Tx>
     </Badge>
   );
 }
@@ -46,8 +49,8 @@ export function TrackingBadge({ status }: { status: string | null | undefined })
  * según lo que diga 17TRACK una vez marcada como enviada.
  */
 export type EnvioState = "pendiente" | "enviado" | "en_reparto" | "entregado";
-export const ENVIO_LABEL: Record<EnvioState, string> = { pendiente: "Pendiente de envío", enviado: "Enviado", en_reparto: "En reparto", entregado: "Entregado" };
-export const ENVIO_OPTIONS = (Object.keys(ENVIO_LABEL) as EnvioState[]).map((value) => ({ value, label: ENVIO_LABEL[value] }));
+export const ENVIO_LABEL: Record<EnvioState, string> = { pendiente: msg("Pendiente de envío"), enviado: msg("Enviado"), en_reparto: msg("En reparto"), entregado: msg("Entregado") };
+export const ENVIO_OPTIONS = (Object.keys(ENVIO_LABEL) as EnvioState[]).map((value) => ({ value, label: ENVIO_LABEL[value] })); // las etiquetas se traducen al pintarlas
 const ENVIO_TONE: Record<EnvioState, "warn" | "info" | "good"> = { pendiente: "warn", enviado: "info", en_reparto: "info", entregado: "good" };
 
 export function envioState(shipping: string | null | undefined, tracking?: string | null, deliveredAt?: string | null): EnvioState {
@@ -60,16 +63,16 @@ export function envioState(shipping: string | null | undefined, tracking?: strin
 export function EnvioBadge({ state }: { state: EnvioState }) {
   return (
     <Badge tone={ENVIO_TONE[state]} dot>
-      {ENVIO_LABEL[state]}
+      <Tx>{ENVIO_LABEL[state]}</Tx>
     </Badge>
   );
 }
 
 const STEPS: { key: TrackingStatus; label: string }[] = [
-  { key: "enviado", label: "Enviado" },
-  { key: "en_transito", label: "En tránsito" },
-  { key: "en_reparto", label: "En reparto" },
-  { key: "entregado", label: "Entregado" },
+  { key: "enviado", label: msg("Enviado") },
+  { key: "en_transito", label: msg("En tránsito") },
+  { key: "en_reparto", label: msg("En reparto") },
+  { key: "entregado", label: msg("Entregado") },
 ];
 const STEP_INDEX: Partial<Record<TrackingStatus, number>> = { enviado: 0, desconocido: 0, en_transito: 1, incidencia: 1, en_reparto: 2, entregado: 3 };
 
@@ -79,7 +82,10 @@ export function TrackingProgress({ status, compact }: { status: string | null | 
   const at = s === "pendiente" ? -1 : (STEP_INDEX[s] ?? 0);
   const problem = s === "incidencia" || s === "devuelto" || s === "cancelado";
   return (
-    <div className="w-full" aria-label={`Estado: ${TRACKING_LABEL[s] ?? s}`}>
+    <div className="w-full">
+      <span className="sr-only">
+        <Tx vars={{ v: TRACKING_LABEL[s] ?? s }}>{"Estado: {v}"}</Tx>
+      </span>
       <div className="flex gap-1">
         {STEPS.map((st, i) => (
           <span
@@ -95,7 +101,7 @@ export function TrackingProgress({ status, compact }: { status: string | null | 
         <div className="mt-1.5 grid grid-cols-4 text-[11.5px] text-faint">
           {STEPS.map((st, i) => (
             <span key={st.key} className={clsx(i === at && "font-semibold text-ink", i === 3 && "text-right", (i === 1 || i === 2) && "text-center")}>
-              {st.label}
+              <Tx>{st.label}</Tx>
             </span>
           ))}
         </div>
@@ -106,12 +112,9 @@ export function TrackingProgress({ status, compact }: { status: string | null | 
 
 export type TimelineEvent = { id: number | string; at: string; status: string; description: string; location: string | null; source: string };
 
-const fmt = (iso: string) =>
-  new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)).replace(",", " ·");
-
 /** Historial del envío: el estado actual arriba y destacado. */
 export function TrackingTimeline({ events }: { events: TimelineEvent[] }) {
-  if (!events.length) return <p className="text-[13.5px] text-muted">Aún no hay movimientos.</p>;
+  if (!events.length) return <p className="text-[13.5px] text-muted"><Tx>Aún no hay movimientos.</Tx></p>;
   // El más reciente arriba; «Marcado como enviado en Resellap» es el punto de partida y va siempre al final
   const sorted = [...events].sort((a, b) => (a.source === "resellap" ? 1 : 0) - (b.source === "resellap" ? 1 : 0) || Date.parse(b.at) - Date.parse(a.at));
   return (
@@ -134,11 +137,11 @@ export function TrackingTimeline({ events }: { events: TimelineEvent[] }) {
               {current && done ? <Check size={13} strokeWidth={3} /> : <span className={clsx("h-2 w-2 rounded-full", current ? (bad ? "bg-warn" : "bg-ink") : "bg-line-strong")} />}
             </span>
             <div className={clsx("min-w-0 flex-1", !current && "text-muted")}>
-              <p className={clsx("text-[14px] leading-snug", current ? "font-semibold text-ink" : "font-medium")}>{e.description}</p>
+              <p className={clsx("text-[14px] leading-snug", current ? "font-semibold text-ink" : "font-medium")}><Tx>{e.description}</Tx></p>
               <p className="num mt-0.5 text-[12.5px] text-faint">
-                {fmt(e.at)}
+                <Fmt kind="eventTime" value={e.at} />
                 {e.location ? ` · ${e.location}` : ""}
-                {e.source === "manual" ? " · a mano" : e.source === "resellap" ? " · Resellap" : ""}
+                {e.source === "manual" ? <> · <Tx>a mano</Tx></> : e.source === "resellap" ? " · Resellap" : ""}
               </p>
             </div>
             {current && <TrackingBadge status={e.status} />}

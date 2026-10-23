@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/i18n/client";
+import { msg } from "@/i18n/translate";
 import { Bell, ChevronDown, ChevronRight, LayoutGrid, LifeBuoy, LogOut, Mail, MessageSquarePlus, Moon, Plus, Settings, Sun, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -52,7 +54,7 @@ function Counter({ n, k }: { n: number; k?: BadgeKey }) {
   return <span className={clsx("num inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11.5px] font-semibold", tone)}>{n}</span>;
 }
 
-const ROLE_LABEL = { admin: "Administrador", vendedor: "Vendedor", almacen: "Almacén" } as const;
+const ROLE_LABEL = { admin: msg("Administrador"), vendedor: msg("Vendedor"), almacen: msg("Almacén") } as const;
 type Badges = Record<BadgeKey, number>;
 
 export function Shell({
@@ -80,6 +82,7 @@ export function Shell({
   /** Aspecto guardado (para el botón claro/oscuro). */
   appearance?: { mode: "auto" | "light" | "dark"; palette: Palette; reduceMotion: boolean };
 }) {
+  const t = useT();
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const [cfg, setCfg] = useState(false);
@@ -198,14 +201,14 @@ export function Shell({
         </span>
         <span className="min-w-0 flex-1 text-[13px] leading-tight">
           <span className="block truncate font-semibold text-ink">{userLabel}</span>
-          <span className="block truncate text-faint">{ROLE_LABEL[role]} · Mi cuenta</span>
+          <span className="block truncate text-faint">{t("{role} · Mi cuenta", { role: t(ROLE_LABEL[role]) })}</span>
         </span>
       </Link>
       <form action="/auth/salir" method="post">
         <button
           className="press flex h-10 w-10 items-center justify-center rounded-full text-faint hover:bg-subtle hover:text-ink"
-          aria-label="Cerrar sesión"
-          title="Cerrar sesión"
+          aria-label={t("Cerrar sesión")}
+          title={t("Cerrar sesión")}
         >
           <LogOut size={17} strokeWidth={1.75} />
         </button>
@@ -228,7 +231,7 @@ export function Shell({
           <li key={it.href}>
             <NavLink href={it.href} active={active} className={itemClass(active)}>
               <Icon size={19} strokeWidth={1.75} className={active ? "text-brand" : "text-faint group-hover:text-ink"} />
-              <span className="flex-1 truncate">{it.label}</span>
+              <span className="flex-1 truncate">{t(it.label)}</span>
               <Counter n={badgeOf(it)} k={it.badgeKey} />
             </NavLink>
           </li>
@@ -238,7 +241,7 @@ export function Shell({
   );
 
   // ---------------- Ordenador: barra superior en píldoras + carril de iconos ----------------
-  const SHORT: Record<string, string> = { "/detectadas": "Detectadas", "/envios": "Envíos" };
+  const SHORT: Record<string, string> = { "/detectadas": msg("Detectadas"), "/envios": msg("Envíos") };
   const topItems = (NAV[0]?.items ?? []).filter(visible).filter((i) => i.href !== "/ventas/nueva");
   const railGroups = NAV.slice(1)
     .filter((g) => !g.footer)
@@ -263,10 +266,10 @@ export function Shell({
 
   const topBar = (
     <header className="sticky top-0 z-40 hidden items-center gap-3 bg-gradient-to-b from-paper from-70% to-transparent px-6 pb-4 pt-4 lg:flex no-print 2xl:px-8">
-      <Link href="/" aria-label="Resellap, inicio" className={clsx(pill, "press flex h-12 shrink-0 items-center px-5")}>
+      <Link href="/" aria-label={t("Resellap, inicio")} className={clsx(pill, "press flex h-12 shrink-0 items-center px-5")}>
         <Logo size={22} />
       </Link>
-      <nav ref={topNav} aria-label="Principal" className={clsx(pill, "no-scrollbar relative flex min-w-0 items-center gap-0.5 overflow-x-auto p-1")}>
+      <nav ref={topNav} aria-label={t("Principal")} className={clsx(pill, "no-scrollbar relative flex min-w-0 items-center gap-0.5 overflow-x-auto p-1")}>
         <LiquidBubble container={topNav} active={topItems.find((i) => isActive(here, i.href))?.href ?? null} />
         {topItems.map((it) => {
           const active = isActive(here, it.href);
@@ -283,7 +286,7 @@ export function Shell({
               )}
               data-on={String(active)}
             >
-              {SHORT[it.href] ?? it.label}
+              {t(SHORT[it.href] ?? it.label)}
               {n > 0 && (
                 <span
                   className={clsx(
@@ -303,19 +306,19 @@ export function Shell({
         <NavLink
           href="/ventas/nueva"
           active={pathname.startsWith("/ventas/nueva")}
-          aria-label="Nueva venta"
+          aria-label={t("Nueva venta")}
           className="press flex h-12 shrink-0 items-center gap-2 rounded-[12px] bg-brand px-4 text-[14px] font-semibold text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_6px_20px_-8px_rgb(54_199_132/0.55)] hover:bg-brand-strong xl:px-5"
         >
           <Plus size={18} strokeWidth={2.25} />
-          <span className="hidden xl:inline">Nueva venta</span>
+          <span className="hidden xl:inline">{t("Nueva venta")}</span>
         </NavLink>
       )}
       <div className={clsx(pill, "hidden h-12 shrink-0 items-center gap-0.5 px-1 xl:flex")}>
         <Link
           href="/seguimiento?vista=alertas"
           className="press relative flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:bg-subtle hover:text-ink"
-          aria-label={badges.alerts > 0 ? `${badges.alerts} ${badges.alerts === 1 ? "alerta" : "alertas"} de envíos` : "Alertas de envíos"}
-          title="Alertas de envíos"
+          aria-label={badges.alerts > 0 ? (badges.alerts === 1 ? t("1 alerta de envíos") : t("{n} alertas de envíos", { n: badges.alerts })) : t("Alertas de envíos")}
+          title={t("Alertas de envíos")}
         >
           <Bell size={18} strokeWidth={1.75} />
           {badges.alerts > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger ring-2 ring-surface" />}
@@ -324,8 +327,8 @@ export function Shell({
           <Link
             href="/detectadas"
             className="press relative flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:bg-subtle hover:text-ink"
-            aria-label="Ventas detectadas en el correo"
-            title="Ventas detectadas"
+            aria-label={t("Ventas detectadas en el correo")}
+            title={t("Ventas detectadas")}
           >
             <Mail size={18} strokeWidth={1.75} />
             {badges.detected > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand ring-2 ring-surface" />}
@@ -347,7 +350,7 @@ export function Shell({
           <div className="px-3 pb-2 pt-2">
             <p className="truncate text-[14px] font-semibold text-ink">{userLabel}</p>
             <p className="truncate text-[12.5px] text-faint">
-              {ROLE_LABEL[role]} · {orgName}
+              {t(ROLE_LABEL[role])} · {orgName}
             </p>
           </div>
           {orgSwitcher && <div className="px-1 pb-2">{orgSwitcher}</div>}
@@ -359,7 +362,7 @@ export function Shell({
 
   const rail = (
     <aside
-      aria-label="Más secciones"
+      aria-label={t("Más secciones")}
       ref={railBox}
       className="fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
     >
@@ -367,8 +370,8 @@ export function Shell({
         <LiquidBubble container={themeBox} active={mode} />
         {(
           [
-            ["light", Sun, "Modo claro"],
-            ["dark", Moon, "Modo oscuro"],
+            ["light", Sun, t("Modo claro")],
+            ["dark", Moon, t("Modo oscuro")],
           ] as const
         ).map(([m, Icon, label]) => (
           <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem()} data-bubble={m} data-on={String(mode === m)} aria-pressed={mode === m} title={label}>
@@ -382,8 +385,8 @@ export function Shell({
         type="button"
         onClick={() => setRailOpen((v) => !v)}
         aria-expanded={railOpen}
-        aria-label={railOpen ? "Recoger el menú" : "Desplegar el menú con los nombres"}
-        title={railOpen ? "Recoger" : "Ver nombres"}
+        aria-label={railOpen ? t("Recoger el menú") : t("Desplegar el menú con los nombres")}
+        title={railOpen ? t("Recoger") : t("Ver nombres")}
         className={clsx(
           "press absolute -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-ink text-paper shadow-[0_0_0_3px_var(--paper),var(--shadow-pop)] rs-ease transition-[left] duration-[450ms] hover:bg-ink-soft",
           railOpen ? "left-[226px]" : "left-[34px]",
@@ -391,7 +394,7 @@ export function Shell({
       >
         <ChevronRight size={15} strokeWidth={2.5} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
       </button>
-      <nav ref={railNav} aria-label="Gestión" className={clsx(railPill, "no-scrollbar relative min-h-0 shrink overflow-y-auto")}>
+      <nav ref={railNav} aria-label={t("Gestión")} className={clsx(railPill, "no-scrollbar relative min-h-0 shrink overflow-y-auto")}>
         <LiquidBubble container={railNav} active={railGroups.flatMap((g) => g.items).find((i) => isActive(here, i.href))?.href ?? null} />
         {railGroups.map((g, gi) => (
           <div key={gi} className={clsx("flex flex-col gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
@@ -399,7 +402,7 @@ export function Shell({
               const active = isActive(here, it.href);
               const n = badgeOf(it);
               return (
-                <NavLink key={it.href} href={it.href} active={isActive(pathname, it.href)} data-bubble={it.href} title={it.label} aria-label={it.label} onClick={() => { closeRail(); setGoingTo(it.href); }} className={railItem()} data-on={String(active)}>
+                <NavLink key={it.href} href={it.href} active={isActive(pathname, it.href)} data-bubble={it.href} title={t(it.label)} aria-label={t(it.label)} onClick={() => { closeRail(); setGoingTo(it.href); }} className={railItem()} data-on={String(active)}>
                   <it.icon size={18} strokeWidth={1.75} className="shrink-0" />
                   {n > 0 && (
                     <span
@@ -409,7 +412,7 @@ export function Shell({
                       )}
                     />
                   )}
-                  <span className={clsx(railLabel, "flex-1")}>{it.label}</span>
+                  <span className={clsx(railLabel, "flex-1")}>{t(it.label)}</span>
                   {n > 0 && (
                     <span className={clsx(railLabel, "shrink-0")}>
                       <Counter n={n} k={it.badgeKey} />
@@ -427,17 +430,17 @@ export function Shell({
         <NavLink
           href="/ayuda"
           active={isActive(pathname, "/ayuda")}
-          title="Ayuda y soporte"
-          aria-label="Ayuda y soporte"
+          title={t("Ayuda y soporte")}
+          aria-label={t("Ayuda y soporte")}
           onClick={() => { closeRail(); setGoingTo("/ayuda"); }}
           className={settingsBtn(helpActive)}
         >
           <LifeBuoy size={18} strokeWidth={1.75} className="shrink-0" />
-          <span className={railLabel}>Ayuda y soporte</span>
+          <span className={railLabel}>{t("Ayuda y soporte")}</span>
         </NavLink>
-        <button type="button" onClick={openFb} title="Enviar feedback" aria-label="Enviar feedback" className={settingsBtn(fb)}>
+        <button type="button" onClick={openFb} title={t("Enviar feedback")} aria-label={t("Enviar feedback")} className={settingsBtn(fb)}>
           <MessageSquarePlus size={18} strokeWidth={1.75} className="shrink-0" />
-          <span className={railLabel}>Enviar feedback</span>
+          <span className={railLabel}>{t("Enviar feedback")}</span>
         </button>
       </div>
       {settingsItems.length > 0 && (
@@ -448,11 +451,11 @@ export function Shell({
               onClick={() => { setCfg((v) => !v); closeRail(); }}
               aria-expanded={cfg}
               aria-controls="menu-config"
-              title="Configuración"
+              title={t("Configuración")}
               className={settingsBtn(settingsActive || cfg)}
             >
               <Settings size={18} strokeWidth={1.75} className={clsx("shrink-0 transition-transform duration-300", cfg && "rotate-90")} />
-              <span className={railLabel}>Configuración</span>
+              <span className={railLabel}>{t("Configuración")}</span>
             </button>
           </div>
           {cfg && (
@@ -462,7 +465,7 @@ export function Shell({
             >
               <p className="flex items-center gap-2 px-3 pb-2 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">
                 <Settings size={13} strokeWidth={2} className="text-brand" />
-                Configuración
+                {t("Configuración")}
               </p>
               <div className="rounded-[14px] bg-surface p-1 [&_a]:min-h-9 [&_a]:text-[13.5px]">{renderGroup(settingsItems)}</div>
             </div>
@@ -474,9 +477,9 @@ export function Shell({
 
   // ---------------- Barra inferior (móvil y iPad en vertical) ----------------
   const tabs: { href: string; label: string; icon: RsIcon; badge?: number }[] = [
-    { href: "/", label: "Inicio", icon: IconInicio },
-    { href: "/ventas", label: "Ventas", icon: IconVentas },
-    { href: "/envios", label: "Envíos", icon: IconEnvios, badge: badges.shipments },
+    { href: "/", label: t("Inicio"), icon: IconInicio },
+    { href: "/ventas", label: t("Ventas"), icon: IconVentas },
+    { href: "/envios", label: t("Envíos"), icon: IconEnvios, badge: badges.shipments },
   ];
   const tabsHere = isActive(here, "/") || isActive(here, "/ventas") || isActive(here, "/envios") || here.startsWith("/ventas/nueva");
   const tabClass = () =>
@@ -488,7 +491,7 @@ export function Shell({
 
   const tabBar = (
     <nav
-      aria-label="Accesos rápidos"
+      aria-label={t("Accesos rápidos")}
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden no-print"
     >
       <ul ref={tabList} className="rs-card relative mx-auto flex max-w-md items-center rounded-[18px] bg-surface/90 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-xl [--bubble-radius:12px]">
@@ -509,7 +512,7 @@ export function Shell({
             <NavLink
               href="/ventas/nueva"
               active={pathname.startsWith("/ventas/nueva")}
-              aria-label="Nueva venta"
+              aria-label={t("Nueva venta")}
               className="press flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-brand text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_6px_20px_-8px_rgb(54_199_132/0.6)]"
             >
               <Plus size={26} strokeWidth={2} />
@@ -540,7 +543,7 @@ export function Shell({
               <LayoutGrid size={23} strokeWidth={1.75} />
               {pendingMore > 0 && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-surface" />}
             </span>
-            Más
+            {t("Más")}
           </button>
         </li>
       </ul>
@@ -551,7 +554,7 @@ export function Shell({
     <dialog
       ref={sheet}
       id="menu-mas"
-      aria-label="Menú"
+      aria-label={t("Menú")}
       onClose={() => setMore(false)}
       onClick={(e) => e.target === e.currentTarget && setMore(false)}
       className="mi-sheet max-h-[88dvh] overflow-hidden rounded-t-[var(--radius-lg)] bg-surface p-0 text-ink lg:hidden"
@@ -564,7 +567,7 @@ export function Shell({
             type="button"
             onClick={() => setMore(false)}
             className="press flex h-10 w-10 items-center justify-center rounded-full bg-subtle"
-            aria-label="Cerrar"
+            aria-label={t("Cerrar")}
           >
             <X size={20} strokeWidth={1.75} />
           </button>
@@ -576,7 +579,7 @@ export function Shell({
             if (!items.length) return null;
             return (
               <section key={gi}>
-                <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{g.label ?? "Día a día"}</p>
+                <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{g.label ? t(g.label) : t("Día a día")}</p>
                 <ul className="stagger grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {items.map((it) => {
                     const active = isActive(pathname, it.href);
@@ -592,7 +595,7 @@ export function Shell({
                           )}
                         >
                           <it.icon size={21} strokeWidth={1.75} className={active ? "text-brand-bright" : "text-faint"} />
-                          <span>{it.label}</span>
+                          <span>{t(it.label)}</span>
                           {n > 0 && (
                             <span className="absolute right-2 top-2">
                               <Counter n={n} k={it.badgeKey} />
@@ -607,7 +610,7 @@ export function Shell({
             );
           })}
           <section>
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">Ayuda</p>
+            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{t("Ayuda")}</p>
             <ul className="grid grid-cols-2 gap-2">
               <li>
                 <NavLink
@@ -619,13 +622,13 @@ export function Shell({
                   )}
                 >
                   <LifeBuoy size={21} strokeWidth={1.75} className={isActive(pathname, "/ayuda") ? "text-brand-bright" : "text-faint"} />
-                  Ayuda y soporte
+                  {t("Ayuda y soporte")}
                 </NavLink>
               </li>
               <li>
                 <button type="button" onClick={openFb} className="press flex min-h-[60px] w-full items-center gap-3 rounded-[20px] bg-surface-2 p-3 text-left text-[13px] font-medium leading-tight text-ink-soft">
                   <MessageSquarePlus size={21} strokeWidth={1.75} className="text-faint" />
-                  Enviar feedback
+                  {t("Enviar feedback")}
                 </button>
               </li>
             </ul>
@@ -647,7 +650,7 @@ export function Shell({
 
       {/* Barra superior (móvil y iPad en vertical) */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-gradient-to-b from-paper from-75% to-transparent px-4 pb-3 pt-[max(0.6rem,env(safe-area-inset-top))] lg:hidden no-print">
-        <Link href="/" aria-label="Resellap, inicio" className={clsx(pill, "press flex h-11 items-center px-4")}>
+        <Link href="/" aria-label={t("Resellap, inicio")} className={clsx(pill, "press flex h-11 items-center px-4")}>
           <Logo size={20} />
         </Link>
         <div className="flex min-w-0 items-center gap-2">
@@ -656,7 +659,7 @@ export function Shell({
             <Link
               href="/seguimiento?vista=alertas"
               className={clsx(pill, "press relative flex h-11 w-11 shrink-0 items-center justify-center")}
-              aria-label={`${badges.alerts} ${badges.alerts === 1 ? "alerta" : "alertas"} de envíos`}
+              aria-label={(badges.alerts === 1 ? t("1 alerta de envíos") : t("{n} alertas de envíos", { n: badges.alerts }))}
             >
               <Bell size={19} strokeWidth={1.75} />
               <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-surface" />

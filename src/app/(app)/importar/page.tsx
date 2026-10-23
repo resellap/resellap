@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
 import { requirePerm } from "@/lib/auth";
@@ -5,7 +6,10 @@ import type { ImportExisting } from "@/lib/import/plan";
 import { createClient } from "@/lib/supabase/server";
 import { ImportWizard } from "./import-wizard";
 
-export const metadata: Metadata = { title: "Importar Excel" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Importar Excel") };
+}
 
 async function fetchAll<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null }>) {
   const out: T[] = [];
@@ -18,6 +22,7 @@ async function fetchAll<T>(build: (from: number, to: number) => PromiseLike<{ da
 }
 
 export default async function ImportPage() {
+  const t = await getT();
   await requirePerm("importar");
   const supabase = await createClient();
   const [products, pos, sales, exits, resp, mobiles, platforms, carriers, batches] = await Promise.all([
@@ -44,8 +49,8 @@ export default async function ImportPage() {
   return (
     <>
       <PageHeader
-        title="Importar Excel"
-        description="Lee tu Excel, relaciona sus columnas con Resellap, revisa los avisos y simula antes de guardar. No se sobrescribe nada que ya exista."
+        title={t("Importar Excel")}
+        description={t("Lee tu Excel, relaciona sus columnas con Resellap, revisa los avisos y simula antes de guardar. No se sobrescribe nada que ya exista.")}
       />
       <ImportWizard existing={existing} previous={(batches.data ?? []) as { id: string; file_name: string; created_at: string; summary: Record<string, unknown> }[]} />
     </>

@@ -1,14 +1,19 @@
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { safeNext } from "@/lib/safe-redirect";
-import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
+import { priceLabel, TRIAL_DAYS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { SignupForm } from "./signup-form";
 
-export const metadata: Metadata = { title: "Crear cuenta" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Crear cuenta") };
+}
 
 export default async function SignupPage({ searchParams }: PageProps<"/registro">) {
+  const t = await getT();
   const sp = await searchParams;
   const next = safeNext(typeof sp.next === "string" ? sp.next : "/bienvenida");
   // Si viene de una invitación, el email es el de la invitación
@@ -21,14 +26,14 @@ export default async function SignupPage({ searchParams }: PageProps<"/registro"
   }
   return (
     <AuthLayout
-      title="Crear cuenta"
-      subtitle={invitedEmail ? "Crea tu cuenta para unirte al equipo." : `${TRIAL_DAYS} días gratis, sin tarjeta. Después, ${PRICE_LABEL} al mes.`}
+      title={t("Crear cuenta")}
+      subtitle={invitedEmail ? t("Crea tu cuenta para unirte al equipo.") : t("{TRIAL_DAYS} días gratis, sin tarjeta. Después, {price} al mes.", { TRIAL_DAYS, price: priceLabel() })}
     >
       <SignupForm next={next} invitedEmail={invitedEmail} />
       <p className="mt-6 text-sm">
-        ¿Ya tienes cuenta?{" "}
+        {t("¿Ya tienes cuenta?")}{" "}
         <Link href={`/login${next !== "/bienvenida" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-brand-ink underline-offset-2 hover:underline">
-          Entrar
+          {t("Entrar")}
         </Link>
       </p>
     </AuthLayout>

@@ -4,6 +4,7 @@
  * visor a pantalla completa. Para el administrador: añadir varias fotos,
  * elegir portada, ordenar y borrar.
  */
+import { useT } from "@/i18n/client";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, GalleryHorizontal, ImagePlus, LayoutGrid, Star, Trash2, X } from "lucide-react";
@@ -46,11 +47,12 @@ export function FadeImg({ src, alt, className, eager }: { src: string; alt: stri
 }
 
 function UsedBadges({ on }: { on: ("vinted" | "wallapop")[] }) {
+  const t = useT();
   if (!on.length) return null;
   return (
     <span className="pointer-events-none absolute left-1.5 top-1.5 flex gap-1">
-      {on.includes("vinted") && <span className="rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">Vinted</span>}
-      {on.includes("wallapop") && <span className="rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">Wallapop</span>}
+      {on.includes("vinted") && <span className="rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">{t("Vinted")}</span>}
+      {on.includes("wallapop") && <span className="rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur">{t("Wallapop")}</span>}
     </span>
   );
 }
@@ -68,6 +70,7 @@ export function PhotoGallery({
   editable: boolean;
   showUsed?: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [view, setView] = useState<View>("carrusel");
   const [order, setOrder] = useState(photos);
@@ -130,7 +133,7 @@ export function PhotoGallery({
     previews.forEach((p) => URL.revokeObjectURL(p));
     setUploading(null);
     setErrors(r.errors);
-    if (r.saved) setMessage(r.saved === 1 ? "Foto guardada." : `${r.saved} fotos guardadas.`);
+    if (r.saved) setMessage(r.saved === 1 ? t("Foto guardada.") : t("{n} fotos guardadas.", { n: r.saved }));
     startTransition(() => router.refresh());
   }
 
@@ -170,25 +173,25 @@ export function PhotoGallery({
       )}
     >
       <ImagePlus size={16} strokeWidth={2.5} />
-      {count ? "Añadir fotos" : "Subir fotos"}
+      {count ? t("Añadir fotos") : t("Subir fotos")}
       <input type="file" accept="image/*,.heic,.heif" multiple className="sr-only" disabled={!!uploading} onChange={(e) => (onFiles(e.target.files), (e.target.value = ""))} />
     </label>
   );
 
   return (
-    <section aria-label="Fotos" className="flex flex-col gap-2.5">
+    <section aria-label={t("Fotos")} className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="display text-[19px]">Fotos</h2>
+          <h2 className="display text-[19px]">{t("Fotos")}</h2>
           {count > 0 && <span className="num text-[13px] text-muted">{count}</span>}
         </div>
         <div className="flex items-center gap-2">
           {count > 1 && (
-            <div role="radiogroup" aria-label="Vista" className="flex rounded-full border border-line-strong bg-surface p-0.5">
+            <div role="radiogroup" aria-label={t("Vista")} className="flex rounded-full border border-line-strong bg-surface p-0.5">
               {(
                 [
-                  ["carrusel", GalleryHorizontal, "Carrusel"],
-                  ["cuadricula", LayoutGrid, "Cuadrícula"],
+                  ["carrusel", GalleryHorizontal, t("Carrusel")],
+                  ["cuadricula", LayoutGrid, t("Cuadrícula")],
                 ] as const
               ).map(([v, Icon, label]) => (
                 <button
@@ -213,7 +216,7 @@ export function PhotoGallery({
       {uploading && (
         <div className="flex flex-col gap-2 rs-card rounded-[var(--radius-md)] bg-surface p-3" aria-live="polite">
           <p className="text-[13px] font-semibold">
-            Subiendo {Math.min(uploading.progress.done + 1, uploading.progress.total)} de {uploading.progress.total}…
+            {t("Subiendo {v} de {total}…", { v: Math.min(uploading.progress.done + 1, uploading.progress.total), total: uploading.progress.total })}
           </p>
           <div className="h-1.5 overflow-hidden rounded-full bg-ink/8">
             <div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${(uploading.progress.done / uploading.progress.total) * 100}%` }} />
@@ -228,7 +231,7 @@ export function PhotoGallery({
       )}
       {message && !uploading && <Notice tone="good">{message}</Notice>}
       {errors.length > 0 && (
-        <Notice tone="bad" title="Alguna foto no se ha podido guardar">
+        <Notice tone="bad" title={t("Alguna foto no se ha podido guardar")}>
           <ul className="list-disc pl-4">
             {errors.map((e, i) => (
               <li key={i}>{e}</li>
@@ -240,8 +243,8 @@ export function PhotoGallery({
       {count === 0 && !uploading ? (
         <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-md)] border border-dashed border-line-strong bg-surface-2 text-sm text-muted">
           <ImagePlus size={28} className="text-faint" />
-          Sin fotos
-          {editable && <span className="max-w-[28ch] text-center text-[12.5px]">Puedes elegir varias a la vez. Las del iPhone (HEIC) se convierten solas.</span>}
+          {t("Sin fotos")}
+          {editable && <span className="max-w-[28ch] text-center text-[12.5px]">{t("Puedes elegir varias a la vez. Las del iPhone (HEIC) se convierten solas.")}</span>}
         </div>
       ) : view === "carrusel" || count === 1 ? (
         <Carousel photos={order} name={name} onOpen={setViewer} showUsed={showUsed} />
@@ -249,7 +252,7 @@ export function PhotoGallery({
         <Grid photos={order} name={name} editable={editable} showUsed={showUsed} onOpen={setViewer} onMove={move} onRemove={remove} />
       )}
 
-      {editable && count > 1 && view === "carrusel" && <p className="text-[12px] text-faint">Para ordenar, elegir portada o borrar, cambia a la vista de cuadrícula.</p>}
+      {editable && count > 1 && view === "carrusel" && <p className="text-[12px] text-faint">{t("Para ordenar, elegir portada o borrar, cambia a la vista de cuadrícula.")}</p>}
       {editable && count === 1 && (
         <div className="flex justify-end">
           <DeleteButton onConfirm={() => remove(order[0].id)} />
@@ -265,6 +268,7 @@ export function PhotoGallery({
 // Carrusel: deslizar con el dedo, flechas en ordenador y miniaturas
 // ---------------------------------------------------------------------
 function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView[]; name: string; onOpen: (i: number) => void; showUsed: boolean }) {
+  const t = useT();
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
 
@@ -302,9 +306,9 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
               type="button"
               onClick={() => onOpen(i)}
               className="relative aspect-square w-full shrink-0 snap-center snap-always"
-              aria-label={`Ver foto ${i + 1} de ${photos.length} en grande`}
+              aria-label={t("Ver foto {v} de {length} en grande", { v: i + 1, length: photos.length })}
             >
-              <FadeImg src={p.url} alt={`${name} · foto ${i + 1}`} eager={i < 2} className="h-full w-full object-contain" />
+              <FadeImg src={p.url} alt={t("{name} · foto {v}", { name, v: i + 1 })} eager={i < 2} className="h-full w-full object-contain" />
               {showUsed && <UsedBadges on={p.usedOn} />}
             </button>
           ))}
@@ -315,7 +319,7 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
               type="button"
               onClick={() => go(index - 1)}
               disabled={index === 0}
-              aria-label="Foto anterior"
+              aria-label={t("Foto anterior")}
               className="absolute left-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100 disabled:!opacity-0 sm:flex"
             >
               <ChevronLeft size={20} />
@@ -324,7 +328,7 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
               type="button"
               onClick={() => go(index + 1)}
               disabled={index === photos.length - 1}
-              aria-label="Foto siguiente"
+              aria-label={t("Foto siguiente")}
               className="absolute right-2 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100 disabled:!opacity-0 sm:flex"
             >
               <ChevronRight size={20} />
@@ -342,7 +346,7 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
               key={p.id}
               type="button"
               onClick={() => go(i)}
-              aria-label={`Ir a la foto ${i + 1}`}
+              aria-label={t("Ir a la foto {v}", { v: i + 1 })}
               aria-current={i === index}
               className={clsx(
                 "relative h-14 w-14 shrink-0 overflow-hidden rounded-[var(--radius-xs)] border-2 transition-[border-color,opacity] duration-200",
@@ -378,30 +382,31 @@ function Grid({
   onMove: (id: string, to: number) => void;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   return (
     <ul className="grid grid-cols-3 gap-1.5">
       {photos.map((p, i) => (
         <li key={p.id} className="group relative aspect-square animate-fade overflow-hidden rounded-[var(--radius-sm)] border border-line bg-surface-2">
-          <button type="button" onClick={() => onOpen(i)} className="block h-full w-full" aria-label={`Ver foto ${i + 1} en grande`}>
-            <FadeImg src={p.thumb} alt={`${name} · foto ${i + 1}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+          <button type="button" onClick={() => onOpen(i)} className="block h-full w-full" aria-label={t("Ver foto {v} en grande", { v: i + 1 })}>
+            <FadeImg src={p.thumb} alt={t("{name} · foto {v}", { name, v: i + 1 })} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
           </button>
           {showUsed && <UsedBadges on={p.usedOn} />}
           {i === 0 && (
-            <span className="pointer-events-none absolute right-1.5 top-1.5 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-on-brand">Portada</span>
+            <span className="pointer-events-none absolute right-1.5 top-1.5 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-on-brand">{t("Portada")}</span>
           )}
           {editable && (
             <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-0.5 bg-gradient-to-t from-black/70 to-transparent p-1 pt-4">
               <div className="flex gap-0.5">
-                <TileButton label="Mover a la izquierda" disabled={i === 0} onClick={() => onMove(p.id, i - 1)}>
+                <TileButton label={t("Mover a la izquierda")} disabled={i === 0} onClick={() => onMove(p.id, i - 1)}>
                   <ChevronLeft size={16} />
                 </TileButton>
-                <TileButton label="Mover a la derecha" disabled={i === photos.length - 1} onClick={() => onMove(p.id, i + 1)}>
+                <TileButton label={t("Mover a la derecha")} disabled={i === photos.length - 1} onClick={() => onMove(p.id, i + 1)}>
                   <ChevronRight size={16} />
                 </TileButton>
               </div>
               <div className="flex gap-0.5">
                 {i > 0 && (
-                  <TileButton label="Usar como portada" onClick={() => onMove(p.id, 0)}>
+                  <TileButton label={t("Usar como portada")} onClick={() => onMove(p.id, 0)}>
                     <Star size={15} />
                   </TileButton>
                 )}
@@ -432,25 +437,26 @@ function TileButton({ label, onClick, disabled, children }: { label: string; onC
 
 /** Borrar con doble toque (el primero pide confirmación durante 3 s). */
 function DeleteButton({ onConfirm, compact }: { onConfirm: () => void; compact?: boolean }) {
+  const t = useT();
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 3000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(tm);
   }, [armed]);
   return (
     <button
       type="button"
       onClick={() => (armed ? onConfirm() : setArmed(true))}
-      aria-label={armed ? "Pulsa otra vez para borrar" : "Borrar foto"}
-      title={armed ? "Pulsa otra vez para borrar" : "Borrar foto"}
+      aria-label={armed ? t("Pulsa otra vez para borrar") : t("Borrar foto")}
+      title={armed ? t("Pulsa otra vez para borrar") : t("Borrar foto")}
       className={clsx(
         "press flex h-8 items-center justify-center gap-1 rounded-full text-[12px] font-semibold transition-colors",
         armed ? "bg-danger px-2.5 text-white" : compact ? "w-8 text-white hover:bg-white/20" : "border border-line-strong px-3 text-danger",
       )}
     >
       <Trash2 size={15} />
-      {(armed || !compact) && (armed ? "¿Borrar?" : "Borrar foto")}
+      {(armed || !compact) && (armed ? t("¿Borrar?") : t("Borrar foto"))}
     </button>
   );
 }
@@ -459,6 +465,7 @@ function DeleteButton({ onConfirm, compact }: { onConfirm: () => void; compact?:
 // Visor a pantalla completa
 // ---------------------------------------------------------------------
 function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]; start: number; name: string; onClose: () => void }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(start);
@@ -498,7 +505,7 @@ function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]
         if (e.key === "ArrowLeft") go(index - 1);
       }}
       className="mi-lightbox m-0 h-[100dvh] max-h-none w-screen max-w-none bg-black p-0 text-white"
-      aria-label={`Fotos de ${name}`}
+      aria-label={t("Fotos de {name}", { name })}
     >
       <div className={clsx("relative flex h-full w-full flex-col transition-[opacity,transform] duration-200 ease-out", closing ? "scale-[0.98] opacity-0" : "animate-fade")}>
         <div
@@ -511,7 +518,7 @@ function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]
         >
           {photos.map((p, i) => (
             <div key={p.id} className="flex h-full w-full shrink-0 snap-center snap-always items-center justify-center p-2 sm:p-8" onClick={(e) => e.target === e.currentTarget && close()}>
-              <FadeImg src={p.url} alt={`${name} · foto ${i + 1}`} eager={Math.abs(i - start) < 2} className="max-h-full max-w-full select-none object-contain" />
+              <FadeImg src={p.url} alt={t("{name} · foto {v}", { name, v: i + 1 })} eager={Math.abs(i - start) < 2} className="max-h-full max-w-full select-none object-contain" />
             </div>
           ))}
         </div>
@@ -522,7 +529,7 @@ function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]
           <button
             type="button"
             onClick={close}
-            aria-label="Cerrar"
+            aria-label={t("Cerrar")}
             className="press pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20"
           >
             <X size={22} />
@@ -534,7 +541,7 @@ function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]
               type="button"
               onClick={() => go(index - 1)}
               disabled={index === 0}
-              aria-label="Foto anterior"
+              aria-label={t("Foto anterior")}
               className="absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20 disabled:opacity-0 sm:flex"
             >
               <ChevronLeft size={24} />
@@ -543,7 +550,7 @@ function Lightbox({ photos, start, name, onClose }: { photos: GalleryPhotoView[]
               type="button"
               onClick={() => go(index + 1)}
               disabled={index === photos.length - 1}
-              aria-label="Foto siguiente"
+              aria-label={t("Foto siguiente")}
               className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 backdrop-blur hover:bg-white/20 disabled:opacity-0 sm:flex"
             >
               <ChevronRight size={24} />

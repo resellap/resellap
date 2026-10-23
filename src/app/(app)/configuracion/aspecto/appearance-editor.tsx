@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Panel, clsx } from "@/components/ui";
@@ -21,6 +22,7 @@ function apply(a: A) {
 const MODE_ICON = { auto: Monitor, light: Sun, dark: Moon } as const;
 
 export function AppearanceEditor({ initial }: { initial: A }) {
+  const t = useT();
   const [saved, setSaved] = useState<A>(initial);
   const [a, setA] = useState<A>(initial);
   const { run, pending, error, message } = useServerAction(savePreferences<"appearance">);
@@ -33,8 +35,8 @@ export function AppearanceEditor({ initial }: { initial: A }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel title="Modo" description="Automático sigue al iPhone, iPad u ordenador (claro de día, oscuro de noche si lo tienes así).">
-          <div role="radiogroup" aria-label="Modo de color" className="grid grid-cols-3 gap-2">
+        <Panel title={t("Modo")} description={t("Automático sigue al iPhone, iPad u ordenador (claro de día, oscuro de noche si lo tienes así).")}>
+          <div role="radiogroup" aria-label={t("Modo de color")} className="grid grid-cols-3 gap-2">
             {(Object.keys(MODES) as A["mode"][]).map((m) => {
               const Icon = MODE_ICON[m];
               const on = a.mode === m;
@@ -51,7 +53,7 @@ export function AppearanceEditor({ initial }: { initial: A }) {
                   )}
                 >
                   <Icon size={22} strokeWidth={2.25} />
-                  {m === "auto" ? "Automático" : MODES[m]}
+                  {m === "auto" ? t("Automático") : t(MODES[m])}
                 </button>
               );
             })}
@@ -59,39 +61,39 @@ export function AppearanceEditor({ initial }: { initial: A }) {
         </Panel>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel title="Accesibilidad">
+        <Panel title={t("Accesibilidad")}>
           <Toggle
             checked={a.reduceMotion}
             onChange={(v) => setA({ ...a, reduceMotion: v })}
-            label="Reducir animaciones"
-            description="Quita las animaciones de cifras, ventanas y cargas. Si tu dispositivo ya lo pide, se respeta siempre."
+            label={t("Reducir animaciones")}
+            description={t("Quita las animaciones de cifras, ventanas y cargas. Si tu dispositivo ya lo pide, se respeta siempre.")}
           />
           <p className="border-t border-line pt-3 text-[13px] text-muted">
-            La letra es la de siempre. Todos los botones se pueden usar con teclado (Tab) y muestran un contorno al seleccionarlos.
+            {t("La letra es la de siempre. Todos los botones se pueden usar con teclado (Tab) y muestran un contorno al seleccionarlos.")}
           </p>
         </Panel>
-        <Panel title="Vista previa">
+        <Panel title={t("Vista previa")}>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="primary" size="sm" type="button">
-                Botón principal
+                {t("Botón principal")}
               </Button>
               <Button size="sm" type="button">
-                Secundario
+                {t("Secundario")}
               </Button>
-              <Badge tone="good">Enviado</Badge>
-              <Badge tone="warn">Pendiente</Badge>
-              <span className="lot-tag">Pedido #7</span>
+              <Badge tone="good">{t("Enviado")}</Badge>
+              <Badge tone="warn">{t("Pendiente")}</Badge>
+              <span className="lot-tag">{t("Pedido #7")}</span>
             </div>
             <div className="rounded-[var(--radius-sm)] border border-line bg-surface-2 p-3">
-              <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">Ingresos</p>
+              <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted">{t("Ingresos")}</p>
               <p className="display num text-[28px]">1.234,50 €</p>
-              <p className="text-[12.5px] font-semibold text-good">+12,4 % vs mes anterior</p>
+              <p className="text-[12.5px] font-semibold text-good">{t("+12,4 % vs mes anterior")}</p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/6">
                 <div className="h-full w-2/3 rounded-full bg-brand" />
               </div>
             </div>
-            <p className="text-[12px] text-faint">Ejemplo ilustrativo del estilo, no son datos tuyos.</p>
+            <p className="text-[12px] text-faint">{t("Ejemplo ilustrativo del estilo, no son datos tuyos.")}</p>
           </div>
         </Panel>
       </div>
@@ -106,8 +108,8 @@ export function AppearanceEditor({ initial }: { initial: A }) {
         error={error}
         message={message}
         reset={{
-          label: "Aspecto inicial",
-          description: "Vuelve a Automático, Verde Vinted y animaciones normales.",
+          label: t("Aspecto inicial"),
+          description: t("Vuelve a Automático, Verde Vinted y animaciones normales."),
           action: () => resetPreferences("appearance"),
           onDone: () => {
             setA(DEFAULT_PREFS.appearance);

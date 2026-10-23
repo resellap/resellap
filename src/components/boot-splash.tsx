@@ -9,6 +9,7 @@
  * Sin JavaScript desaparece sola a los 3 s. Con «reducir animaciones» (del
  * sistema o de Ajustes) no hay movimiento: un fundido corto y listo.
  */
+import { tSync } from "@/i18n/server";
 const A1 = "M0 0H38V50H0Z";
 const A2 = "M43 0H71A25 25 0 0 1 71 50H43Z";
 const A3 = "M0 55H38V96H0Z";
@@ -50,10 +51,11 @@ html[data-motion="reduce"].rs-booted #rs-boot svg{animation:none}
 const JS = `(function(){var t0=Date.now(),d=document.documentElement;function done(){var w=Math.max(0,450-(Date.now()-t0));setTimeout(function(){d.classList.add("rs-booted");setTimeout(function(){var e=document.getElementById("rs-boot");if(e)e.style.display="none"},700)},w)}if(document.readyState==="complete")done();else{addEventListener("load",done,{once:true});setTimeout(done,1800)}})();`;
 
 export function BootSplash() {
+  const t = tSync();
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div id="rs-boot" role="status" aria-label="Cargando Resellap" suppressHydrationWarning>
+      <div id="rs-boot" role="status" aria-label={t("Cargando Resellap")} suppressHydrationWarning>
         <div className="wrap">
           <svg viewBox="0 0 96 96" aria-hidden="true">
             <path className="a" d={A1} />

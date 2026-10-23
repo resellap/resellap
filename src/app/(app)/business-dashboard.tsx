@@ -7,6 +7,9 @@
  * del stock y actividad, business_dashboard. Si un dato no se puede
  * calcular, se dice.
  */
+import { getT, tSync } from "@/i18n/server";
+import { msg } from "@/i18n/translate";
+import { rich } from "@/i18n/rich";
 import {
   ArrowDownRight,
   ArrowLeftRight,
@@ -25,7 +28,8 @@ import type { ReactNode } from "react";
 import { MonthlyBars } from "@/components/charts/monthly-bars";
 import { CountUp } from "@/components/count-up";
 import { Notice, clsx } from "@/components/ui";
-import { MOVEMENT_TYPES, date, money, units } from "@/lib/format";
+import { EXIT_REASONS, MOVEMENT_TYPES, date, decimal, money, percent, units } from "@/lib/format";
+import { INTL_TAG } from "@/i18n/config";
 import { GRANULARITIES, PERIODS, WIDGET_BY_ID, type Period, type WidgetItem, type WidgetSize } from "@/lib/preferences";
 import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
@@ -71,7 +75,7 @@ type Extra = { aging: AgingLot[]; recent: Movement[] } | null;
 const n = (v: unknown) => Number(v ?? 0);
 const shortDate = (iso: string) => {
   const [, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return `${d} ${new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString("es-ES", { month: "short", timeZone: "UTC" }).replace(".", "")}`;
+  return new Date(Date.UTC(2000, m - 1, d)).toLocaleDateString(INTL_TAG[tSync().locale], { day: "numeric", month: "short", timeZone: "UTC" }).replace(".", "");
 };
 
 // ---------------------------------------------------------------------
@@ -80,11 +84,12 @@ const shortDate = (iso: string) => {
 type Delta = { text: string; dir: "up" | "down" | "flat"; tone: "good" | "bad" | "neutral" } | { note: string };
 
 function pctDelta(cur: number, prev: number, vs: string): Delta {
-  if (prev === 0 && cur === 0) return { note: `Sin datos ${vs}` };
-  if (prev <= 0) return { note: `${vs}: ${money(prev)} (sin % comparable)` };
+  const t = tSync();
+  if (prev === 0 && cur === 0) return { note: t("Sin datos {vs}", { vs }) };
+  if (prev <= 0) return { note: t("{vs}: {prev} (sin % comparable)", { vs, prev: money(prev) }) };
   const pct = ((cur - prev) / Math.abs(prev)) * 100;
   const dir = Math.abs(pct) < 0.05 ? "flat" : pct > 0 ? "up" : "down";
-  return { text: `${pct > 0 ? "+" : ""}${pct.toLocaleString("es-ES", { maximumFractionDigits: 1 })} % ${vs}`, dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
+  return { text: `${pct > 0 ? "+" : ""}${percent(pct)} ${vs}`, dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
 }
 
 function DeltaLine({ d }: { d?: Delta }) {
@@ -116,9 +121,10 @@ export const SIZE_CLASS: Record<WidgetSize, string> = {
 };
 
 function Frame({ title, sub, href, children, className, accent }: { title: string; sub?: string; href?: string; children: ReactNode; className?: string; accent?: boolean }) {
+  const t = tSync();
   return (
     <section
-      aria-label={title}
+      aria-label={t(title)}
       className={clsx(
         "flex min-w-0 flex-col gap-2 overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface p-4",
         accent && "rs-ink-tile",
@@ -127,11 +133,11 @@ function Frame({ title, sub, href, children, className, accent }: { title: strin
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="text-[13px] font-medium text-muted">{title}</h3>
-          {sub && <p className="truncate text-[12px] text-faint">{sub}</p>}
+          <h3 className="text-[13px] font-medium text-muted">{t(title)}</h3>
+          {sub && <p className="truncate text-[12px] text-faint">{t(sub)}</p>}
         </div>
         {href && (
-          <Link href={href} className="-m-1 flex shrink-0 items-center rounded-full p-1 text-faint hover:text-ink" aria-label={`Ver ${title.toLowerCase()}`}>
+          <Link href={href} className="-m-1 flex shrink-0 items-center rounded-full p-1 text-faint hover:text-ink" aria-label={t("Ver {name}", { name: t(title).toLowerCase() })}>
             <ChevronRight size={18} />
           </Link>
         )}
@@ -184,10 +190,11 @@ function movementLink(m: Movement): string {
   return `/productos/${m.product_id}`;
 }
 function movementTitle(m: Movement): string {
-  const label = MOVEMENT_TYPES[m.movement_type] ?? m.movement_type;
+  const t = tSync();
+  const label = t(MOVEMENT_TYPES[m.movement_type] ?? m.movement_type);
   if (m.sale_number) return `${label} ${m.sale_number}`;
-  if (m.purchase_order_number) return `${label} · pedido #${m.purchase_order_number}`;
-  if (m.exit_reason) return `${label} · ${m.exit_reason}`;
+  if (m.purchase_order_number) return `${label} · ${t("pedido #{n}", { n: m.purchase_order_number })}`;
+  if (m.exit_reason) return `${label} · ${t(EXIT_REASONS[m.exit_reason] ?? m.exit_reason)}`;
   return label;
 }
 
@@ -197,6 +204,7 @@ function movementTitle(m: Movement): string {
 type Ctx = { w: WidgetsData; extra: Extra; compare: boolean; granularity: keyof typeof GRANULARITIES; scope: string; vs: string };
 
 function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
+  const t = tSync();
   const { w, compare, scope, vs } = ctx;
   const def = WIDGET_BY_ID.get(item.id);
   if (!def) return null;
@@ -207,7 +215,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
   const cur = { revenue: n(w.current.revenue), profit: n(w.current.profit), cost: n(w.current.cost), orders: n(w.current.orders), units: n(w.current.units) };
   const prev = { revenue: n(w.previous.revenue), profit: n(w.previous.profit), cost: n(w.previous.cost), orders: n(w.previous.orders), units: n(w.previous.units) };
   const d = (a: number, b: number) => (compare ? pctDelta(a, b, vs) : undefined);
-  const prevLine = (v: string) => wide && compare && <p className="mt-auto text-[12px] text-muted">Periodo anterior: {v}</p>;
+  const prevLine = (v: string) => wide && compare && <p className="mt-auto text-[12px] text-muted">{t("Periodo anterior: {v}", { v })}</p>;
 
   switch (item.id) {
     case "ventas":
@@ -217,10 +225,10 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
             <CountUp value={cur.orders} format="units" />
           </Big>
           <p className="text-[12.5px] text-muted">
-            {units(cur.units)} {cur.units === 1 ? "unidad" : "unidades"}
+            {cur.units === 1 ? t("1 unidad") : t("{n} unidades", { n: units(cur.units) })}
           </p>
           <DeltaLine d={d(cur.orders, prev.orders)} />
-          {prevLine(`${units(prev.orders)} ventas`)}
+          {prevLine(prev.orders === 1 ? t("1 venta") : t("{n} ventas", { n: units(prev.orders) }))}
         </Frame>
       );
     case "ingresos":
@@ -230,7 +238,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
             <CountUp value={cur.revenue} />
           </Big>
           <DeltaLine d={d(cur.revenue, prev.revenue)} />
-          {wide && <p className="text-[12px] text-muted">Ventas menos devoluciones · coste de lo vendido {money(cur.cost)}</p>}
+          {wide && <p className="text-[12px] text-muted">{t("Ventas menos devoluciones · coste de lo vendido {cost}", { cost: money(cur.cost) })}</p>}
           {prevLine(money(prev.revenue))}
         </Frame>
       );
@@ -243,7 +251,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
             </span>
           </Big>
           <DeltaLine d={d(cur.profit, prev.profit)} />
-          <p className="text-[12px] text-muted">Sin gastos del negocio: no es beneficio neto</p>
+          <p className="text-[12px] text-muted">{t("Sin gastos del negocio: no es beneficio neto")}</p>
           {prevLine(money(prev.profit))}
         </Frame>
       );
@@ -252,75 +260,75 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       const pm = prev.revenue > 0 ? (prev.profit / prev.revenue) * 100 : null;
       let delta: Delta | undefined;
       if (compare && m !== null) {
-        if (pm === null) delta = { note: `Sin ventas ${vs}` };
+        if (pm === null) delta = { note: t("Sin ventas {vs}", { vs }) };
         else {
           const dd = m - pm;
           const dir = Math.abs(dd) < 0.05 ? "flat" : dd > 0 ? "up" : "down";
-          delta = { text: `${dd > 0 ? "+" : ""}${dd.toLocaleString("es-ES", { maximumFractionDigits: 1 })} puntos ${vs}`, dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
+          delta = { text: t("{sign}{n} puntos {vs}", { sign: dd > 0 ? "+" : "", n: decimal(dd), vs }), dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
         }
       }
       return (
         <Frame title={def.title} sub={scope} className={cls}>
-          <Big small={!wide}>{m === null ? <span className="text-[20px] text-muted">Sin ventas</span> : `${m.toLocaleString("es-ES", { maximumFractionDigits: 1 })} %`}</Big>
+          <Big small={!wide}>{m === null ? <span className="text-[20px] text-muted">{t("Sin ventas")}</span> : percent(m)}</Big>
           <DeltaLine d={delta} />
-          {prevLine(pm === null ? "sin ventas" : `${pm.toLocaleString("es-ES", { maximumFractionDigits: 1 })} %`)}
+          {prevLine(pm === null ? t("sin ventas") : percent(pm))}
         </Frame>
       );
     }
     case "ticket": {
-      const t = cur.orders > 0 ? cur.revenue / cur.orders : null;
+      const tk = cur.orders > 0 ? cur.revenue / cur.orders : null;
       const pt = prev.orders > 0 ? prev.revenue / prev.orders : 0;
       return (
         <Frame title={def.title} sub={scope} className={cls}>
-          <Big small={!wide}>{t === null ? <span className="text-[20px] text-muted">Sin ventas</span> : <CountUp value={t} />}</Big>
-          {t !== null && <DeltaLine d={d(t, pt)} />}
-          {prevLine(prev.orders > 0 ? money(pt) : "sin ventas")}
+          <Big small={!wide}>{tk === null ? <span className="text-[20px] text-muted">{t("Sin ventas")}</span> : <CountUp value={tk} />}</Big>
+          {tk !== null && <DeltaLine d={d(tk, pt)} />}
+          {prevLine(prev.orders > 0 ? money(pt) : t("sin ventas"))}
         </Frame>
       );
     }
     case "stock":
       return (
-        <Frame title={def.title} sub="Hoy" className={cls} href="/inventario">
+        <Frame title={def.title} sub={msg("Hoy")} className={cls} href="/inventario">
           <Big small={!wide}>
-            <CountUp value={n(w.inventory.units)} format="units" /> <span className="text-[16px] text-muted">uds.</span>
+            <CountUp value={n(w.inventory.units)} format="units" /> <span className="text-[16px] text-muted">{t("uds.")}</span>
           </Big>
-          <p className="text-[12.5px] text-muted">{units(w.inventory.products_with_stock)} productos distintos</p>
+          <p className="text-[12.5px] text-muted">{t("{products_with_stock} productos distintos", { products_with_stock: units(w.inventory.products_with_stock) })}</p>
         </Frame>
       );
     case "valor_inventario":
       return (
-        <Frame title={def.title} sub="Hoy · a coste medio" className={cls} href="/inventario">
+        <Frame title={def.title} sub={msg("Hoy · a coste medio")} className={cls} href="/inventario">
           <Big small={!wide}>
             <CountUp value={n(w.inventory.stock_value)} />
           </Big>
           {wide ? (
             <dl className="mt-auto grid grid-cols-2 gap-2 text-[12.5px]">
               <div>
-                <dt className="text-muted">Valor potencial de venta</dt>
+                <dt className="text-muted">{t("Valor potencial de venta")}</dt>
                 <dd className="num font-semibold">{money(w.inventory.potential_value)}</dd>
               </div>
               <div>
-                <dt className="text-muted">Beneficio potencial</dt>
+                <dt className="text-muted">{t("Beneficio potencial")}</dt>
                 <dd className="num font-semibold text-good">{money(w.inventory.potential_profit)}</dd>
               </div>
             </dl>
           ) : (
-            <p className="text-[12px] text-muted">Capital invertido</p>
+            <p className="text-[12px] text-muted">{t("Capital invertido")}</p>
           )}
-          {n(w.inventory.unpriced_units) > 0 && wide && <p className="text-[11.5px] text-muted">{units(w.inventory.unpriced_units)} uds. sin precio de venta no cuentan en el potencial.</p>}
+          {n(w.inventory.unpriced_units) > 0 && wide && <p className="text-[11.5px] text-muted">{t("{unpriced_units} uds. sin precio de venta no cuentan en el potencial.", { unpriced_units: units(w.inventory.unpriced_units) })}</p>}
         </Frame>
       );
     case "envios_pendientes": {
       const p = n(w.pending_shipments);
       return (
-        <Frame title={def.title} sub="Ahora" className={cls} href="/envios">
+        <Frame title={def.title} sub={msg("Ahora")} className={cls} href="/envios">
           <div className="flex items-center gap-3">
             <span className={clsx("flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)]", p > 0 ? "bg-brand text-on-brand" : "bg-good-soft text-good-ink")}>
               <Truck size={22} strokeWidth={2.25} />
             </span>
             <Big small>{units(p)}</Big>
           </div>
-          <p className="text-[12.5px] text-muted">{p === 0 ? "Todo enviado" : p === 1 ? "paquete por enviar" : "paquetes por enviar"}</p>
+          <p className="text-[12.5px] text-muted">{p === 0 ? t("Todo enviado") : p === 1 ? t("paquete por enviar") : t("paquetes por enviar")}</p>
         </Frame>
       );
     }
@@ -328,13 +336,13 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       const g = ctx.granularity;
       const data = (w.series[g] ?? []).map((s) => ({ month: s.key, revenue: n(s.revenue), profit: n(s.profit), orders: n(s.orders), units: n(s.units) }));
       const any = data.some((p) => p.revenue !== 0);
-      const label = g === "dia" ? "Últimos 30 días" : g === "semana" ? "Últimas 12 semanas" : "Últimos 12 meses";
+      const label = g === "dia" ? t("Últimos 30 días") : g === "semana" ? t("Últimas 12 semanas") : t("Últimos 12 meses");
       return (
         <Frame title={def.title} sub={`${label}${scope.includes("·") ? ` · ${scope.split("·")[1].trim()}` : ""}`} className={cls}>
           {any ? (
             <MonthlyBars data={g === "dia" && !big ? data.slice(-14) : data} unit={g} height={big ? 240 : 150} />
           ) : (
-            <p className="py-6 text-center text-sm text-muted">Aún no hay ventas en este tramo.</p>
+            <p className="py-6 text-center text-sm text-muted">{t("Aún no hay ventas en este tramo.")}</p>
           )}
         </Frame>
       );
@@ -343,29 +351,29 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       return (
         <Frame title={def.title} sub={scope} className={cls}>
           <Rank
-            empty="Sin ventas en este periodo."
+            empty={t("Sin ventas en este periodo.")}
             items={w.top_units.slice(0, big ? 8 : 3).map((p) => ({
               key: p.product_id,
               href: `/productos/${p.product_id}`,
               name: p.product_name,
-              sub: `ingresos ${money(p.revenue)} · beneficio ${money(p.profit)}`,
-              value: `${units(p.units)} uds.`,
+              sub: t("ingresos {revenue} · beneficio {profit}", { revenue: money(p.revenue), profit: money(p.profit) }),
+              value: t("{n} uds.", { n: units(p.units) }),
             }))}
           />
         </Frame>
       );
     case "rentabilidad":
       return (
-        <Frame title={def.title} sub={`${scope} · beneficio bruto`} className={cls}>
+        <Frame title={def.title} sub={`${scope} · ${t("beneficio bruto")}`} className={cls}>
           <Rank
-            empty="Sin ventas en este periodo."
+            empty={t("Sin ventas en este periodo.")}
             items={w.top_profit.slice(0, big ? 8 : 3).map((p) => {
               const margin = n(p.revenue) !== 0 ? (n(p.profit) / n(p.revenue)) * 100 : null;
               return {
                 key: p.product_id,
                 href: `/productos/${p.product_id}`,
                 name: p.product_name,
-                sub: `${units(p.units)} uds. · margen ${margin === null ? "—" : `${margin.toLocaleString("es-ES", { maximumFractionDigits: 1 })} %`}`,
+                sub: t("{n} uds. · margen {margin}", { n: units(p.units), margin: margin === null ? "—" : percent(margin) }),
                 value: money(p.profit),
                 tone: n(p.profit) < 0 ? "bad" : undefined,
               };
@@ -379,7 +387,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       return (
         <Frame title={def.title} sub={scope} className={cls}>
           {list.length === 0 ? (
-            <p className="py-4 text-sm text-muted">Sin ventas en este periodo.</p>
+            <p className="py-4 text-sm text-muted">{t("Sin ventas en este periodo.")}</p>
           ) : (
             <ul className="flex flex-col gap-2.5">
               {list.map((p) => {
@@ -389,7 +397,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
                     <div className="flex items-baseline justify-between gap-2 text-sm">
                       <span className="truncate font-semibold">{p.platform_name}</span>
                       <span className="num shrink-0">
-                        {money(p.revenue)} <span className="text-[12px] text-muted">· {units(p.orders)} {n(p.orders) === 1 ? "venta" : "ventas"}</span>
+                        {money(p.revenue)} <span className="text-[12px] text-muted">· {n(p.orders) === 1 ? t("1 venta") : t("{n} ventas", { n: units(p.orders) })}</span>
                       </span>
                     </div>
                     <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink/6" aria-hidden>
@@ -405,18 +413,18 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
     }
     case "antiguedad":
       return (
-        <Frame title={def.title} sub="Desde la recepción del lote" className={cls} href="/inventario">
+        <Frame title={def.title} sub={msg("Desde la recepción del lote")} className={cls} href="/inventario">
           {!ctx.extra ? (
-            <p className="py-4 text-sm text-muted">No se ha podido cargar.</p>
+            <p className="py-4 text-sm text-muted">{t("No se ha podido cargar.")}</p>
           ) : (
             <Rank
-              empty="No hay unidades en el almacén."
+              empty={t("No hay unidades en el almacén.")}
               items={ctx.extra.aging.slice(0, big ? 6 : 3).map((a, i) => ({
                 key: `${a.product_id}-${a.lot_label}-${i}`,
                 href: `/productos/${a.product_id}`,
                 name: variantDisplay(a.product_name, a.variant_name),
-                sub: `${a.lot_label} · ${units(a.units)} uds. · ${money(a.value)}`,
-                value: `${units(a.days)} d`,
+                sub: `${a.lot_label} · ${t("{n} uds.", { n: units(a.units) })} · ${money(a.value)}`,
+                value: t("{n} d", { n: units(a.days) }),
               }))}
             />
           )}
@@ -424,11 +432,11 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       );
     case "actividad":
       return (
-        <Frame title={def.title} sub="Últimos movimientos de stock" className={cls} href="/auditoria">
+        <Frame title={def.title} sub={msg("Últimos movimientos de stock")} className={cls} href="/auditoria">
           {!ctx.extra ? (
-            <p className="py-4 text-sm text-muted">No se ha podido cargar.</p>
+            <p className="py-4 text-sm text-muted">{t("No se ha podido cargar.")}</p>
           ) : ctx.extra.recent.length === 0 ? (
-            <p className="py-4 text-sm text-muted">Todavía no hay movimientos.</p>
+            <p className="py-4 text-sm text-muted">{t("Todavía no hay movimientos.")}</p>
           ) : (
             <ul className="-mx-4 divide-y divide-line">
               {ctx.extra.recent.slice(0, big ? 6 : 3).map((m) => {
@@ -491,6 +499,7 @@ export async function BusinessDashboard({
   compare: boolean;
   granularity: keyof typeof GRANULARITIES;
 }) {
+  const t = await getT();
   const supabase = await createClient();
   const needExtra = items.some((i) => i.id === "antiguedad" || i.id === "actividad");
   const [main, extra] = await Promise.all([
@@ -499,23 +508,25 @@ export async function BusinessDashboard({
   ]);
   if (main.error || !main.data) {
     return (
-      <Notice tone="bad" title="No se han podido cargar los datos del panel">
-        {main.error?.message?.includes("dashboard_widgets") ? "Falta la función dashboard_widgets en la base de datos (migración 20261011120000_ajustes_y_widgets.sql)." : "Comprueba la conexión y vuelve a cargar la página."}
+      <Notice tone="bad" title={t("No se han podido cargar los datos del panel")}>
+        {main.error?.message?.includes("dashboard_widgets") ? t("Falta la función dashboard_widgets en la base de datos (migración 20261011120000_ajustes_y_widgets.sql).") : t("Comprueba la conexión y vuelve a cargar la página.")}
       </Notice>
     );
   }
   const w = main.data as WidgetsData;
   const ex = extra.data ? { aging: (extra.data as { aging: AgingLot[] }).aging ?? [], recent: (extra.data as { recent: Movement[] }).recent ?? [] } : null;
-  const scope = `${PERIODS[period]}${platformName ? ` · ${platformName}` : ""}`;
-  const vs = period === "dia" ? "vs ayer" : `vs ${shortDate(w.prev_start)}–${shortDate(w.prev_end)}`;
+  const scope = `${t(PERIODS[period])}${platformName ? ` · ${platformName}` : ""}`;
+  const vs = period === "dia" ? t("vs ayer") : t("vs {range}", { range: `${shortDate(w.prev_start)}–${shortDate(w.prev_end)}` });
   if (!items.length) {
     return (
       <div className="rounded-[var(--radius-md)] border border-dashed border-line-strong p-6 text-center text-sm text-muted">
-        No tienes widgets en el panel.{" "}
-        <Link href="/configuracion/panel" className="font-semibold text-brand-ink underline">
-          Añade los que quieras
-        </Link>
-        .
+        {rich(t("No tienes widgets en el panel. <a>Añade los que quieras</a>."), {
+          a: (c) => (
+            <Link href="/configuracion/panel" className="font-semibold text-brand-ink underline">
+              {c}
+            </Link>
+          ),
+        })}
       </div>
     );
   }
@@ -524,8 +535,9 @@ export async function BusinessDashboard({
 
 /** Mientras cargan los datos */
 export function DashboardSkeleton() {
+  const t = tSync();
   return (
-    <div className="grid auto-rows-[140px] grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Cargando el panel" aria-busy>
+    <div className="grid auto-rows-[140px] grid-cols-2 gap-3 lg:grid-cols-4" aria-label={t("Cargando el panel")} aria-busy>
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className={clsx("skeleton rounded-[var(--radius-md)]", (i === 0 || i === 5) && "col-span-2", i === 5 && "row-span-2")} />
       ))}

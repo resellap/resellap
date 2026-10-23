@@ -1,3 +1,4 @@
+import { getT, tSync } from "@/i18n/server";
 import Link from "next/link";
 import { BubbleGroup } from "@/components/liquid";
 import { Plus, SlidersHorizontal } from "lucide-react";
@@ -17,6 +18,7 @@ import { PERIODS, type Period as PeriodKey } from "@/lib/preferences";
 import { loadPrefs } from "@/lib/user-prefs";
 
 export default async function Dashboard({ searchParams }: PageProps<"/">) {
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const [supabase, badges, prefs0] = await Promise.all([createClient(), loadBadges(), loadPrefs()]);
@@ -27,7 +29,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
       : 0;
   const sinPermiso = sp.aviso === "sin-permiso" && (
     <Notice tone="warn" className="mb-4">
-      Tu rol no tiene acceso a esa sección.
+      {t("Tu rol no tiene acceso a esa sección.")}
     </Notice>
   );
 
@@ -36,7 +38,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
     return (
       <>
         {sinPermiso}
-        <PageHeader title={`Hola${user.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}`} description="Lo que hay que preparar y enviar." />
+        <PageHeader title={t("Hola{v}", { v: user.fullName ? `, ${user.fullName.split(" ")[0]}` : "" })} description={t("Lo que hay que preparar y enviar.")} />
         <div className="flex flex-col gap-5">
           <HomeTasks badges={badges} perms={user.permissions} notify={prefs0.notifications} lowStock={lowStock} />
           <QuickActions perms={user.permissions} />
@@ -57,18 +59,18 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
       <>
         {sinPermiso}
         <PageHeader
-          title={`Hola${user.responsibleName ? `, ${user.responsibleName.split(" ")[0]}` : ""}`}
-          description="Tus ventas de hoy y de este mes."
+          title={t("Hola{v}", { v: user.responsibleName ? `, ${user.responsibleName.split(" ")[0]}` : "" })}
+          description={t("Tus ventas de hoy y de este mes.")}
           actions={
             <LinkButton href="/ventas/nueva" variant="primary" className="max-md:hidden">
               <Plus size={17} strokeWidth={2.75} />
-              Nueva venta
+              {t("Nueva venta")}
             </LinkButton>
           }
         />
         {!d?.linked && (
-          <Notice tone="warn" className="mb-4" title="Tu usuario no está vinculado a un responsable">
-            Hasta que el administrador lo vincule no podrás registrar ventas.
+          <Notice tone="warn" className="mb-4" title={t("Tu usuario no está vinculado a un responsable")}>
+            {t("Hasta que el administrador lo vincule no podrás registrar ventas.")}
           </Notice>
         )}
         <Hero
@@ -105,12 +107,12 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
     <>
       {sinPermiso}
       <PageHeader
-        title={`Hola${user.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}`}
-        description="Cómo va el negocio. Solo datos reales."
+        title={t("Hola{v}", { v: user.fullName ? `, ${user.fullName.split(" ")[0]}` : "" })}
+        description={t("Cómo va el negocio. Solo datos reales.")}
         actions={
           <Link href="/configuracion/panel" className={buttonClass("secondary", "sm")}>
             <SlidersHorizontal size={16} strokeWidth={2.25} />
-            Personalizar panel
+            {t("Personalizar panel")}
           </Link>
         }
       />
@@ -118,7 +120,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
         <HomeTasks badges={badges} perms={user.permissions} notify={prefs.notifications} lowStock={lowStock} />
         <QuickActions perms={user.permissions} />
         <div className="flex flex-wrap items-center gap-2">
-          <BubbleGroup label="Periodo" active={period} className="rs-card no-scrollbar flex max-w-full overflow-x-auto rounded-[12px] bg-surface p-1 text-[13px] font-semibold">
+          <BubbleGroup label={t("Periodo")} active={period} className="rs-card no-scrollbar flex max-w-full overflow-x-auto rounded-[12px] bg-surface p-1 text-[13px] font-semibold">
             {(Object.keys(PERIODS) as PeriodKey[]).map((k) => (
               <Link
                 key={k}
@@ -129,7 +131,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
                 data-on={String(period === k)}
                 className="rs-seg press whitespace-nowrap rounded-[8px] px-3 py-1.5 [--seg-ink:var(--ink-soft)]"
               >
-                {PERIODS[k]}
+                {t(PERIODS[k])}
               </Link>
             ))}
           </BubbleGroup>
@@ -160,6 +162,7 @@ type Period = { revenue: number; orders: number; units: number; profit?: number 
 
 /** Lo primero que se ve: facturación y beneficio de hoy y del mes, en grande. */
 function Hero({ today, month, losses = 0 }: { today: Period; month: Period; losses?: number }) {
+  const t = tSync();
   const block = (label: string, p: Period, main: boolean) => (
     <div className={clsx("flex flex-col gap-3 p-5 sm:p-6", main ? "bg-chrome text-chrome-ink" : "bg-chrome-2 text-chrome-ink")}>
       <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-chrome-ink/55">
@@ -167,7 +170,7 @@ function Hero({ today, month, losses = 0 }: { today: Period; month: Period; loss
         {label}
       </p>
       <div>
-        <p className="text-[12px] font-medium text-chrome-ink/55">Facturación</p>
+        <p className="text-[12px] font-medium text-chrome-ink/55">{t("Facturación")}</p>
         <p className="display text-[46px] sm:text-[56px]">
           <CountUp value={p.revenue} />
         </p>
@@ -175,7 +178,7 @@ function Hero({ today, month, losses = 0 }: { today: Period; month: Period; loss
       <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
         {p.profit !== undefined && (
           <div>
-            <p className="text-[12px] font-medium text-chrome-ink/55">Beneficio</p>
+            <p className="text-[12px] font-medium text-chrome-ink/55">{t("Beneficio")}</p>
             <p className={clsx("display text-[28px]", p.profit < 0 ? "text-danger" : "text-brand-bright")}>
               {p.profit > 0 ? "+" : ""}
               <CountUp value={p.profit} />
@@ -187,16 +190,16 @@ function Hero({ today, month, losses = 0 }: { today: Period; month: Period; loss
           <span className="num font-semibold text-chrome-ink">{units(p.units)}</span> {p.units === 1 ? "ud." : "uds."}
         </div>
       </div>
-      {!main && losses > 0 && <p className="text-[12.5px] text-chrome-ink/55">{money(losses)} en salidas sin venta este mes</p>}
+      {!main && losses > 0 && <p className="text-[12.5px] text-chrome-ink/55">{t("{losses} en salidas sin venta este mes", { losses: money(losses) })}</p>}
     </div>
   );
   return (
     <section
       className="grid overflow-hidden rounded-[var(--radius-lg)] border border-white/6 shadow-[var(--shadow-pop)] md:grid-cols-2"
-      aria-label="Facturación y beneficio"
+      aria-label={t("Facturación y beneficio")}
     >
-      {block("Hoy", today, true)}
-      {block("Este mes", month, false)}
+      {block(t("Hoy"), today, true)}
+      {block(t("Este mes"), month, false)}
     </section>
   );
 }

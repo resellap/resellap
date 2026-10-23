@@ -2,6 +2,7 @@
  * Componentes visuales básicos (sin estado). Se pueden usar en el
  * servidor y en el cliente.
  */
+import { Tx } from "@/i18n/tx";
 import clsx from "clsx";
 import { BackLink } from "./list-memory";
 import Link from "next/link";
@@ -91,7 +92,7 @@ export function Field({
   const help = (
     <>
       {hint && !error && <span className="text-xs text-muted">{hint}</span>}
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      {error && <span className="text-xs font-medium text-danger">{typeof error === "string" ? <Tx>{error}</Tx> : error}</span>}
     </>
   );
   if (htmlFor !== undefined) {
@@ -261,7 +262,7 @@ export function Badge({ tone = "neutral", children, className, dot }: { tone?: T
 
 /** Pegatina del pedido/lote de procedencia. */
 export function LotTag({ label, origin }: { label: string | null | undefined; origin?: "compra" | "ajuste" | string | null }) {
-  if (!label) return <Badge tone="warn">Lote no identificado</Badge>;
+  if (!label) return <Badge tone="warn"><Tx>Lote no identificado</Tx></Badge>;
   return (
     <span className="lot-tag" data-origin={origin ?? (label.startsWith("Ajuste") ? "ajuste" : "compra")}>
       {label}
@@ -270,7 +271,7 @@ export function LotTag({ label, origin }: { label: string | null | undefined; or
 }
 
 export function StockBadge({ stock }: { stock: number }) {
-  if (stock <= 0) return <Badge tone="neutral">Sin stock</Badge>;
+  if (stock <= 0) return <Badge tone="neutral"><Tx>Sin stock</Tx></Badge>;
   return <span className="num font-semibold">{stock}</span>;
 }
 
@@ -288,8 +289,9 @@ export function Notice({ tone = "info", title, children, className }: { tone?: T
         className,
       )}
     >
-      {title && <p className="font-semibold">{title}</p>}
-      {children && <div className={clsx(title && "mt-0.5", "text-[13.5px] [&_a]:underline")}>{children}</div>}
+      {/* Los textos sueltos (p. ej. errores que llegan del servidor) se traducen aquí */}
+      {title && <p className="font-semibold">{typeof title === "string" ? <Tx>{title}</Tx> : title}</p>}
+      {children && <div className={clsx(title && "mt-0.5", "text-[13.5px] [&_a]:underline")}>{typeof children === "string" ? <Tx>{children}</Tx> : children}</div>}
     </div>
   );
 }
@@ -315,31 +317,32 @@ export function Pagination({ page, size, total, hrefFor }: { page: number; size:
   if (pages <= 1)
     return (
       <p className="px-3 py-3 text-[13px] text-muted">
-        {total} resultado{total === 1 ? "" : "s"}
+        {total === 1 ? <Tx>1 resultado</Tx> : <Tx vars={{ n: total }}>{"{n} resultados"}</Tx>}
       </p>
     );
   return (
-    <nav className="flex items-center justify-between gap-2 px-3 py-3 text-[13px]" aria-label="Paginación">
+    <nav className="flex items-center justify-between gap-2 px-3 py-3 text-[13px]" aria-labelledby="pag-label">
+      <span id="pag-label" className="sr-only"><Tx>Paginación</Tx></span>
       <span className="text-muted">
-        {(page - 1) * size + 1}–{Math.min(page * size, total)} de {total}
+        <Tx vars={{ from: (page - 1) * size + 1, to: Math.min(page * size, total), total }}>{"{from}–{to} de {total}"}</Tx>
       </span>
       <span className="flex gap-1.5">
         {page > 1 ? (
           <LinkButton size="sm" href={hrefFor(page - 1)}>
-            Anterior
+            <Tx>Anterior</Tx>
           </LinkButton>
         ) : (
           <Button size="sm" disabled>
-            Anterior
+            <Tx>Anterior</Tx>
           </Button>
         )}
         {page < pages ? (
           <LinkButton size="sm" href={hrefFor(page + 1)}>
-            Siguiente
+            <Tx>Siguiente</Tx>
           </LinkButton>
         ) : (
           <Button size="sm" disabled>
-            Siguiente
+            <Tx>Siguiente</Tx>
           </Button>
         )}
       </span>

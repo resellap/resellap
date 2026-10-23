@@ -10,7 +10,10 @@
  *   ver, no se genera nada.
  * - Solo LEE productos. No modifica stock, precios ni fichas.
  */
+import { getT } from "@/i18n/server";
 import { z } from "zod";
+import { msg } from "@/i18n/translate";
+import type { Locale } from "@/i18n/config";
 import { getCurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import type { ActionResult } from "@/lib/errors";
@@ -27,8 +30,8 @@ const DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-flas
 const DAILY_LIMIT = 60;
 const GEMINI_URL = testOnlyEnv("GEMINI_BASE_URL") || "https://generativelanguage.googleapis.com/v1beta/models";
 
-const short = z.string().trim().max(MAX_FIELD, `Cada campo admite como máximo ${MAX_FIELD} caracteres.`);
-const long = z.string().trim().max(MAX_LONG_FIELD, `Este campo admite como máximo ${MAX_LONG_FIELD} caracteres.`);
+const short = z.string().trim().max(MAX_FIELD, msg("Cada campo admite como máximo 300 caracteres."));
+const long = z.string().trim().max(MAX_LONG_FIELD, msg("Este campo admite como máximo 800 caracteres."));
 
 const detailsSchema = z.object({
   brand: short,
@@ -52,7 +55,7 @@ const itemSchema = z.object({
 });
 
 const requestSchema = z.object({
-  items: z.array(itemSchema).min(1, "Selecciona al menos un producto.").max(MAX_PRODUCTS, `Como máximo ${MAX_PRODUCTS} productos a la vez.`),
+  items: z.array(itemSchema).min(1, msg("Selecciona al menos un producto.")).max(MAX_PRODUCTS, msg("Como máximo 5 productos a la vez.")),
   tone: z.enum(Object.keys(TONES) as [keyof typeof TONES, ...(keyof typeof TONES)[]]),
   platform: z.enum(Object.keys(PLATFORMS) as [keyof typeof PLATFORMS, ...(keyof typeof PLATFORMS)[]]),
   otherPlatform: short,
@@ -103,7 +106,7 @@ const LENGTH_GUIDE: Record<keyof typeof LENGTHS, string> = {
     "Detallada: aprox. 120-220 palabras sin contar hashtags, usando SOLO la información disponible; si no hay tanta información, escribe menos en lugar de rellenar.",
 };
 
-const SYSTEM = `Eres quien redacta los anuncios de segunda mano de una pequeña tienda online española. Escribes en español de España.
+const SYSTEM = (lang: string) => `Eres quien redacta los anuncios de segunda mano de una pequeña tienda online. Escribes el anuncio en ${lang}, con naturalidad, como lo escribiría alguien nativo.
 
 Tu única tarea es devolver el texto del anuncio, listo para copiar y pegar. Sin introducciones, sin comillas, sin explicaciones, sin notas al final y sin formato markdown (nada de **, #, ni listas con guiones salvo que la plataforma lo pida expresamente en las indicaciones).
 
@@ -123,6 +126,16 @@ ESTILO:
 - Hashtags: solo si se piden; específicos del producto (marca, modelo, tipo de producto, color, estilo) y adecuados a la plataforma. Sin hashtags genéricos vacíos (#love, #instagood…) ni que afirmen cosas no indicadas.
 
 Las indicaciones adicionales del usuario mandan sobre el estilo, pero nunca sobre las reglas de veracidad.`;
+
+/** Idioma en que se escribe el anuncio (el de la app). */
+const AD_LANGUAGE: Record<Locale, string> = {
+  es: "español de España",
+  en: "inglés británico",
+  fr: "francés",
+  de: "alemán",
+  it: "italiano",
+  pt: "portugués de Portugal",
+};
 
 /** Nombres de variante que no aportan nada («Única», «Sin especificar»). */
 const GENERIC_VARIANT = /^(única|unica|sin especificar)$/i;
@@ -159,7 +172,7 @@ function buildPrompt(req: GenerateRequest, p: DbProduct, variant: { name: string
   add("Descripción guardada en la ficha", p.description);
   add("Otra información", d.extra);
 
-  return `Escribe un anuncio para publicar en ${platformName}.
+  return `Escribe un anuncio para publicar en ${platformName}. Los datos están en español; el anuncio, en el idioma indicado.
 
 DATOS DEL PRODUCTO (lo único que puedes afirmar):
 ${lines.join("\n")}
@@ -188,18 +201,18 @@ const tryNext = (e: unknown) => e instanceof AiError && (e.status === 429 || e.s
 
 function friendlyAiError(e: unknown): string {
   if (e instanceof AiError) {
-    if (e.reason === "API_KEY_INVALID" || e.status === 401) return "La clave de Gemini (GEMINI_API_KEY) no es válida. Revísala en Vercel.";
-    if (e.status === 403) return "La clave de Gemini no tiene permiso para usar la API. Crea una nueva en aistudio.google.com y ponla en Vercel.";
-    if (e.status === 429) return "Se ha agotado el cupo gratuito de Gemini por ahora (por minuto o por día). Espera un poco y vuelve a intentarlo.";
-    if (e.status === 404) return "El modelo indicado en GEMINI_MODEL no existe. Quita esa variable para usar el modelo por defecto.";
-    if (e.status === 408 || e.reason === "TIMEOUT") return "La IA ha tardado demasiado en responder. Vuelve a intentarlo.";
-    if (e.status >= 500) return "Los servidores de Gemini están saturados ahora mismo (se han probado varios modelos). Inténtalo en unos minutos.";
-    if (e.reason === "SAFETY" || e.reason === "BLOCKED") return "La IA no ha querido redactar este texto. Cambia las indicaciones e inténtalo de nuevo.";
-    if (e.reason === "EMPTY") return "La IA no ha devuelto texto. Vuelve a intentarlo.";
-    return "La IA ha rechazado la petición. Revisa los datos e inténtalo de nuevo.";
+    if (e.reason === "API_KEY_INVALID" || e.status === 401) return msg("La clave de Gemini (GEMINI_API_KEY) no es válida. Revísala en Vercel.");
+    if (e.status === 403) return msg("La clave de Gemini no tiene permiso para usar la API. Crea una nueva en aistudio.google.com y ponla en Vercel.");
+    if (e.status === 429) return msg("Se ha agotado el cupo gratuito de Gemini por ahora (por minuto o por día). Espera un poco y vuelve a intentarlo.");
+    if (e.status === 404) return msg("El modelo indicado en GEMINI_MODEL no existe. Quita esa variable para usar el modelo por defecto.");
+    if (e.status === 408 || e.reason === "TIMEOUT") return msg("La IA ha tardado demasiado en responder. Vuelve a intentarlo.");
+    if (e.status >= 500) return msg("Los servidores de Gemini están saturados ahora mismo (se han probado varios modelos). Inténtalo en unos minutos.");
+    if (e.reason === "SAFETY" || e.reason === "BLOCKED") return msg("La IA no ha querido redactar este texto. Cambia las indicaciones e inténtalo de nuevo.");
+    if (e.reason === "EMPTY") return msg("La IA no ha devuelto texto. Vuelve a intentarlo.");
+    return msg("La IA ha rechazado la petición. Revisa los datos e inténtalo de nuevo.");
   }
-  if (e instanceof TypeError) return "No se ha podido conectar con la IA. Comprueba la conexión y vuelve a intentarlo.";
-  return "No se ha podido generar la descripción. Inténtalo de nuevo.";
+  if (e instanceof TypeError) return msg("No se ha podido conectar con la IA. Comprueba la conexión y vuelve a intentarlo.");
+  return msg("No se ha podido generar la descripción. Inténtalo de nuevo.");
 }
 
 type GeminiResponse = {
@@ -250,21 +263,22 @@ async function callGemini(apiKey: string, model: string, system: string, prompt:
 
 /** Genera una descripción por producto. No guarda nada en la base de datos. */
 export async function generateDescriptions(input: GenerateRequest): Promise<ActionResult<GeneratedItem[]>> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user || !user.active) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
-  if (!user.orgId || !can(user, "generador")) return { ok: false, error: "No tienes permiso para usar el generador." };
-  if (!user.hasAccess) return { ok: false, error: "Tu espacio está en solo lectura: activa la suscripción para usar el generador." };
+  if (!user || !user.active) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
+  if (!user.orgId || !can(user, "generador")) return { ok: false, error: t("No tienes permiso para usar el generador.") };
+  if (!user.hasAccess) return { ok: false, error: t("Tu espacio está en solo lectura: activa la suscripción para usar el generador.") };
 
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     return {
       ok: false,
-      error: "Falta la variable GEMINI_API_KEY en Vercel. Añádela en Vercel → tu proyecto → Settings → Environment Variables y vuelve a desplegar (Redeploy).",
+      error: t("Falta la variable GEMINI_API_KEY en Vercel. Añádela en Vercel → tu proyecto → Settings → Environment Variables y vuelve a desplegar (Redeploy)."),
     };
   }
 
   const parsed = requestSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t("Datos no válidos.") };
   const req = parsed.data;
 
   // Leer los productos con la sesión del usuario (la base de datos decide qué puede ver)
@@ -275,9 +289,9 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
     .select("id, name, sku, description, normal_sale_price, brands(name), categories(name)")
     .in("id", ids)
     .is("deleted_at", null);
-  if (error) return { ok: false, error: "No se han podido leer los productos." };
+  if (error) return { ok: false, error: t("No se han podido leer los productos.") };
   const byId = new Map(((products ?? []) as unknown as DbProduct[]).map((p) => [p.id, p]));
-  if (ids.some((id) => !byId.has(id))) return { ok: false, error: "Alguno de los productos no existe o no tienes acceso a él." };
+  if (ids.some((id) => !byId.has(id))) return { ok: false, error: t("Alguno de los productos no existe o no tienes acceso a él.") };
 
 
   const variantIds = req.items.map((i) => i.variantId).filter((v): v is string => !!v);
@@ -287,7 +301,7 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
     for (const v of vs ?? []) variants.set(v.id as string, v as { name: string; sku: string | null; product_id: string });
   }
   for (const it of req.items) {
-    if (it.variantId && variants.get(it.variantId)?.product_id !== it.productId) return { ok: false, error: "La variante no corresponde al producto." };
+    if (it.variantId && variants.get(it.variantId)?.product_id !== it.productId) return { ok: false, error: t("La variante no corresponde al producto.") };
   }
 
   const custom = process.env.GEMINI_MODEL?.trim();
@@ -297,8 +311,8 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
 
   // Límite diario por usuario (lo cuenta la base de datos, día de Madrid)
   const { data: allowed, error: limitError } = await supabase.rpc("ai_usage_take", { p_units: req.items.length, p_limit: DAILY_LIMIT });
-  if (limitError) return { ok: false, error: "No se ha podido comprobar el límite diario. Inténtalo de nuevo." };
-  if (!allowed) return { ok: false, error: `Has llegado al límite de ${DAILY_LIMIT} descripciones de hoy. Mañana podrás generar más.` };
+  if (limitError) return { ok: false, error: t("No se ha podido comprobar el límite diario. Inténtalo de nuevo.") };
+  if (!allowed) return { ok: false, error: t("Has llegado al límite de {DAILY_LIMIT} descripciones de hoy. Mañana podrás generar más.", { DAILY_LIMIT }) };
 
   const results = await Promise.all(
     req.items.map(async (it): Promise<GeneratedItem> => {
@@ -312,7 +326,7 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
         // Cada modelo: un intento y, si está saturado (503), un reintento tras una pausa corta
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
-            const text = await callGemini(apiKey, model, SYSTEM, prompt, maxTokens);
+            const text = await callGemini(apiKey, model, SYSTEM(AD_LANGUAGE[t.locale]), prompt, maxTokens);
             return { productId: it.productId, variantId: it.variantId, title, text };
           } catch (e) {
             lastError = e;
@@ -332,7 +346,7 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
         productId: it.productId,
         variantId: it.variantId,
         title,
-        error: `${friendlyAiError(lastError)} Detalle: ${tried.join(" · ")}${technical}`,
+        error: t("{message} Detalle: {detail}", { message: t(friendlyAiError(lastError)), detail: `${tried.join(" · ")}${technical}` }),
       };
     }),
   );
