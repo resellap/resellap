@@ -145,7 +145,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                       </Td>
                       <Td className="num">{date(s.sale_date)}</Td>
                       <Td>
-                        <Link className="whitespace-nowrap font-semibold text-brand-ink hover:underline" href={`/ventas/${s.id}`}>
+                        <Link className="mono whitespace-nowrap text-[12.5px] font-medium text-brand-ink hover:underline" href={`/ventas/${s.id}`}>
                           {s.sale_number}
                         </Link>
                       </Td>
@@ -317,7 +317,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                         case "venta":
                           return (
                             <Td key={c}>
-                              <Link className="whitespace-nowrap font-semibold text-brand-ink hover:underline" href={`/ventas/${l.sale_id}`}>
+                              <Link className="mono whitespace-nowrap text-[12.5px] font-medium text-brand-ink hover:underline" href={`/ventas/${l.sale_id}`}>
                                 {l.sale_number}
                               </Link>
                               {extras.get(l.sale_id)?.buyer_name && <span className="block max-w-[12ch] truncate text-xs text-faint">{extras.get(l.sale_id)!.buyer_name}</span>}

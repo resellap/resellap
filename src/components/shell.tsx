@@ -191,7 +191,7 @@ export function Shell({
 
   const itemClass = (active: boolean) =>
     clsx(
-      "press group flex min-h-10 items-center gap-3 rounded-full px-3 text-[14px] font-medium",
+      "press group flex min-h-10 items-center gap-3 rounded-[8px] px-3 text-[14px] font-medium",
       active ? "bg-subtle text-ink" : "text-muted hover:bg-subtle/70 hover:text-ink",
     );
 
@@ -223,15 +223,15 @@ export function Shell({
   const settingsItems = (NAV.find((g) => g.footer)?.items ?? []).filter(visible).filter((i) => i.href !== "/cuenta");
   const settingsActive = settingsItems.some((i) => isActive(pathname, i.href));
 
-  const pill = "rs-card rounded-full bg-surface";
+  const pill = "rs-card rounded-[12px] bg-surface/85 backdrop-blur-md";
   // Carril: iconos; con la flechita se despliega y enseña los nombres.
   // El color de la opción activa lo pone la burbuja (rs-seg + data-on).
-  const railBase = "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9";
+  const railBase = "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-[8px] px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9";
   const railItem = () => clsx(railBase, "rs-seg");
   const settingsBtn = (active: boolean) => clsx(railBase, "transition-colors duration-300", active ? "bg-ink text-paper" : "text-ink-soft hover:text-ink");
   const railLabel = clsx("truncate whitespace-nowrap transition-opacity duration-150", railOpen ? "opacity-100 delay-75" : "pointer-events-none opacity-0");
   const railPill = clsx(
-    "rs-ease flex flex-col gap-0.5 overflow-hidden rounded-[24px] border border-line-strong/70 bg-surface p-1 shadow-[var(--shadow-card)] [--seg-ink:var(--ink-soft)] transition-[width] duration-[450ms]",
+    "rs-ease flex flex-col gap-0.5 overflow-hidden rounded-[14px] border border-line-strong/70 bg-surface/85 p-1 backdrop-blur-md shadow-[var(--shadow-card)] [--seg-ink:var(--ink-soft)] transition-[width] duration-[450ms]",
     railOpen ? "w-60" : "w-12",
   );
   // Cualquier opción del carril lo vuelve a recoger
@@ -255,7 +255,7 @@ export function Shell({
               data-bubble={it.href}
               onClick={go(it.href)}
               className={clsx(
-                "rs-seg press flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium xl:px-4 xl:text-[13.5px]",
+                "rs-seg press flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] px-3 text-[13px] font-medium xl:px-4 xl:text-[13.5px]",
               )}
               data-on={String(active)}
             >
@@ -280,7 +280,7 @@ export function Shell({
           href="/ventas/nueva"
           active={pathname.startsWith("/ventas/nueva")}
           aria-label="Nueva venta"
-          className="press flex h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-4 text-[14px] font-semibold text-on-brand shadow-[var(--shadow-card)] hover:bg-brand-strong xl:px-5"
+          className="press flex h-12 shrink-0 items-center gap-2 rounded-[12px] bg-brand px-4 text-[14px] font-semibold text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_6px_20px_-8px_rgb(54_199_132/0.55)] hover:bg-brand-strong xl:px-5"
         >
           <Plus size={18} strokeWidth={2.25} />
           <span className="hidden xl:inline">Nueva venta</span>
@@ -289,7 +289,7 @@ export function Shell({
       <div className={clsx(pill, "hidden h-12 shrink-0 items-center gap-0.5 px-1 xl:flex")}>
         <Link
           href="/seguimiento?vista=alertas"
-          className="press relative flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-ink"
+          className="press relative flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:bg-subtle hover:text-ink"
           aria-label={badges.alerts > 0 ? `${badges.alerts} ${badges.alerts === 1 ? "alerta" : "alertas"} de envíos` : "Alertas de envíos"}
           title="Alertas de envíos"
         >
@@ -299,7 +299,7 @@ export function Shell({
         {canSeeDetected && (
           <Link
             href="/detectadas"
-            className="press relative flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-ink"
+            className="press relative flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:bg-subtle hover:text-ink"
             aria-label="Ventas detectadas en el correo"
             title="Ventas detectadas"
           >
@@ -310,7 +310,7 @@ export function Shell({
       </div>
       <details ref={userMenu} className="group/user relative shrink-0">
         <summary className={clsx(pill, "press flex h-12 cursor-pointer list-none items-center gap-2.5 pl-1 pr-3 [&::-webkit-details-marker]:hidden")}>
-          <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-[13px] font-semibold text-paper">
+          <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-brand-soft text-[13px] font-semibold text-brand-ink ring-1 ring-inset ring-brand/30">
             {initials || "·"}
           </span>
           <span className="hidden max-w-[180px] text-left text-[13px] leading-tight 2xl:block">
@@ -440,7 +440,7 @@ export function Shell({
   const tabsHere = isActive(here, "/") || isActive(here, "/ventas") || isActive(here, "/envios") || here.startsWith("/ventas/nueva");
   const tabClass = () =>
     clsx(
-      "press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium",
+      "press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-[12px] text-[11px] font-medium",
       "rs-seg [--seg-ink:var(--faint)]",
     );
   const pendingMore = badges.reviews + badges.emails + badges.detected + badges.listings + badges.alerts;
@@ -450,7 +450,7 @@ export function Shell({
       aria-label="Accesos rápidos"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden no-print"
     >
-      <ul ref={tabList} className="rs-card relative mx-auto flex max-w-md items-center rounded-full bg-surface/95 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-md">
+      <ul ref={tabList} className="rs-card relative mx-auto flex max-w-md items-center rounded-[18px] bg-surface/90 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-xl [--bubble-radius:12px]">
         <LiquidBubble container={tabList} active={more || !tabsHere ? "mas" : (tabs.find((t) => isActive(here, t.href))?.href ?? null)} />
         {tabs.slice(0, 2).map((t) => {
           const active = !more && isActive(here, t.href);
@@ -469,7 +469,7 @@ export function Shell({
               href="/ventas/nueva"
               active={pathname.startsWith("/ventas/nueva")}
               aria-label="Nueva venta"
-              className="press flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand text-on-brand"
+              className="press flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-brand text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_6px_20px_-8px_rgb(54_199_132/0.6)]"
             >
               <Plus size={26} strokeWidth={2} />
             </NavLink>

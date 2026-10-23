@@ -11,7 +11,7 @@ export function TrackingCode({ code, link }: { code: string; link: string | null
   const [copied, setCopied] = useState(false);
   return (
     <span className="inline-flex max-w-full items-center gap-1">
-      <span className="num truncate font-medium">{code}</span>
+      <span className="mono truncate text-[13px] font-medium">{code}</span>
       <button
         type="button"
         className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-xs)] text-faint hover:bg-subtle hover:text-ink"

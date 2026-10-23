@@ -118,7 +118,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
         <HomeTasks badges={badges} perms={user.permissions} notify={prefs.notifications} lowStock={lowStock} />
         <QuickActions perms={user.permissions} />
         <div className="flex flex-wrap items-center gap-2">
-          <BubbleGroup label="Periodo" active={period} className="no-scrollbar flex max-w-full overflow-x-auto rounded-full border border-line-strong bg-surface p-1 text-[13px] font-semibold">
+          <BubbleGroup label="Periodo" active={period} className="rs-card no-scrollbar flex max-w-full overflow-x-auto rounded-[12px] bg-surface p-1 text-[13px] font-semibold">
             {(Object.keys(PERIODS) as PeriodKey[]).map((k) => (
               <Link
                 key={k}
@@ -127,7 +127,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
                 aria-current={period === k ? "page" : undefined}
                 data-bubble={k}
                 data-on={String(period === k)}
-                className="rs-seg press whitespace-nowrap rounded-full px-3 py-1.5 [--seg-ink:var(--ink-soft)]"
+                className="rs-seg press whitespace-nowrap rounded-[8px] px-3 py-1.5 [--seg-ink:var(--ink-soft)]"
               >
                 {PERIODS[k]}
               </Link>

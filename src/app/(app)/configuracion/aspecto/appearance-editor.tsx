@@ -13,7 +13,7 @@ type A = Prefs["appearance"];
 function apply(a: A) {
   const el = document.documentElement;
   const set = (k: string, v?: string) => (v ? el.setAttribute(k, v) : el.removeAttribute(k));
-  set("data-mode", a.mode === "auto" ? undefined : a.mode);
+  set("data-mode", a.mode);
   set("data-palette", a.palette === "vinted" ? undefined : a.palette);
   set("data-motion", a.reduceMotion ? "reduce" : undefined);
 }
