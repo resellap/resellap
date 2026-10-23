@@ -1,5 +1,6 @@
 import "server-only";
 import { headers } from "next/headers";
+import { money } from "./format";
 
 /** Dirección pública de la app (para los enlaces de los correos y de Stripe). */
 export async function siteUrl(): Promise<string> {
@@ -17,7 +18,11 @@ export const SITE_URL = (
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
 ).replace(/\/$/, "");
 
-export const PRICE_LABEL = "4,99 €";
+export const PRICE = 4.99;
+/** «4,99 €» en el formato del idioma de la petición. */
+export function priceLabel(): string {
+  return money(PRICE);
+}
 export const TRIAL_DAYS = 7;
 
 /** Titular del servicio para las páginas legales (se configura en Vercel). */

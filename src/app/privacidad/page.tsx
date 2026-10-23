@@ -1,4 +1,4 @@
-import { getT, tSync } from "@/i18n/server";
+import { getFormat, getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/public-layout";
 import { LEGAL } from "@/lib/site";
@@ -8,10 +8,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("Privacidad") };
 }
 
-export default function PrivacyPage() {
-  const t = tSync();
+export default async function PrivacyPage() {
+  const t = await getT();
   return (
-    <LegalPage title={t("Privacidad")} updated="12 de octubre de 2026">
+    <LegalPage title={t("Privacidad")} updated={(await getFormat()).longDate("2026-10-12")}>
       <h2>{t("Responsable")}</h2>
       <p>
         {LEGAL.name} ({LEGAL.taxId}), {LEGAL.address}{t(". Contacto: {email}.", { email: LEGAL.email })}

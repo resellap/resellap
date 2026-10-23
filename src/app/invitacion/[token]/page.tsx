@@ -1,4 +1,6 @@
 import { getT } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
+import { msg } from "@/i18n/translate";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
@@ -12,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("Invitación") };
 }
 
-const ROLE = { admin: "administrador", vendedor: "vendedor", almacen: "almacén" } as const;
+const ROLE = { admin: msg("Únete a <b>{org}</b> como administrador."), vendedor: msg("Únete a <b>{org}</b> como vendedor."), almacen: msg("Únete a <b>{org}</b> como almacén.") } as const;
 
 export default async function InvitationPage({ params }: PageProps<"/invitacion/[token]">) {
   const t = await getT();
@@ -33,10 +35,10 @@ export default async function InvitationPage({ params }: PageProps<"/invitacion/
     );
   }
   return (
-    <AuthLayout title={t("Te han invitado")} subtitle={<>{t("Únete a")}{" "}<strong>{info.organization}</strong>{" "}{t("como {ROLE}.", { ROLE: ROLE[info.role] })}</>}>
+    <AuthLayout title={t("Te han invitado")} subtitle={rich(t(ROLE[info.role], { org: info.organization }), { b: (c) => <strong>{c}</strong> })}>
       {!user ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm">{t("La invitación es para")}{" "}<strong>{info.email}</strong>.</p>
+          <p className="text-sm">{rich(t("La invitación es para <b>{email}</b>.", { email: info.email }), { b: (c) => <strong>{c}</strong> })}</p>
           <Link href={`/registro?next=${encodeURIComponent(here)}`} className={buttonClass("primary", "md")}>
             {t("Crear cuenta")}
           </Link>
@@ -47,7 +49,7 @@ export default async function InvitationPage({ params }: PageProps<"/invitacion/
       ) : user.email.toLowerCase() !== info.email ? (
         <div className="flex flex-col gap-3 text-sm">
           <p>
-            {t("Has entrado como")}{" "}<strong>{user.email}</strong>{t(", pero la invitación es para")}{" "}<strong>{info.email}</strong>.
+            {rich(t("Has entrado como <b>{me}</b>, pero la invitación es para <b>{email}</b>.", { me: user.email, email: info.email }), { b: (c) => <strong>{c}</strong> })}
           </p>
           <form action="/auth/salir" method="post">
             <button className={buttonClass("secondary", "md")}>{t("Cerrar sesión y entrar con el otro email")}</button>

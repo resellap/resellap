@@ -1,4 +1,6 @@
 import { tSync } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
+import { LanguagePicker } from "./language-picker";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Logo } from "./brand";
@@ -35,13 +37,13 @@ export function AuthLayout({ title, subtitle, children, aside }: { title: string
     <div className="grid min-h-dvh bg-paper lg:grid-cols-[minmax(0,1fr)_minmax(460px,560px)]">
       {/* Columna de marca (en el móvil, una cabecera compacta) */}
       <div className="relative flex flex-col justify-between gap-8 overflow-hidden bg-[#0B0F0E] px-6 pb-8 pt-[max(1.25rem,env(safe-area-inset-top))] text-[#F4F6F5] lg:px-12 lg:py-12">
-        <Link href="/precios" aria-label={t("Resellap")} className="relative w-fit">
+        <Link href="/precios" aria-label="Resellap" className="relative w-fit">
           <Logo size={28} tone="white" />
         </Link>
         <div className="relative max-w-xl animate-rise">
           {aside ?? (
             <p className="font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[40px] lg:text-[52px]">
-              {t("Sabes lo que tienes, lo que te costó")}{" "}<span className="text-[#36C784]">{t("y lo que ganas.")}</span>
+              {rich(t("Sabes lo que tienes, lo que te costó <g>y lo que ganas.</g>"), { g: (c) => <span className="text-[#36C784]">{c}</span> })}
             </p>
           )}
           <p className="mt-4 hidden max-w-md text-[15px] leading-relaxed text-[#B4BDB9] sm:block">
@@ -50,8 +52,9 @@ export function AuthLayout({ title, subtitle, children, aside }: { title: string
         </div>
         <ModulePattern className="relative hidden w-full max-w-lg lg:block" />
       </div>
-      <div className="flex items-start justify-center border-line bg-surface/60 px-5 pb-12 pt-8 sm:px-6 lg:items-center lg:border-l lg:py-12">
-        <div className="w-full max-w-sm animate-rise">
+      <div className="relative flex items-start justify-center border-line bg-surface/60 px-5 pb-12 pt-8 sm:px-6 lg:items-center lg:border-l lg:py-12">
+        <LanguagePicker current={t.locale} compact className="absolute right-5 top-5 lg:right-6" />
+        <div className="mt-10 w-full max-w-sm animate-rise lg:mt-0">
           <h1 className="display text-[30px] text-ink sm:text-[34px]">{title}</h1>
           {subtitle && <div className="mb-6 mt-1.5 text-[14.5px] text-muted">{subtitle}</div>}
           {!subtitle && <div className="mb-6" />}

@@ -1,4 +1,6 @@
-import { getT, tSync } from "@/i18n/server";
+import { getFormat, getT } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
+import { msg } from "@/i18n/translate";
 import type { Metadata } from "next";
 import { Check, MailCheck, MapPinned, PackageCheck, ChartColumn, Tag, Users } from "lucide-react";
 import Link from "next/link";
@@ -6,35 +8,36 @@ import { ModulePattern } from "@/components/auth-layout";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
 import { PublicLayout } from "@/components/public-layout";
 import { buttonClass } from "@/components/ui";
-import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
+import { priceLabel, TRIAL_DAYS } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
   title: t("Resellap · Inventario y ventas para revendedores"),
-  description: `Detecta tus ventas de Vinted y Wallapop, controla el stock, los envíos y el beneficio real. ${TRIAL_DAYS} días gratis, después ${PRICE_LABEL} al mes.`,
+  description: t("Detecta tus ventas de Vinted y Wallapop, controla el stock, los envíos y el beneficio real. {days} días gratis, después {price} al mes.", { days: TRIAL_DAYS, price: priceLabel() }),
 };
 }
 
 const FLOW = [
-  { n: "1", t: "Resellap detecta", d: "Lee los correos de venta de Vinted y Wallapop: producto, comprador, precio, foto y transportista." },
-  { n: "2", t: "Te lo propone", d: "Identifica el producto de tu inventario y te dice por qué. Si hay duda, te enseña las opciones." },
-  { n: "3", t: "Tú confirmas", d: "Revisas, corriges si hace falta y confirmas. El stock se descuenta del lote correcto." },
-  { n: "4", t: "Envías", d: "Pendientes por transportista, con la etiqueta a mano. Marcas «enviado» y empieza el seguimiento." },
-  { n: "5", t: "Sabes lo que ganas", d: "Beneficio real por venta, tiempos de entrega por transportista e informes listos para exportar." },
+  { n: "1", t: msg("Resellap detecta"), d: msg("Lee los correos de venta de Vinted y Wallapop: producto, comprador, precio, foto y transportista.") },
+  { n: "2", t: msg("Te lo propone"), d: msg("Identifica el producto de tu inventario y te dice por qué. Si hay duda, te enseña las opciones.") },
+  { n: "3", t: msg("Tú confirmas"), d: msg("Revisas, corriges si hace falta y confirmas. El stock se descuenta del lote correcto.") },
+  { n: "4", t: msg("Envías"), d: msg("Pendientes por transportista, con la etiqueta a mano. Marcas «enviado» y empieza el seguimiento.") },
+  { n: "5", t: msg("Sabes lo que ganas"), d: msg("Beneficio real por venta, tiempos de entrega por transportista e informes listos para exportar.") },
 ];
 
 const FEATURES = [
-  { icon: Tag, t: "Inventario por lotes", d: "Cada unidad sabe de qué compra vino y cuánto costó. Margen y beneficio por producto." },
-  { icon: MailCheck, t: "Ventas detectadas", d: "Las ventas llegan solas desde tu Gmail. Nada se registra sin que lo confirmes." },
-  { icon: PackageCheck, t: "Pendientes de envío", d: "Separados por transportista, con etiqueta, fecha límite y foto del artículo." },
-  { icon: MapPinned, t: "Seguimiento", d: "Estado de cada paquete, historial completo y avisos de retraso o incidencia." },
-  { icon: ChartColumn, t: "Informes", d: "Ventas, inventario, compras, responsables y envíos. A Excel o CSV en un clic." },
-  { icon: Users, t: "Equipo", d: "Administrador, vendedor y almacén, con permisos persona a persona." },
+  { icon: Tag, t: msg("Inventario por lotes"), d: msg("Cada unidad sabe de qué compra vino y cuánto costó. Margen y beneficio por producto.") },
+  { icon: MailCheck, t: msg("Ventas detectadas"), d: msg("Las ventas llegan solas desde tu Gmail. Nada se registra sin que lo confirmes.") },
+  { icon: PackageCheck, t: msg("Pendientes de envío"), d: msg("Separados por transportista, con etiqueta, fecha límite y foto del artículo.") },
+  { icon: MapPinned, t: msg("Seguimiento"), d: msg("Estado de cada paquete, historial completo y avisos de retraso o incidencia.") },
+  { icon: ChartColumn, t: msg("Informes"), d: msg("Ventas, inventario, compras, responsables y envíos. A Excel o CSV en un clic.") },
+  { icon: Users, t: msg("Equipo"), d: msg("Administrador, vendedor y almacén, con permisos persona a persona.") },
 ];
 
-export default function PricingPage() {
-  const t = tSync();
+export default async function PricingPage() {
+  const t = await getT();
+  const f = await getFormat();
   return (
     <PublicLayout>
       {/* Portada */}
@@ -43,7 +46,7 @@ export default function PricingPage() {
           <div className="animate-rise">
             <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#6FDCA6]">{t("Para quien revende en Vinted, Wallapop y más")}</p>
             <h1 className="mt-4 font-[family-name:var(--font-display)] text-[40px] font-semibold leading-[1.02] tracking-[-0.035em] text-white sm:text-[60px]">
-              {t("Sabes lo que tienes, lo que te costó")}{" "}<span className="text-[#36C784]">{t("y lo que ganas.")}</span>
+              {rich(t("Sabes lo que tienes, lo que te costó <g>y lo que ganas.</g>"), { g: (c) => <span className="text-[#36C784]">{c}</span> })}
             </h1>
             <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-[#B4BDB9]">
               {t("Resellap detecta tus ventas en el correo, te propone el producto y el transportista, y sigue cada envío hasta que llega. Sin hojas de cálculo.")}
@@ -56,7 +59,7 @@ export default function PricingPage() {
                 {t("Ya tengo cuenta")}
               </Link>
             </div>
-            <p className="mt-4 text-[13px] text-[#8A9590]">{t("Sin tarjeta. Después, {PRICE_LABEL} al mes. Cancela cuando quieras.", { PRICE_LABEL })}</p>
+            <p className="mt-4 text-[13px] text-[#8A9590]">{t("Sin tarjeta. Después, {price} al mes. Cancela cuando quieras.", { price: priceLabel() })}</p>
           </div>
 
           {/* Vista de ejemplo de la app */}
@@ -80,12 +83,12 @@ export default function PricingPage() {
                   <p className="text-[16px] font-semibold text-white">{t("Gafas de sol de ejemplo")}</p>
                   <p className="text-[13px] text-[#8A9590]">{t("Comprador: lucia_88 · hoy")}</p>
                 </div>
-                <p className="num text-[22px] font-semibold text-white">45,00 €</p>
+                <p className="num text-[22px] font-semibold text-white">{f.money(45)}</p>
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-[12px] border border-[#222927] bg-[#222927] text-[13px]">
                 <div className="bg-[#151A18] px-3 py-2.5">
                   <dt className="text-[#8A9590]">{t("Producto")}</dt>
-                  <dd className="mt-0.5 font-medium text-white">{t("Identificado · 96 %")}</dd>
+                  <dd className="mt-0.5 font-medium text-white">{t("Identificado")} · {f.percent(96)}</dd>
                 </div>
                 <div className="bg-[#151A18] px-3 py-2.5">
                   <dt className="text-[#8A9590]">{t("Transportista")}</dt>
@@ -95,11 +98,11 @@ export default function PricingPage() {
                 </div>
                 <div className="bg-[#151A18] px-3 py-2.5">
                   <dt className="text-[#8A9590]">{t("Coste del lote")}</dt>
-                  <dd className="num mt-0.5 font-medium text-white">12,00 €</dd>
+                  <dd className="num mt-0.5 font-medium text-white">{f.money(12)}</dd>
                 </div>
                 <div className="bg-[#151A18] px-3 py-2.5">
                   <dt className="text-[#8A9590]">{t("Beneficio")}</dt>
-                  <dd className="num mt-0.5 font-semibold text-[#6FDCA6]">+31,80 €</dd>
+                  <dd className="num mt-0.5 font-semibold text-[#6FDCA6]">+{f.money(31.8)}</dd>
                 </div>
               </dl>
               <div className="mt-4 flex gap-2">
@@ -116,11 +119,11 @@ export default function PricingPage() {
         <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-brand-ink">{t("Cómo funciona")}</p>
         <h2 className="display mt-3 max-w-2xl text-[32px] sm:text-[40px]">{t("Resellap hace el trabajo. Tú solo revisas.")}</h2>
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {FLOW.map((f) => (
-            <li key={f.n} className="rs-card rounded-[var(--radius-md)] bg-surface p-5">
-              <span className="num flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[14px] font-semibold text-paper">{f.n}</span>
-              <p className="mt-4 text-[16px] font-semibold">{f.t}</p>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{f.d}</p>
+          {FLOW.map((x) => (
+            <li key={x.n} className="rs-card rounded-[var(--radius-md)] bg-surface p-5">
+              <span className="num flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[14px] font-semibold text-paper">{x.n}</span>
+              <p className="mt-4 text-[16px] font-semibold">{t(x.t)}</p>
+              <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{t(x.d)}</p>
             </li>
           ))}
         </ol>
@@ -132,14 +135,14 @@ export default function PricingPage() {
           <div>
             <h2 className="display text-[30px] sm:text-[36px]">{t("Todo incluido")}</h2>
             <ul className="mt-8 grid gap-6 sm:grid-cols-2">
-              {FEATURES.map((f) => (
-                <li key={f.t} className="flex gap-3.5">
+              {FEATURES.map((x) => (
+                <li key={x.t} className="flex gap-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-paper">
-                    <f.icon size={20} strokeWidth={1.75} className="text-brand" aria-hidden />
+                    <x.icon size={20} strokeWidth={1.75} className="text-brand" aria-hidden />
                   </span>
                   <span>
-                    <span className="block font-semibold">{f.t}</span>
-                    <span className="mt-0.5 block text-[14px] leading-relaxed text-muted">{f.d}</span>
+                    <span className="block font-semibold">{t(x.t)}</span>
+                    <span className="mt-0.5 block text-[14px] leading-relaxed text-muted">{t(x.d)}</span>
                   </span>
                 </li>
               ))}
@@ -148,12 +151,12 @@ export default function PricingPage() {
           <div className="h-fit rounded-[var(--radius-lg)] border border-line bg-paper p-6 sm:p-7">
             <p className="text-[13px] font-medium text-muted">{t("Plan único")}</p>
             <p className="mt-2 flex items-baseline gap-1.5">
-              <span className="num font-[family-name:var(--font-display)] text-[52px] font-semibold leading-none tracking-[-0.03em]">{PRICE_LABEL}</span>
+              <span className="num font-[family-name:var(--font-display)] text-[52px] font-semibold leading-none tracking-[-0.03em]">{priceLabel()}</span>
               <span className="text-muted">{t("/ mes")}</span>
             </p>
             <p className="mt-1 text-sm text-muted">{t("Sin permanencia. Cancela cuando quieras.")}</p>
             <ul className="mt-6 space-y-2.5 text-[14.5px]">
-              {[`${TRIAL_DAYS} días de prueba gratis, sin tarjeta`, "Usuarios del equipo incluidos", "Si cancelas, tus datos no se borran: puedes exportarlos", "Tus datos separados de los de cualquier otra empresa"].map((x) => (
+              {[t("{days} días de prueba gratis, sin tarjeta", { days: TRIAL_DAYS }), t("Usuarios del equipo incluidos"), t("Si cancelas, tus datos no se borran: puedes exportarlos"), t("Tus datos separados de los de cualquier otra empresa")].map((x) => (
                 <li key={x} className="flex gap-2.5">
                   <Check size={18} strokeWidth={2.25} className="mt-0.5 shrink-0 text-brand" aria-hidden />
                   {x}

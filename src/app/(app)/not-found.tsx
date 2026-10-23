@@ -1,10 +1,10 @@
-import { tSync } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 import { House, SearchX } from "lucide-react";
 import Link from "next/link";
 import { buttonClass } from "@/components/ui";
 
-export default function NotFound() {
-  const t = tSync();
+export default async function NotFound() {
+  const t = await getT();
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center animate-rise">
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand-ink">

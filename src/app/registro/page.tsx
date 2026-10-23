@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { safeNext } from "@/lib/safe-redirect";
-import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
+import { priceLabel, TRIAL_DAYS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { SignupForm } from "./signup-form";
 
@@ -27,7 +27,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/registro"
   return (
     <AuthLayout
       title={t("Crear cuenta")}
-      subtitle={invitedEmail ? t("Crea tu cuenta para unirte al equipo.") : t("{TRIAL_DAYS} días gratis, sin tarjeta. Después, {PRICE_LABEL} al mes.", { TRIAL_DAYS, PRICE_LABEL })}
+      subtitle={invitedEmail ? t("Crea tu cuenta para unirte al equipo.") : t("{TRIAL_DAYS} días gratis, sin tarjeta. Después, {price} al mes.", { TRIAL_DAYS, price: priceLabel() })}
     >
       <SignupForm next={next} invitedEmail={invitedEmail} />
       <p className="mt-6 text-sm">

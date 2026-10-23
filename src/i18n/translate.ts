@@ -85,6 +85,8 @@ export type Formatter = {
   udsLabel(v: Num): string;
   date(v: string | Date | null | undefined): string;
   dateTime(v: string | null | undefined): string;
+  /** «20 de octubre de 2026» */
+  longDate(iso: string): string;
   monthLabel(ym: string): string;
   /** «12 oct · 14:30» */
   eventTime(iso: string): string;
@@ -104,6 +106,7 @@ export function makeFormat(locale: Locale): Formatter {
   const dateFmt = new Intl.DateTimeFormat(tag, { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
   const dateTimeFmt = new Intl.DateTimeFormat(tag, { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Madrid" });
   const monthFmt = new Intl.DateTimeFormat(tag, { month: "short", year: "2-digit", timeZone: "UTC" });
+  const longFmt = new Intl.DateTimeFormat(tag, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const eventFmt = new Intl.DateTimeFormat(tag, { timeZone: "Europe/Madrid", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const isEmpty = (v: unknown) => v === null || v === undefined || v === "";
   const f: Formatter = {
@@ -138,6 +141,9 @@ export function makeFormat(locale: Locale): Formatter {
     dateTime(v: string | null | undefined): string {
       if (!v) return "—";
       return dateTimeFmt.format(new Date(v));
+    },
+    longDate(iso: string): string {
+      return longFmt.format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
     },
     eventTime(iso: string): string {
       return eventFmt.format(new Date(iso)).replace(/,\s*/, " · ");

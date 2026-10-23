@@ -1,4 +1,5 @@
 import { getT } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthLayout } from "@/components/auth-layout";
@@ -24,9 +25,9 @@ export default async function WelcomePage() {
   const suggested = (meta.user?.user_metadata?.business_name as string | undefined) ?? "";
   return (
     <AuthLayout
-      title={t("Hola{v}", { v: user.fullName ? `, ${user.fullName.split(" ")[0]}` : "" })}
+      title={user.fullName ? t("Hola, {name}", { name: user.fullName.split(" ")[0] }) : t("Hola")}
       subtitle={suspended ? undefined : t("Crea tu espacio de trabajo: ahí estarán tu inventario, tus ventas y tu equipo. Tienes {TRIAL_DAYS} días gratis.", { TRIAL_DAYS })}
-      aside={<p className="font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[40px] lg:text-[52px]">{t("Tu negocio,")}{" "}<span className="text-[#36C784]">{t("tus datos")}</span>{t(". Solo los ve tu equipo.")}</p>}
+      aside={<p className="font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[40px] lg:text-[52px]">{rich(t("Tu negocio, <g>tus datos</g>. Solo los ve tu equipo."), { g: (c) => <span className="text-[#36C784]">{c}</span> })}</p>}
     >
       {suspended && (
         <p className="mb-5 rounded-[var(--radius-sm)] bg-warn-soft px-3 py-2 text-sm text-ink">

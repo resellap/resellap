@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Badge, buttonClass, Notice, PageHeader, Panel } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { date } from "@/lib/format";
-import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
+import { priceLabel, TRIAL_DAYS } from "@/lib/site";
 import { stripeConfigured, stripeTestMode } from "@/lib/stripe";
 import { CancelDeletion, RequestDeletion } from "./deletion";
 
@@ -46,7 +46,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/sus
   const detail = typeof sp.detalle === "string" ? sp.detalle.slice(0, 300) : null;
   return (
     <>
-      <PageHeader title={t("Suscripción")} description={t("Plan único: {PRICE_LABEL} al mes. {TRIAL_DAYS} días de prueba gratis al crear el espacio.", { PRICE_LABEL, TRIAL_DAYS })} />
+      <PageHeader title={t("Suscripción")} description={t("Plan único: {price} al mes. {TRIAL_DAYS} días de prueba gratis al crear el espacio.", { price: priceLabel(), TRIAL_DAYS })} />
       {sp.ok === "pago" && (
         <Notice tone="good" className="mb-4" title={t("Pago recibido")}>
           {t("En cuanto Stripe lo confirme (suele tardar unos segundos), verás aquí la suscripción activa. Recarga la página si no aparece.")}
@@ -97,7 +97,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/sus
                 <>
                   {!hasStripeSub && !deleting && (
                     <form action="/api/stripe/checkout" method="post">
-                      <button className={buttonClass("primary", "md")}>{t("Suscribirme por {PRICE_LABEL}/mes", { PRICE_LABEL })}</button>
+                      <button className={buttonClass("primary", "md")}>{t("Suscribirme por {price}/mes", { price: priceLabel() })}</button>
                     </form>
                   )}
                   {s?.hasCustomer && (
