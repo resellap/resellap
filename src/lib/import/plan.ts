@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 /**
  * Construye el "plan de importación": convierte las filas del Excel en
  * datos estructurados (productos, pedidos de compra con sus lotes,
@@ -202,7 +203,7 @@ export function suggestMerges(names: string[], presets: { from: string; to: stri
   const seen = new Set<string>();
   for (const p of presets) {
     if (unique.some((n) => normKey(n) === normKey(p.from))) {
-      out.push({ from: p.from, to: p.to, reason: "Confirmado por ti: es el mismo producto.", preset: true });
+      out.push({ from: p.from, to: p.to, reason: msg("Confirmado por ti: es el mismo producto."), preset: true });
       seen.add(normKey(p.from));
     }
   }
@@ -217,7 +218,7 @@ export function suggestMerges(names: string[], presets: { from: string; to: stri
         out.push({
           from: a,
           to: b,
-          reason: trailingNumber ? "Solo se diferencian por un número final." : "Los nombres son casi iguales (¿error de escritura?).",
+          reason: trailingNumber ? msg("Solo se diferencian por un número final.") : msg("Los nombres son casi iguales (¿error de escritura?)."),
           preset: false,
         });
         seen.add(ka);
@@ -303,13 +304,13 @@ export function buildPlan(
       const rawName = cleanText(r.get("name"));
       if (!rawName) {
         summary.rows.withErrors++;
-        add("error", cfg.sheetName, r.excelRow, "Fila sin nombre de producto: no se importa.");
+        add("error", cfg.sheetName, r.excelRow, msg("Fila sin nombre de producto: no se importa."));
         continue;
       }
       const key = keyOf(rawName);
       const price = toNumber(r.get("normal_sale_price"));
       if (r.get("normal_sale_price") !== null && (price === null || price < 0)) {
-        add("warning", cfg.sheetName, r.excelRow, `Precio de venta no válido para «${rawName}»: se deja vacío.`);
+        add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("Precio de venta no válido para «{0}»: se deja vacío."), rawName));
       }
       const expected = toNumber(r.get("expected_stock"));
       const brandCol = cleanText(r.get("brand"));
@@ -330,10 +331,10 @@ export function buildPlan(
         }
         if (normKey(rawName) !== normKey(prev.name) || mergeMap.has(normKey(rawName))) {
           summary.products.merged++;
-          add("info", cfg.sheetName, r.excelRow, `«${rawName}» se unifica con «${prev.name}».`);
+          add("info", cfg.sheetName, r.excelRow, fmtMsg(msg("«{0}» se unifica con «{1}»."), rawName, prev.name));
         } else {
           summary.rows.possibleDuplicates++;
-          add("warning", cfg.sheetName, r.excelRow, `Producto repetido «${rawName}»: se usa la primera fila (${prev.source_ref}).`);
+          add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("Producto repetido «{0}»: se usa la primera fila ({1})."), rawName, prev.source_ref));
         }
         if (expected !== null) prev.expectedStock = (prev.expectedStock ?? 0) + expected;
         prev.description ??= cleanText(r.get("description"));
@@ -343,7 +344,7 @@ export function buildPlan(
       const name = resolveName(rawName);
       if (name !== rawName) {
         summary.products.merged++;
-        add("info", cfg.sheetName, r.excelRow, `«${rawName}» se unifica con «${name}».`);
+        add("info", cfg.sheetName, r.excelRow, fmtMsg(msg("«{0}» se unifica con «{1}»."), rawName, name));
       }
       ensureProduct(rawName, cfg.sheetName, ref, {
         brand: brandCol ?? brandFromName(name),
@@ -381,21 +382,21 @@ export function buildPlan(
       const rawName = cleanText(r.get("product_name"));
       const qty = toNumber(r.get("quantity"));
       const cost = toNumber(r.get("unit_cost"));
-      if (!isInteger(num) || num <= 0) errs.push("el número de pedido no es válido");
-      if (!date) errs.push("la fecha no es válida");
-      if (!rawName) errs.push("falta el producto");
-      if (cost === null || cost < 0) errs.push("el coste unitario no es válido");
-      if (qty === null || !Number.isInteger(qty) || qty < 0) errs.push("las unidades no son un número entero válido");
+      if (!isInteger(num) || num <= 0) errs.push(msg("el número de pedido no es válido"));
+      if (!date) errs.push(msg("la fecha no es válida"));
+      if (!rawName) errs.push(msg("falta el producto"));
+      if (cost === null || cost < 0) errs.push(msg("el coste unitario no es válido"));
+      if (qty === null || !Number.isInteger(qty) || qty < 0) errs.push(msg("las unidades no son un número entero válido"));
 
       if (errs.length) {
         summary.rows.withErrors++;
-        add("error", cfg.sheetName, r.excelRow, `No se importa: ${errs.join(", ")}.`);
-        review.push({ kind: "fila_con_errores", entity_type: "purchase_orders", title: `Línea de compra no importada (${ref})`, details: errs.join(", "), payload: jsonRaw(r.raw) });
+        add("error", cfg.sheetName, r.excelRow, fmtMsg(msg("No se importa: {0}."), errs.join(", ")));
+        review.push({ kind: "fila_con_errores", entity_type: "purchase_orders", title: fmtMsg(msg("Línea de compra no importada ({0})"), ref), details: errs.join(", "), payload: jsonRaw(r.raw) });
         continue;
       }
       if (qty === 0) {
         summary.purchaseOrders.linesSkipped++;
-        add("warning", cfg.sheetName, r.excelRow, `«${rawName}» del pedido #${num} tiene 0 unidades: la línea no se importa.`);
+        add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("«{0}» del pedido #{1} tiene 0 unidades: la línea no se importa."), rawName, num));
         continue;
       }
 
@@ -403,7 +404,7 @@ export function buildPlan(
       const product = ensureProduct(rawName!, cfg.sheetName, ref);
       if (product.fromSheet === cfg.sheetName && product.source_ref === ref && byType("productos").length > 0) {
         summary.products.fromPurchasesOnly++;
-        add("info", cfg.sheetName, r.excelRow, `«${product.name}» no estaba en la hoja de productos: se crea desde Compras.`);
+        add("info", cfg.sheetName, r.excelRow, fmtMsg(msg("«{0}» no estaba en la hoja de productos: se crea desde Compras."), product.name));
       }
 
       let po = pos.get(orderNumber);
@@ -429,7 +430,7 @@ export function buildPlan(
       for (const cf of costFields) {
         const v = toNumber(r.get(cf));
         if (v !== null && v !== 0) {
-          if (v < 0) add("warning", cfg.sheetName, r.excelRow, `Coste de ${cf} negativo: se ignora.`);
+          if (v < 0) add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("Coste de {0} negativo: se ignora."), cf));
           else {
             const set = po.costMap.get(cf) ?? new Set<number>();
             set.add(round(v));
@@ -438,7 +439,7 @@ export function buildPlan(
         }
       }
       if (po.items.some((it) => it.product_key === product.key)) {
-        add("info", cfg.sheetName, r.excelRow, `«${product.name}» aparece en varias líneas del pedido #${orderNumber}: se mantienen como líneas separadas.`);
+        add("info", cfg.sheetName, r.excelRow, fmtMsg(msg("«{0}» aparece en varias líneas del pedido #{1}: se mantienen como líneas separadas."), product.name, orderNumber));
       }
       po.items.push({ product_key: product.key, quantity: qty as number, unit_cost: cost as number, notes: cleanText(r.get("notes")), source_ref: ref });
       purchased.set(`${product.key}|${orderNumber}`, (purchased.get(`${product.key}|${orderNumber}`) ?? 0) + (qty as number));
@@ -452,30 +453,30 @@ export function buildPlan(
   const payloadPOs: ImportPayload["purchase_orders"] = [];
   for (const po of Array.from(pos.values()).sort((a, b) => a.order_number - b.order_number)) {
     if (po.dates.size > 1) {
-      add("warning", po.sheet, null, `El pedido #${po.order_number} tiene varias fechas (${Array.from(po.dates).join(", ")}): se usa la primera, ${po.order_date}.`);
+      add("warning", po.sheet, null, fmtMsg(msg("El pedido #{0} tiene varias fechas ({1}): se usa la primera, {2}."), po.order_number, Array.from(po.dates).join(", "), po.order_date));
     }
     if (po.suppliers.size > 1) {
-      add("warning", po.sheet, null, `El pedido #${po.order_number} tiene varios proveedores (${Array.from(po.suppliers).join(", ")}). Un pedido pertenece a un solo proveedor: se usa «${Array.from(po.suppliers)[0]}».`);
+      add("warning", po.sheet, null, fmtMsg(msg("El pedido #{0} tiene varios proveedores ({1}). Un pedido pertenece a un solo proveedor: se usa «{2}»."), po.order_number, Array.from(po.suppliers).join(", "), Array.from(po.suppliers)[0]));
     }
     po.supplier_name = Array.from(po.suppliers)[0] ?? null;
     for (const [cf, set] of po.costMap) {
       const values = Array.from(set);
       if (values.length > 1) {
-        add("warning", po.sheet, null, `El pedido #${po.order_number} tiene varios importes de ${cf} (${values.join(", ")}): se usa el primero.`);
+        add("warning", po.sheet, null, fmtMsg(msg("El pedido #{0} tiene varios importes de {1} ({2}): se usa el primero."), po.order_number, cf, values.join(", ")));
       }
       po.costs.push({ cost_type: cf, amount: values[0] });
     }
     if (existingPOs.has(po.order_number)) {
       summary.purchaseOrders.duplicated++;
-      add("warning", po.sheet, null, `El pedido de compra #${po.order_number} ya existe en Resellap: no se vuelve a importar.`);
+      add("warning", po.sheet, null, fmtMsg(msg("El pedido de compra #{0} ya existe en Resellap: no se vuelve a importar."), po.order_number));
       continue;
     }
     if (!po.supplier_name) {
       review.push({
         kind: "proveedor_pendiente",
         entity_type: "purchase_orders",
-        title: `Pedido de compra #${po.order_number}: proveedor pendiente de identificar`,
-        details: "El Excel no indica el proveedor. Se ha asignado «Proveedor pendiente de identificar».",
+        title: fmtMsg(msg("Pedido de compra #{0}: proveedor pendiente de identificar"), po.order_number),
+        details: msg("El Excel no indica el proveedor. Se ha asignado «Proveedor pendiente de identificar»."),
         payload: { order_number: po.order_number },
       });
     }
@@ -516,7 +517,7 @@ export function buildPlan(
       const n = toNumber(r.get("number"));
       if (!isInteger(n) || n <= 0) {
         summary.rows.withErrors++;
-        add("error", cfg.sheetName, r.excelRow, "Número de móvil no válido: la fila no se importa.");
+        add("error", cfg.sheetName, r.excelRow, msg("Número de móvil no válido: la fila no se importa."));
         continue;
       }
       mobiles.set(n, { number: n, name: cleanText(r.get("name")), email: cleanText(r.get("email")), phone: toPhone(r.get("phone")) });
@@ -573,30 +574,30 @@ export function buildPlan(
       const poCell = r.get("purchase_order_number");
       const poNum = toNumber(poCell);
 
-      if (!date) errs.push("la fecha no es válida");
-      if (!resp) errs.push("falta el responsable");
-      if (!rawName) errs.push("falta el producto");
-      if (qty === null || !Number.isInteger(qty) || qty <= 0) errs.push("las unidades deben ser un número entero mayor que 0");
+      if (!date) errs.push(msg("la fecha no es válida"));
+      if (!resp) errs.push(msg("falta el responsable"));
+      if (!rawName) errs.push(msg("falta el producto"));
+      if (qty === null || !Number.isInteger(qty) || qty <= 0) errs.push(msg("las unidades deben ser un número entero mayor que 0"));
       let total: number | null = null;
       if (totalCell !== null) total = totalCell;
       else if (unitCell !== null && qty !== null) total = unitCell * qty;
-      if (total === null) errs.push("falta el importe");
-      else if (total < 0) errs.push("el importe es negativo");
-      if (poCell !== null && cleanText(poCell) !== null && (!isInteger(poNum) || poNum <= 0)) errs.push("el número de pedido de procedencia no es válido");
+      if (total === null) errs.push(msg("falta el importe"));
+      else if (total < 0) errs.push(msg("el importe es negativo"));
+      if (poCell !== null && cleanText(poCell) !== null && (!isInteger(poNum) || poNum <= 0)) errs.push(msg("el número de pedido de procedencia no es válido"));
 
       const product = rawName ? products.get(keyOf(rawName)) : undefined;
-      if (rawName && !product) errs.push(`el producto «${rawName}» no existe ni en Productos ni en Compras`);
+      if (rawName && !product) errs.push(fmtMsg(msg("el producto «{0}» no existe ni en Productos ni en Compras"), rawName));
 
       if (errs.length) {
         summary.rows.withErrors++;
         summary.sales.withErrors++;
-        add("error", cfg.sheetName, r.excelRow, `No se importa: ${errs.join(", ")}.`);
-        review.push({ kind: "venta_no_importada", entity_type: "sales", title: `Venta no importada (${ref})`, details: errs.join(", "), payload: jsonRaw(r.raw) });
+        add("error", cfg.sheetName, r.excelRow, fmtMsg(msg("No se importa: {0}."), errs.join(", ")));
+        review.push({ kind: "venta_no_importada", entity_type: "sales", title: fmtMsg(msg("Venta no importada ({0})"), ref), details: errs.join(", "), payload: jsonRaw(r.raw) });
         continue;
       }
 
       if (totalCell !== null && unitCell !== null && qty && Math.abs(totalCell / qty - unitCell) > 0.005) {
-        add("warning", cfg.sheetName, r.excelRow, `El precio unitario (${unitCell} €) no cuadra con el total (${totalCell} €) / unidades (${qty}): se usa el total.`);
+        add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("El precio unitario ({0} €) no cuadra con el total ({1} €) / unidades ({2}): se usa el total."), unitCell, totalCell, qty));
       }
 
       // Plataforma y transportista
@@ -608,13 +609,13 @@ export function buildPlan(
       carrier = carrier ?? cleanText(r.get("carrier"));
       if (!platform) {
         platform = "En persona";
-        add("warning", cfg.sheetName, r.excelRow, "Sin plataforma ni método de envío: se registra como «En persona».");
+        add("warning", cfg.sheetName, r.excelRow, msg("Sin plataforma ni método de envío: se registra como «En persona»."));
       }
       const pk = normKey(platform);
       const known = platformsKnown.get(pk) ?? platformsNew.get(pk);
       if (!known) {
         platformsNew.set(pk, { name: platform, requires_shipping: !!carrier });
-        add("info", cfg.sheetName, r.excelRow, `Plataforma nueva «${platform}»: se creará.`);
+        add("info", cfg.sheetName, r.excelRow, fmtMsg(msg("Plataforma nueva «{0}»: se creará."), platform));
       } else platform = known.name;
       const requiresShipping = (platformsKnown.get(pk) ?? platformsNew.get(pk))!.requires_shipping;
       if (!requiresShipping) carrier = null;
@@ -630,7 +631,7 @@ export function buildPlan(
       let mobile: number | null = null;
       if (mobRaw !== null) {
         if (isInteger(mobRaw) && knownMobiles.has(mobRaw)) mobile = mobRaw;
-        else add("warning", cfg.sheetName, r.excelRow, `El móvil «${cleanText(r.get("mobile"))}» no existe: se deja vacío.`);
+        else add("warning", cfg.sheetName, r.excelRow, fmtMsg(msg("El móvil «{0}» no existe: se deja vacío."), String(cleanText(r.get("mobile")))));
       }
 
       const respName = responsibles.get(normKey(resp)) ?? resp!;
@@ -641,8 +642,8 @@ export function buildPlan(
       seenBase.set(base, occurrence + 1);
       if (occurrence > 0) {
         summary.rows.possibleDuplicates++;
-        add("warning", cfg.sheetName, r.excelRow, "Fila idéntica a otra anterior: se importan ambas, pero revisa si es un duplicado.");
-        review.push({ kind: "posible_duplicado", entity_type: "sales", title: `Posible venta duplicada (${ref})`, details: "Hay otra fila exactamente igual en el Excel.", payload: jsonRaw(r.raw) });
+        add("warning", cfg.sheetName, r.excelRow, msg("Fila idéntica a otra anterior: se importan ambas, pero revisa si es un duplicado."));
+        review.push({ kind: "posible_duplicado", entity_type: "sales", title: fmtMsg(msg("Posible venta duplicada ({0})"), ref), details: msg("Hay otra fila exactamente igual en el Excel."), payload: jsonRaw(r.raw) });
       }
 
       saleRows.push({
@@ -678,8 +679,8 @@ export function buildPlan(
     const ref = `${s.sheet}!fila ${s.excelRow}`;
     if (s.po === null) {
       summary.sales.withoutLot++;
-      add("error", s.sheet, s.excelRow, "Venta sin pedido/lote de procedencia: no se importa y queda como «Lote no identificado» en Revisión.");
-      review.push({ kind: "venta_sin_lote", entity_type: "sales", title: `Lote no identificado (${ref})`, details: `${s.qty} x ${s.productName} · ${s.total} €`, payload: jsonRaw(s.raw) });
+      add("error", s.sheet, s.excelRow, msg("Venta sin pedido/lote de procedencia: no se importa y queda como «Lote no identificado» en Revisión."));
+      review.push({ kind: "venta_sin_lote", entity_type: "sales", title: fmtMsg(msg("Lote no identificado ({0})"), ref), details: `${s.qty} x ${s.productName} · ${s.total} €`, payload: jsonRaw(s.raw) });
       continue;
     }
     const lotKey = `${s.productKey}|${s.po}`;
@@ -690,24 +691,24 @@ export function buildPlan(
       if (!purchased.has(lotKey)) {
         summary.sales.withErrors++;
         summary.rows.withErrors++;
-        add("error", s.sheet, s.excelRow, `«${s.productName}» no aparece en el pedido de compra #${s.po}: no se importa.`);
-        review.push({ kind: "venta_no_importada", entity_type: "sales", title: `Venta no importada (${ref})`, details: `El producto no está en el pedido #${s.po}`, payload: jsonRaw(s.raw) });
+        add("error", s.sheet, s.excelRow, fmtMsg(msg("«{0}» no aparece en el pedido de compra #{1}: no se importa."), s.productName, s.po));
+        review.push({ kind: "venta_no_importada", entity_type: "sales", title: fmtMsg(msg("Venta no importada ({0})"), ref), details: fmtMsg(msg("El producto no está en el pedido #{0}"), s.po), payload: jsonRaw(s.raw) });
         continue;
       }
       const left = available.get(lotKey) ?? 0;
       if (left < s.qty) {
         summary.sales.withErrors++;
         summary.rows.withErrors++;
-        add("error", s.sheet, s.excelRow, `No quedan unidades de «${s.productName}» en el pedido #${s.po} (quedan ${left}): no se importa.`);
-        review.push({ kind: "venta_no_importada", entity_type: "sales", title: `Venta no importada (${ref})`, details: `Sin stock en su lote: en el pedido #${s.po} quedan ${left} y se venden ${s.qty}`, payload: jsonRaw(s.raw) });
+        add("error", s.sheet, s.excelRow, fmtMsg(msg("No quedan unidades de «{0}» en el pedido #{1} (quedan {2}): no se importa."), s.productName, s.po, left));
+        review.push({ kind: "venta_no_importada", entity_type: "sales", title: fmtMsg(msg("Venta no importada ({0})"), ref), details: fmtMsg(msg("Sin stock en su lote: en el pedido #{0} quedan {1} y se venden {2}"), s.po, left, s.qty), payload: jsonRaw(s.raw) });
         continue;
       }
       available.set(lotKey, left - s.qty);
     } else if (!pos.has(s.po) && !existingPOs.has(s.po)) {
       summary.sales.withErrors++;
       summary.rows.withErrors++;
-      add("error", s.sheet, s.excelRow, `El pedido de compra #${s.po} no existe: no se importa.`);
-      review.push({ kind: "venta_no_importada", entity_type: "sales", title: `Venta no importada (${ref})`, details: `El pedido #${s.po} no existe`, payload: jsonRaw(s.raw) });
+      add("error", s.sheet, s.excelRow, fmtMsg(msg("El pedido de compra #{0} no existe: no se importa."), s.po));
+      review.push({ kind: "venta_no_importada", entity_type: "sales", title: fmtMsg(msg("Venta no importada ({0})"), ref), details: fmtMsg(msg("El pedido #{0} no existe"), s.po), payload: jsonRaw(s.raw) });
       continue;
     }
     consumedBy.set(s.productKey, (consumedBy.get(s.productKey) ?? 0) + s.qty);
@@ -723,12 +724,12 @@ export function buildPlan(
         review.push({
           kind: "motivo_pendiente",
           entity_type: "stock_exits",
-          title: `Salida sin venta sin motivo (${ref})`,
-          details: `${s.qty} x ${s.productName} del pedido #${s.po}, ${s.date}. Indica si fue regalo, pérdida u otro.`,
+          title: fmtMsg(msg("Salida sin venta sin motivo ({0})"), ref),
+          details: fmtMsg(msg("{0} x {1} del pedido #{2}, {3}. Indica si fue regalo, pérdida u otro."), s.qty, s.productName, s.po, s.date),
           payload: { source_ref: ref, fingerprint },
         });
       }
-      add("info", s.sheet, s.excelRow, `Venta a 0 € → salida sin venta (${reason === "pendiente" ? "motivo pendiente" : reason}).`);
+      add("info", s.sheet, s.excelRow, (reason === "pendiente" ? msg("Venta a 0 € → salida sin venta (motivo pendiente).") : fmtMsg(msg("Venta a 0 € → salida sin venta ({0})."), reason)));
       payloadExits.push({
         fingerprint,
         exit_date: s.date,
@@ -745,7 +746,7 @@ export function buildPlan(
       continue;
     }
     if (isZero) {
-      add("warning", s.sheet, s.excelRow, "Venta a 0 €: se importa como venta porque la regla «venta a 0 € = salida sin venta» está desactivada.");
+      add("warning", s.sheet, s.excelRow, msg("Venta a 0 €: se importa como venta porque la regla «venta a 0 € = salida sin venta» está desactivada."));
     }
 
     if (existingSaleFp.has(fingerprint)) {

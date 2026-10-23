@@ -81,8 +81,8 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
     () =>
       configs
         .filter((c) => c.type !== "ignorar")
-        .flatMap((c) => FIELDS[c.type as Exclude<SheetType, "ignorar">].filter((f) => f.required && (c.mapping[f.key] ?? null) === null).map((f) => `${c.sheetName}: ${f.label}`)),
-    [configs],
+        .flatMap((c) => FIELDS[c.type as Exclude<SheetType, "ignorar">].filter((f) => f.required && (c.mapping[f.key] ?? null) === null).map((f) => `${c.sheetName}: ${t(f.label)}`)),
+    [configs, t],
   );
 
   function makePlan() {
@@ -232,9 +232,9 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                       <Td className="font-semibold">{c.sheetName}</Td>
                       <Td>
                         <Select className="h-9 min-w-52" value={c.type} onChange={(e) => updateConfig(c.sheetName, (cfg) => withType(sheet, cfg, e.target.value as SheetType))}>
-                          {SHEET_TYPES.map((t) => (
-                            <option key={t.type} value={t.type}>
-                              {t.label}
+                          {SHEET_TYPES.map((st) => (
+                            <option key={st.type} value={st.type}>
+                              {t(st.label)}
                             </option>
                           ))}
                         </Select>
@@ -251,7 +251,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                         )}
                       </Td>
                       <Td num>{Math.max(0, sheet.rows.length - c.headerRow - 1)}</Td>
-                      <Td className="max-w-80 text-[13px]">{c.reason}</Td>
+                      <Td className="max-w-80 text-[13px]">{t(c.reason)}</Td>
                       <Td>
                         {c.type !== "ignorar" && (
                           <Button size="sm" variant={openSheet === c.sheetName ? "primary" : "secondary"} onClick={() => setOpenSheet(openSheet === c.sheetName ? null : c.sheetName)}>
@@ -281,7 +281,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                     {fields.map((f) => (
                       <label key={f.key} className="flex flex-col gap-1">
                         <span className="text-[13px] font-semibold text-ink-soft">
-                          {f.label}
+                          {t(f.label)}
                           {f.required && <span className="text-danger"> *</span>}
                           {f.verifyOnly && <span className="ml-1 font-normal text-muted">{t("(solo para comprobar)")}</span>}
                         </span>
@@ -294,11 +294,11 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                           {headers.map((h) => (
                             <option key={h.i} value={h.i}>
                               {h.label}
-                              {auto[f.key] === h.i ? t(" (sugerida)") : ""}
+                              {auto[f.key] === h.i ? ` (${t("sugerida")})` : ""}
                             </option>
                           ))}
                         </Select>
-                        {f.help && <span className="text-xs text-muted">{f.help}</span>}
+                        {f.help && <span className="text-xs text-muted">{t(f.help)}</span>}
                       </label>
                     ))}
                   </div>
@@ -309,7 +309,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                         {fields
                           .filter((f) => c.mapping[f.key] != null)
                           .map((f) => (
-                            <Th key={f.key}>{f.label}</Th>
+                            <Th key={f.key}>{t(f.label)}</Th>
                           ))}
                       </tr>
                     </thead>
@@ -340,7 +340,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                       <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={m.on} onChange={(e) => setMerges((ms) => ms.map((x, j) => (j === i ? { ...x, on: e.target.checked } : x)))} />
                       <span>
                         «{m.from}{t("» es «{to}»", { to: m.to })}
-                        <span className="block text-xs text-muted">{m.reason}</span>
+                        <span className="block text-xs text-muted">{t(m.reason)}</span>
                       </span>
                     </label>
                   </li>
@@ -433,7 +433,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                           <Td>{i.level === "error" ? <Badge tone="bad">{t("Error")}</Badge> : i.level === "warning" ? <Badge tone="warn">{t("Aviso")}</Badge> : <Badge tone="info">{t("Info")}</Badge>}</Td>
                           <Td>{i.sheet}</Td>
                           <Td num>{i.row ?? "—"}</Td>
-                          <Td className="text-[13.5px]">{i.message}</Td>
+                          <Td className="text-[13.5px]">{t(i.message)}</Td>
                         </tr>
                       ))}
                   </tbody>
@@ -463,8 +463,8 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
               <ul className="max-h-72 divide-y divide-line overflow-y-auto">
                 {plan.payload.review_items.map((r, i) => (
                   <li key={i} className="px-4 py-2 text-sm">
-                    <span className="font-semibold">{r.title}</span>
-                    {r.details && <span className="block text-[13px] text-muted">{r.details}</span>}
+                    <span className="font-semibold">{t(r.title)}</span>
+                    {r.details && <span className="block text-[13px] text-muted">{t(r.details)}</span>}
                   </li>
                 ))}
               </ul>

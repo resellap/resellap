@@ -19,6 +19,15 @@ export function msg<S extends string>(text: S): S {
   return text;
 }
 
+/**
+ * Rellena {0}, {1}… con datos y deja el texto en español. Sirve para mensajes
+ * que se guardan o se montan fuera de React (importación, correo…): al
+ * mostrarlos, t() los reconoce por el patrón y los traduce.
+ */
+export function fmtMsg(template: string, ...args: (string | number | null | undefined)[]): string {
+  return template.replace(/\{(\d)\}/g, (m, i: string) => (args[Number(i)] === undefined || args[Number(i)] === null ? m : String(args[Number(i)])));
+}
+
 function fill(text: string, vars?: Vars): string {
   if (!vars) return text;
   return text.replace(/\{(\w+)\}/g, (m, k: string) => (vars[k] === undefined || vars[k] === null ? m : String(vars[k])));

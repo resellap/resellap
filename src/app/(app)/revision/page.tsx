@@ -68,9 +68,9 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
                       <Badge tone={k.tone}>{t(k.label)}</Badge>
-                      <span className="font-semibold">{r.title}</span>
+                      <span className="font-semibold">{t(r.title)}</span>
                     </p>
-                    {r.details && <p className="mt-1 text-sm text-ink-soft">{r.details}</p>}
+                    {r.details && <p className="mt-1 text-sm text-ink-soft">{t(r.details)}</p>}
                     {r.payload && r.kind !== "proveedor_pendiente" && (
                       <details className="mt-1 text-[13px] text-muted">
                         <summary className="cursor-pointer">{t("Datos originales")}</summary>
