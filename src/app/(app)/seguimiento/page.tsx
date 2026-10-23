@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BubbleGroup } from "@/components/liquid";
 import { after } from "next/server";
 import { AlertTriangle, Bell, PackageCheck, Search, Timer, Truck } from "lucide-react";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
@@ -72,7 +73,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
 
       {/* Pestañas y búsqueda */}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <nav className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4 lg:mx-0 lg:px-0" aria-label="Vistas">
+        <BubbleGroup label="Vistas" active={view} className="rs-card no-scrollbar flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full bg-surface p-1">
           {VIEWS.map((v) => {
             const on = v.key === view;
             const n = v.key === "alertas" ? alerts.length : null;
@@ -81,9 +82,10 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 key={v.key}
                 href={{ pathname: "/seguimiento", query: { vista: v.key, ...(q && v.key !== "alertas" ? { q } : {}) } }}
                 aria-current={on ? "page" : undefined}
+                data-bubble={v.key}
                 className={clsx(
-                  "press inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13.5px] font-medium",
-                  on ? "border-ink bg-ink text-paper" : "border-line bg-surface text-muted hover:text-ink",
+                  "press relative z-[1] inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-300",
+                  on ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
                 )}
               >
                 {v.key === "alertas" && <Bell size={14} strokeWidth={1.75} />}
@@ -92,7 +94,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
               </Link>
             );
           })}
-        </nav>
+        </BubbleGroup>
         {view !== "alertas" && (
           <form className="relative w-full lg:max-w-xs" action="/seguimiento">
             <input type="hidden" name="vista" value={view} />

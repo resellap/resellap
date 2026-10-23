@@ -5,6 +5,7 @@
 import clsx from "clsx";
 import { BackLink } from "./list-memory";
 import Link from "next/link";
+import { BubbleGroup } from "./liquid";
 import type { ComponentProps, ReactNode } from "react";
 
 export { clsx };
@@ -184,7 +185,7 @@ export function Figures({
   return (
     <dl
       className={clsx(
-        "grid grid-cols-2 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]",
+        "stagger grid grid-cols-2 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]",
         className,
       )}
     >
@@ -348,20 +349,21 @@ export function Pagination({ page, size, total, hrefFor }: { page: number; size:
 
 export function Tabs({ items, current }: { items: { href: string; label: string; key: string }[]; current: string }) {
   return (
-    <nav className="no-scrollbar mb-5 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface p-1 rs-card" aria-label="Secciones">
+    <BubbleGroup label="Secciones" active={current} className="no-scrollbar mb-5 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface p-1 rs-card">
       {items.map((t) => (
         <Link
           key={t.key}
           href={t.href}
           aria-current={t.key === current ? "page" : undefined}
+          data-bubble={t.key}
           className={clsx(
-            "press flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium",
-            t.key === current ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+            "press relative z-[1] flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors duration-300",
+            t.key === current ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
           )}
         >
           {t.label}
         </Link>
       ))}
-    </nav>
+    </BubbleGroup>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BubbleGroup } from "@/components/liquid";
 import { Plus, SlidersHorizontal } from "lucide-react";
 import { Suspense } from "react";
 import { CountUp } from "@/components/count-up";
@@ -117,19 +118,20 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
         <HomeTasks badges={badges} perms={user.permissions} notify={prefs.notifications} lowStock={lowStock} />
         <QuickActions perms={user.permissions} />
         <div className="flex flex-wrap items-center gap-2">
-          <nav aria-label="Periodo" className="no-scrollbar flex max-w-full overflow-x-auto rounded-full border border-line-strong bg-surface p-1 text-[13px] font-semibold">
+          <BubbleGroup label="Periodo" active={period} className="no-scrollbar flex max-w-full overflow-x-auto rounded-full border border-line-strong bg-surface p-1 text-[13px] font-semibold">
             {(Object.keys(PERIODS) as PeriodKey[]).map((k) => (
               <Link
                 key={k}
                 href={q({ periodo: k })}
                 scroll={false}
                 aria-current={period === k ? "page" : undefined}
-                className={clsx("press whitespace-nowrap rounded-full px-3 py-1.5", period === k ? "bg-ink text-paper" : "text-ink-soft hover:text-ink")}
+                data-bubble={k}
+                className={clsx("press relative z-[1] whitespace-nowrap rounded-full px-3 py-1.5 transition-colors duration-300", period === k ? "text-paper" : "text-ink-soft hover:text-ink")}
               >
                 {PERIODS[k]}
               </Link>
             ))}
-          </nav>
+          </BubbleGroup>
           {opts.platforms.length > 1 && (
             <PlatformFilter
               value={platformId ?? ""}

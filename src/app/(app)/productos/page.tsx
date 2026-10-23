@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BubbleGroup } from "@/components/liquid";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
 import { Badge, Empty, Figures, LinkButton, Notice, PageHeader, Pagination, Panel, StockBadge, Table, Td, Th, Tr, clsx } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
@@ -203,7 +204,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           ]}
         />
       )}
-      <nav className="no-scrollbar -mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 lg:mx-0 lg:px-0" aria-label="Estado del stock">
+      <BubbleGroup
+        label="Estado del stock"
+        active={first(sp.estado) ?? ""}
+        className="rs-card no-scrollbar mb-3 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full bg-surface p-1"
+      >
         {chips.map((c) => {
           const on = (first(sp.estado) ?? "") === c.key;
           return (
@@ -211,9 +216,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               key={c.key || "todos"}
               href={`/productos${toQuery({ ...filters, only_in_stock: undefined, estado: c.key || undefined, orden: first(sp.orden) })}`}
               aria-current={on ? "page" : undefined}
+              data-bubble={c.key}
               className={clsx(
-                "press inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13.5px] font-medium",
-                on ? "border-ink bg-ink text-paper" : "border-line bg-surface text-muted hover:text-ink",
+                "press relative z-[1] inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-300",
+                on ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
               )}
             >
               {c.label}
@@ -221,7 +227,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             </Link>
           );
         })}
-      </nav>
+      </BubbleGroup>
       <FilterBar
         basePath="/productos"
         values={{ ...filters, orden: first(sp.orden) }}
