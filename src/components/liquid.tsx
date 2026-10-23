@@ -1,83 +1,75 @@
 "use client";
 /**
- * «Burbuja» que marca la opción activa y viaja de una a otra como una gota
- * (estilo Liquid Glass): al moverse se estira hasta cubrir el camino, se
- * aplasta un poco y vuelve a su forma al llegar.
+ * Indicador de la opción activa (la «burbuja»): una cápsula que se desliza
+ * con un muelle suave de una opción a otra.
  *
- * Uso: un contenedor con `position: relative`, las opciones con
- * `data-bubble="<clave>"` y <LiquidBubble container={ref} active="<clave>" />.
+ * - Solo se animan transform y tamaño de un único elemento (barato y fluido).
+ * - El color del texto cambia a la vez que llega la burbuja: las opciones
+ *   llevan `data-on`, que este componente actualiza, y el CSS hace el resto.
+ * - Al pulsar, la burbuja sale al instante (no espera a que cargue la página).
+ *
+ * Uso: contenedor con `position: relative`; opciones con
+ * `data-bubble="<clave>"` y la clase `rs-seg` (o sus propios colores con
+ * `data-[on=true]:`).
  */
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import clsx from "clsx";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 type Box = { x: number; y: number; w: number; h: number };
 
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-function measure(container: HTMLElement, key: string): Box | null {
-  const el = container.querySelector<HTMLElement>(`[data-bubble="${CSS.escape(key)}"]`);
-  if (!el) return null;
+function itemOf(container: HTMLElement, key: string) {
+  return container.querySelector<HTMLElement>(`[data-bubble="${CSS.escape(key)}"]`);
+}
+
+function measure(container: HTMLElement, el: HTMLElement): Box | null {
   const c = container.getBoundingClientRect();
   const r = el.getBoundingClientRect();
   if (!r.width || !r.height) return null;
-  return { x: r.left - c.left + container.scrollLeft, y: r.top - c.top + container.scrollTop, w: r.width, h: r.height };
+  return { x: r.left - c.left + container.scrollLeft - container.clientLeft, y: r.top - c.top + container.scrollTop - container.clientTop, w: r.width, h: r.height };
 }
 
-const place = (b: Box) => ({ transform: `translate(${b.x}px, ${b.y}px)`, width: `${b.w}px`, height: `${b.h}px` });
+function apply(b: HTMLElement, box: Box) {
+  b.style.transform = `translate3d(${box.x}px, ${box.y}px, 0)`;
+  b.style.width = `${box.w}px`;
+  b.style.height = `${box.h}px`;
+}
 
-export function LiquidBubble({
-  container,
-  active,
-  axis = "x",
-  className,
-}: {
-  container: RefObject<HTMLElement | null>;
-  active: string | null;
-  axis?: "x" | "y";
-  className?: string;
-}) {
+export function LiquidBubble({ container, active, className }: { container: RefObject<HTMLElement | null>; active: string | null; className?: string }) {
   const bubble = useRef<HTMLSpanElement>(null);
-  const last = useRef<Box | null>(null);
+  const placed = useRef(false);
 
-  // Ir a la opción activa (con viaje si ya estaba en otra)
   useIso(() => {
     const c = container.current;
     const b = bubble.current;
     if (!c || !b) return;
-    const to = active != null ? measure(c, active) : null;
-    if (!to) {
+    // Colores: la opción activa se marca con data-on (el resto, sin)
+    c.querySelectorAll<HTMLElement>("[data-bubble]").forEach((el) => {
+      el.dataset.on = String(active != null && el.dataset.bubble === active);
+    });
+    const el = active != null ? itemOf(c, active) : null;
+    const box = el ? measure(c, el) : null;
+    if (!box) {
       b.style.opacity = "0";
-      last.current = null;
+      placed.current = false;
       return;
     }
-    const from = last.current;
-    Object.assign(b.style, place(to), { opacity: "1" });
-    last.current = to;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "reduce";
-    if (!from || reduce || typeof b.animate !== "function") return;
-    if (Math.abs(from.x - to.x) < 1 && Math.abs(from.y - to.y) < 1 && Math.abs(from.w - to.w) < 1) return;
+    if (!placed.current) {
+      // Primera vez (o al reaparecer): se coloca sin viaje
+      b.classList.add("rs-bubble-still");
+      apply(b, box);
+      void b.offsetWidth;
+      b.classList.remove("rs-bubble-still");
+      b.style.opacity = "1";
+      placed.current = true;
+      return;
+    }
+    apply(b, box);
+    b.style.opacity = "1";
+  }, [active, container]);
 
-    // A mitad de camino la gota cubre las dos posiciones y se aplasta un poco
-    const mid: Box =
-      axis === "x"
-        ? { x: Math.min(from.x, to.x), y: to.y, w: Math.max(from.x + from.w, to.x + to.w) - Math.min(from.x, to.x), h: to.h }
-        : { x: to.x, y: Math.min(from.y, to.y), w: to.w, h: Math.max(from.y + from.h, to.y + to.h) - Math.min(from.y, to.y) };
-    const dist = axis === "x" ? Math.abs(to.x - from.x) : Math.abs(to.y - from.y);
-    const squash = axis === "x" ? "scaleY(0.84)" : "scaleX(0.84)";
-    const duration = Math.min(560, 340 + dist * 0.35);
-    b.animate(
-      [
-        { ...place(from), offset: 0 },
-        { transform: `translate(${mid.x}px, ${mid.y}px) ${squash}`, width: `${mid.w}px`, height: `${mid.h}px`, offset: 0.48, easing: "cubic-bezier(0.3, 0, 0.2, 1)" },
-        { transform: `translate(${to.x}px, ${to.y}px) ${axis === "x" ? "scale(1.04, 0.97)" : "scale(0.97, 1.04)"}`, width: `${to.w}px`, height: `${to.h}px`, offset: 0.82 },
-        { ...place(to), offset: 1 },
-      ],
-      { duration, easing: "cubic-bezier(0.45, 0, 0.25, 1)" },
-    );
-  }, [active, axis, container]);
-
-  // Si cambia el tamaño (ventana, menú desplegado), se recoloca sin animación.
-  // Solo cuando la medida cambia de verdad: así no corta el viaje de la burbuja.
+  // Cambios de tamaño (ventana, menú desplegado, fuentes): se recoloca sin viaje
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;
@@ -86,42 +78,47 @@ export function LiquidBubble({
     const c = container.current;
     const b = bubble.current;
     if (!c || !b || typeof ResizeObserver === "undefined") return;
+    let frame = 0;
     const ro = new ResizeObserver(() => {
-      const key = activeRef.current;
-      if (key == null) return;
-      const to = measure(c, key);
-      const prev = last.current;
-      if (!to || (prev && Math.abs(prev.x - to.x) < 0.5 && Math.abs(prev.y - to.y) < 0.5 && Math.abs(prev.w - to.w) < 0.5 && Math.abs(prev.h - to.h) < 0.5)) return;
-      if (b.getAnimations().length) return;
-      Object.assign(b.style, place(to), { opacity: "1" });
-      last.current = to;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const key = activeRef.current;
+        const el = key != null ? itemOf(c, key) : null;
+        const box = el ? measure(c, el) : null;
+        if (!box) return;
+        // También coloca la burbuja si al principio no se podía medir
+        // (pantalla de carga, menú oculto…)
+        b.classList.add("rs-bubble-still");
+        apply(b, box);
+        void b.offsetWidth;
+        b.classList.remove("rs-bubble-still");
+        b.style.opacity = "1";
+        placed.current = true;
+      });
     });
     ro.observe(c);
-    c.querySelectorAll("[data-bubble]").forEach((el) => ro.observe(el));
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
   }, [container]);
 
-  return (
-    <span
-      ref={bubble}
-      aria-hidden
-      className={clsx("pointer-events-none absolute left-0 top-0 z-0 rounded-full bg-ink opacity-0 will-change-transform", className)}
-      style={{ transformOrigin: "center" }}
-    />
-  );
+  return <span ref={bubble} aria-hidden className={clsx("rs-bubble", className)} />;
 }
 
-/** Grupo de opciones con burbuja: las opciones llevan `data-bubble="<clave>"`. */
+/**
+ * Grupo de opciones con burbuja. Las opciones llevan `data-bubble="<clave>"`.
+ * Al pulsar una, la burbuja va hacia ella enseguida, aunque la página
+ * todavía esté cargando.
+ */
 export function BubbleGroup({
   active,
-  axis = "x",
   className,
   bubbleClassName,
   children,
   label,
 }: {
   active: string | null;
-  axis?: "x" | "y";
   className?: string;
   bubbleClassName?: string;
   children: React.ReactNode;
@@ -129,10 +126,25 @@ export function BubbleGroup({
   label?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const [pending, setPending] = useState<string | null>(null);
+  const [seen, setSeen] = useState(active);
+  if (seen !== active) {
+    setSeen(active);
+    setPending(null);
+  }
   const Tag = label ? "nav" : "div";
   return (
-    <Tag ref={ref as never} aria-label={label} className={clsx("relative", className)}>
-      <LiquidBubble container={ref} active={active} axis={axis} className={bubbleClassName} />
+    <Tag
+      ref={ref as never}
+      aria-label={label}
+      className={clsx("relative", className)}
+      onClickCapture={(e: React.MouseEvent) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        const el = (e.target as HTMLElement).closest<HTMLElement>("[data-bubble]");
+        if (el?.dataset.bubble != null) setPending(el.dataset.bubble);
+      }}
+    >
+      <LiquidBubble container={ref} active={pending ?? active} className={bubbleClassName} />
       {children}
     </Tag>
   );

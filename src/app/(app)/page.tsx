@@ -126,7 +126,8 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
                 scroll={false}
                 aria-current={period === k ? "page" : undefined}
                 data-bubble={k}
-                className={clsx("press relative z-[1] whitespace-nowrap rounded-full px-3 py-1.5 transition-colors duration-300", period === k ? "text-paper" : "text-ink-soft hover:text-ink")}
+                data-on={String(period === k)}
+                className="rs-seg press whitespace-nowrap rounded-full px-3 py-1.5 [--seg-ink:var(--ink-soft)]"
               >
                 {PERIODS[k]}
               </Link>

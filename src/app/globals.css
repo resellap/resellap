@@ -17,6 +17,11 @@
 
 :root {
   color-scheme: light;
+  /* Movimiento: un solo lenguaje para toda la app.
+     Muelle suave (rebote de ~1 %), y salida rápida tipo iOS. */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   /* Superficies */
   --paper: #eceeed;
   --surface: #ffffff;
@@ -211,7 +216,7 @@
   --shadow-card: var(--shadow-card);
   --shadow-pop: var(--shadow-pop);
 
-  --animate-rise: rise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-rise: rise 0.4s var(--ease-out) both;
   --animate-sheet: sheet 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
   --animate-fade: fade 0.2s ease-out both;
   --animate-pop: pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
@@ -220,7 +225,7 @@
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -307,14 +312,15 @@ main .grid > * {
 /* Botones y elementos tocables: se hunden un poco al pulsar */
 .press {
   transition:
-    transform 0.12s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.3s var(--ease-spring),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .press:active:not(:disabled) {
   transform: scale(0.97);
+  transition-duration: 0.1s;
 }
 
 /* Pantalla fija: sin rebote al llegar al final, solo se desliza el contenido */
@@ -325,17 +331,8 @@ body {
 
 /* Detalles al pasar el ratón: sutiles, sin saltos */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .press:hover:not(:disabled) {
+  .press:hover:not(:disabled):not(.rs-seg) {
     transform: translateY(-1px);
-  }
-  a:hover > svg,
-  button:hover > svg {
-    transform: translateY(-1px) scale(1.04);
-    transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  a > svg,
-  button > svg {
-    transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 }
 
@@ -357,44 +354,102 @@ body {
   }
 }
 
-/* Cambio de pantalla: la nueva entra con un fundido, sube un poco y se enfoca */
+/* Cambio de pantalla: la nueva aparece con un fundido corto y sube 6 px.
+   Solo opacidad y transform (lo que el navegador anima sin esfuerzo). */
 .page-in {
-  animation: page-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: page-in 0.36s var(--ease-out) both;
 }
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.995);
-    filter: blur(3px);
-  }
-  60% {
-    filter: blur(0);
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
     transform: none;
-    filter: none;
   }
 }
 
-/* Aparición escalonada de listas y tarjetas */
+/* Navegadores que entienden linear(): muelle de verdad */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.0189, 0.0675, 0.1356, 0.2151, 0.2999, 0.3855, 0.4686, 0.5469, 0.619, 0.6841, 0.7418, 0.7923, 0.8357, 0.8726, 0.9035, 0.929, 0.9497, 0.9663, 0.9794, 0.9894, 0.997, 1.0025, 1.0063, 1.0088, 1.0103, 1.011, 1.0111, 1.0107, 1.0101, 1.0093, 1.0084, 1.0075, 1.0065, 1.0056, 1.0048, 1.004, 1.0033, 1.0027, 1.0021, 1);
+  }
+}
+
+/* Curva común para transiciones de tamaño (menú lateral, contenido) */
+.rs-ease {
+  transition-timing-function: var(--ease-ios);
+}
+
+/* Burbuja: la cápsula que marca la opción activa y se desliza con un muelle */
+.rs-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  box-shadow:
+    0 1px 1px rgb(11 15 14 / 0.08),
+    0 4px 12px -6px rgb(11 15 14 / 0.35);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  transition:
+    transform 0.55s var(--ease-spring),
+    width 0.55s var(--ease-spring),
+    height 0.55s var(--ease-spring),
+    opacity 0.2s ease;
+}
+.rs-bubble-still {
+  transition: none !important;
+}
+
+/* Opciones sobre la burbuja: el texto se vuelve claro justo cuando llega
+   la burbuja y oscuro en cuanto se va (sin saltos de color) */
+@layer components {
+  .rs-seg {
+    position: relative;
+    z-index: 1;
+    color: var(--seg-ink, var(--muted));
+    transition: color 0.2s ease;
+  }
+  .rs-seg:hover {
+    color: var(--ink);
+  }
+  .rs-seg[data-on="true"] {
+    color: var(--paper);
+    transition: color 0.28s ease 0.1s;
+  }
+  .rs-seg .rs-seg-sub {
+    color: var(--faint);
+    transition: color 0.2s ease;
+  }
+  .rs-seg[data-on="true"] .rs-seg-sub {
+    color: color-mix(in srgb, var(--paper) 65%, transparent);
+    transition: color 0.28s ease 0.1s;
+  }
+}
+
+/* Aparición escalonada de listas y tarjetas (suave y corta) */
 .stagger > * {
-  animation: rise 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: rise 0.4s var(--ease-out) both;
 }
 .stagger > *:nth-child(2) {
-  animation-delay: 30ms;
+  animation-delay: 25ms;
 }
 .stagger > *:nth-child(3) {
-  animation-delay: 60ms;
+  animation-delay: 50ms;
 }
 .stagger > *:nth-child(4) {
-  animation-delay: 90ms;
+  animation-delay: 75ms;
 }
 .stagger > *:nth-child(5) {
-  animation-delay: 120ms;
+  animation-delay: 100ms;
 }
 .stagger > *:nth-child(n + 6) {
-  animation-delay: 150ms;
+  animation-delay: 120ms;
 }
 
 /* Ficha del lote de procedencia (pedido de compra o ajuste) */
