@@ -17,14 +17,16 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
-  const po = must(await supabase.from("v_purchase_orders").select("*").eq("id", id).maybeSingle(), "el pedido");
-  if (!po) notFound();
-  const [{ data: lines }, { data: costs }, { data: raw }, suppliers] = await Promise.all([
+  // Todo a la vez: el pedido y sus líneas, costes y proveedores (una sola espera)
+  const [poRes, { data: lines }, { data: costs }, { data: raw }, suppliers] = await Promise.all([
+    supabase.from("v_purchase_orders").select("*").eq("id", id).maybeSingle(),
     supabase.from("v_purchase_lines").select("*").eq("purchase_order_id", id).order("line_number"),
     supabase.from("purchase_order_costs").select("cost_type, amount, description").eq("purchase_order_id", id),
     supabase.from("purchase_orders").select("cancel_reason, source_ref").eq("id", id).maybeSingle(),
     loadSuppliers(),
   ]);
+  const po = must(poRes, "el pedido");
+  if (!po) notFound();
   const costMap: Record<string, string> = {};
   for (const c of costs ?? []) costMap[c.cost_type] = String(Number(costMap[c.cost_type] ?? 0) + Number(c.amount));
   const extra = (costs ?? []).reduce((a, c) => a + Number(c.amount), 0);

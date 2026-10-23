@@ -69,6 +69,8 @@ async function codeFromWallapopLabel(saleId: string): Promise<string | null> {
     .eq("id", saleId)
     .maybeSingle<{ id: string; organization_id: string; tracking_number: string | null; shipping_label_path: string | null; carrier_id: string | null; platforms: { name: string } | null; carriers: { name: string } | null }>();
   if (!s?.shipping_label_path || s.tracking_number) return null;
+  // Solo archivos de la carpeta de esta venta (el servidor lee con permisos amplios)
+  if (!s.shipping_label_path.startsWith(`${s.id}/`)) return null;
   if (platformMark(s.platforms?.name)?.key !== "wallapop") return null;
   const carrierKey = carrierMark(s.carriers?.name)?.key ?? null;
   if (carrierKey && carrierKey !== "correos") return null;

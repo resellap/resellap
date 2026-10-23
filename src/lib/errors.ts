@@ -19,7 +19,12 @@ const CONSTRAINTS: Record<string, string> = {
   purchase_orders_order_number_key: "Ya existe un pedido de compra con ese número.",
   responsibles_profile_id_key: "Ese usuario ya está vinculado a otro responsable.",
   inventory_lots_stock_no_negativo: "No hay stock suficiente.",
+  sales_label_path_own_folder: "La etiqueta no corresponde a esta venta.",
+  sales_image_path_own_org: "La foto no corresponde a este espacio.",
 };
+
+// Errores de negocio que lanzan nuestras funciones (mensajes ya pensados para el usuario)
+const OWN_CODES = new Set(["P0001", "MI001"]);
 
 export function friendlyError(e: PgError): string {
   if (!e) return "Ha ocurrido un error.";
@@ -30,6 +35,10 @@ export function friendlyError(e: PgError): string {
   if (e.code === "23503") return "No se puede completar: hay datos relacionados que lo impiden.";
   if (/fetch failed|Failed to fetch|NetworkError/i.test(msg)) return "No se puede conectar con la base de datos. Revisa tu conexión.";
   if (/JWT|session/i.test(msg)) return "Tu sesión ha caducado. Vuelve a iniciar sesión.";
+  if (e.code === "23514" || e.code === "22P02" || e.code === "22003") return "Los datos no son válidos.";
+  // Cualquier otro error interno de la base de datos (con código SQL y sin
+  // mensaje en español) no se enseña tal cual: podría revelar detalles internos
+  if (e.code && !OWN_CODES.has(e.code) && !/[áéíóúñ¿¡]/i.test(msg)) return "Ha ocurrido un error. Inténtalo de nuevo.";
   return msg || "Ha ocurrido un error.";
 }
 
