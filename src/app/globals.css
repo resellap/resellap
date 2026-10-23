@@ -3,10 +3,11 @@
 /*
  * Resellap · sistema visual (manual de marca v1.0)
  * Tinta #0B0F0E + Verde Resellap #0F9D63 sobre Niebla #F4F6F5.
- * Instrument Sans para marca, titulares y cifras grandes; Inter para la
- * interfaz y los datos (cifras tabulares). Verde solo para la acción
- * principal y lo que suma. Bordes de 1 px; sombras solo en lo flotante.
- * Claro u oscuro según el dispositivo (o lo elegido en Ajustes → Aspecto).
+ * Instrument Sans para todo (marca, titulares, interfaz y cifras tabulares) e
+ * IBM Plex Mono para códigos y referencias. Verde solo para la acción
+ * principal, los estados activos y lo que suma. Bordes de 1 px; sombras solo
+ * en lo flotante. Oscuro por defecto; claro (o «como el dispositivo») si se
+ * elige en Ajustes → Aspecto.
  *
  * Rampas: tinta 50 #F4F6F5 · 100 #E9EDEB · 200 #D5DBD8 · 300 #B4BDB9 ·
  *   400 #8A9590 · 500 #66716C · 600 #4B5551 · 700 #343C39 · 800 #222927 ·
@@ -16,159 +17,184 @@
  */
 
 :root {
-  color-scheme: light;
-  /* Movimiento: un solo lenguaje para toda la app.
-     Muelle suave (rebote de ~1 %), y salida rápida tipo iOS. */
+  /* Movimiento: un solo lenguaje para toda la app (muelle suave y salida tipo iOS) */
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
-  /* Superficies */
-  --paper: #eceeed;
-  --surface: #ffffff;
-  --surface-2: #f5f7f6;
-  --subtle: #eef1ef;
+  color-scheme: dark;
+  /* Superficies (de abajo arriba): fondo · hundido · superficie · elevado */
+  --paper: #090c0b;
+  --surface-2: #0d1110;
+  --surface: #111614;
+  --elevated: #171e1b;
+  --subtle: #1b2320;
   /* Texto */
-  --ink: #0b0f0e;
-  --ink-soft: #343c39;
-  --muted: #4b5551;
-  --faint: #66716c;
-  /* Bordes */
-  --line: #e3e7e5;
-  --line-strong: #c9d0cc;
-  --field: #8a9590;
-  /* Tarjetas: blancas sobre gris, sin borde (en oscuro, con borde) */
-  --card-line: transparent;
+  --ink: #ecf1ee;
+  --ink-soft: #c6cfca;
+  --muted: #98a39e;
+  --faint: #6c7772;
+  /* Bordes: líneas finas de luz, no grises sólidos */
+  --line: rgb(236 241 238 / 0.075);
+  --line-strong: rgb(236 241 238 / 0.14);
+  --field: rgb(236 241 238 / 0.22);
+  --card-line: rgb(236 241 238 / 0.07);
 
-  /* Acción y marca: Verde 600 en claro (4,85:1 con blanco) */
+  /* Marca: el verde solo para acción, estados activos y lo que suma */
+  --brand: #36c784;
+  --brand-strong: #5fd79c;
+  --brand-ink: #6fdca6;
+  --brand-soft: rgb(54 199 132 / 0.12);
+  --on-brand: #03130b;
+  --brand-mark: #36c784;
+  --brand-bright: #36c784;
+
+  --chrome: #050807;
+  --chrome-2: #0f1412;
+  --chrome-ink: #ecf1ee;
+
+  --good: #4fd497;
+  --good-soft: rgb(54 199 132 / 0.12);
+  --good-ink: #6fdca6;
+  --on-good: #03130b;
+  --danger: #ff6f61;
+  --danger-soft: rgb(255 111 97 / 0.12);
+  --warn: #f1b649;
+  --warn-soft: rgb(241 182 73 / 0.12);
+  --info: #c6cfca;
+  --info-soft: rgb(236 241 238 / 0.06);
+
+  --tag: rgb(236 241 238 / 0.07);
+  --tag-ink: #c6cfca;
+  --tag-adjust: rgb(236 241 238 / 0.04);
+
+  /* Opción activa (burbuja): verde tenue con filo verde */
+  --bubble-bg: rgb(54 199 132 / 0.14);
+  --bubble-ring: rgb(54 199 132 / 0.38);
+  --seg-on: #8be6b9;
+
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-pop: 0 0 0 1px rgb(236 241 238 / 0.08), 0 24px 48px -16px rgb(0 0 0 / 0.75);
+  /* Atmósfera del fondo: un halo verde muy leve arriba y una retícula casi invisible */
+  --atmos: radial-gradient(1100px 520px at 12% -12%, rgb(54 199 132 / 0.075), transparent 62%),
+    radial-gradient(900px 480px at 100% 0%, rgb(54 199 132 / 0.035), transparent 60%);
+  --grid-line: rgb(236 241 238 / 0.022);
+}
+
+/* Claro: elegido en Ajustes, o «Automático» con el dispositivo en claro.
+   Sin elección, Resellap es oscuro. */
+:root[data-mode="light"] {
+  color-scheme: light;
+  --paper: #f2f4f3;
+  --surface-2: #f7f8f8;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --subtle: #eceeed;
+  --ink: #0b0f0e;
+  --ink-soft: #2f3734;
+  --muted: #4b5551;
+  --faint: #6a756f;
+  --line: #e2e6e4;
+  --line-strong: #c9d0cc;
+  --field: #a7b0ab;
+  --card-line: #e5e9e7;
+
   --brand: #0b8253;
   --brand-strong: #0a6845;
   --brand-ink: #0a6845;
-  --brand-soft: #ecfbf3;
+  --brand-soft: #e8f8ef;
   --on-brand: #ffffff;
   --brand-mark: #0f9d63;
   --brand-bright: #36c784;
 
-  /* Superficie oscura (bloques destacados, avisos tinta) */
   --chrome: #0b0f0e;
   --chrome-2: #151a18;
   --chrome-ink: #f4f6f5;
 
   --good: #0a6845;
-  --good-soft: #ecfbf3;
+  --good-soft: #e8f8ef;
   --good-ink: #0a6845;
   --on-good: #ffffff;
   --danger: #d92d20;
-  --danger-soft: #fef0ee;
-  --warn: #a15c00;
-  --warn-soft: #fff6e5;
+  --danger-soft: #fdeeec;
+  --warn: #9a5800;
+  --warn-soft: #fdf3e1;
   --info: #343c39;
-  --info-soft: #e9edeb;
+  --info-soft: #eceeed;
 
-  /* Antigua «pegatina» del lote: ahora una ficha neutra */
-  --tag: #e9edeb;
+  --tag: #eceeed;
   --tag-ink: #343c39;
   --tag-adjust: #f4f6f5;
 
-  --shadow-card: 0 1px 2px rgb(11 15 14 / 0.04), 0 8px 24px -16px rgb(11 15 14 / 0.12);
-  --shadow-pop: 0 1px 0 rgb(11 15 14 / 0.04), 0 24px 48px -24px rgb(11 15 14 / 0.38);
+  --bubble-bg: #0b0f0e;
+  --bubble-ring: #0b0f0e;
+  --seg-on: #ffffff;
+
+  --shadow-card: 0 1px 2px rgb(11 15 14 / 0.05);
+  --shadow-pop: 0 0 0 1px rgb(11 15 14 / 0.06), 0 24px 48px -20px rgb(11 15 14 / 0.3);
+  --atmos: radial-gradient(1100px 520px at 12% -12%, rgb(15 157 99 / 0.05), transparent 62%);
+  --grid-line: rgb(11 15 14 / 0.028);
 }
+@media (prefers-color-scheme: light) {
+  :root[data-mode="auto"] {
+    color-scheme: light;
+    --paper: #f2f4f3;
+    --surface-2: #f7f8f8;
+    --surface: #ffffff;
+    --elevated: #ffffff;
+    --subtle: #eceeed;
+    --ink: #0b0f0e;
+    --ink-soft: #2f3734;
+    --muted: #4b5551;
+    --faint: #6a756f;
+    --line: #e2e6e4;
+    --line-strong: #c9d0cc;
+    --field: #a7b0ab;
+    --card-line: #e5e9e7;
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-mode="light"]) {
-    color-scheme: dark;
-    --paper: #0b0f0e;
-    --surface: #151a18;
-    --surface-2: #1a201e;
-    --subtle: #222927;
-    --ink: #f4f6f5;
-    --ink-soft: #d5dbd8;
-    --muted: #b4bdb9;
-    --faint: #8a9590;
-    --line: #222927;
-    --line-strong: #343c39;
-    --card-line: #222927;
-    --field: #4b5551;
-
-    --brand: #36c784;
-    --brand-strong: #6fdca6;
-    --brand-ink: #6fdca6;
-    --brand-soft: #052419;
-    --on-brand: #0b0f0e;
-    --brand-mark: #36c784;
+    --brand: #0b8253;
+    --brand-strong: #0a6845;
+    --brand-ink: #0a6845;
+    --brand-soft: #e8f8ef;
+    --on-brand: #ffffff;
+    --brand-mark: #0f9d63;
     --brand-bright: #36c784;
 
-    --chrome: #050807;
+    --chrome: #0b0f0e;
     --chrome-2: #151a18;
     --chrome-ink: #f4f6f5;
 
-    --good: #6fdca6;
-    --good-soft: #052419;
-    --good-ink: #6fdca6;
-    --on-good: #0b0f0e;
-    --danger: #f97066;
-    --danger-soft: #3b1512;
-    --warn: #f5a524;
-    --warn-soft: #3a2a0b;
-    --info: #d5dbd8;
-    --info-soft: #222927;
+    --good: #0a6845;
+    --good-soft: #e8f8ef;
+    --good-ink: #0a6845;
+    --on-good: #ffffff;
+    --danger: #d92d20;
+    --danger-soft: #fdeeec;
+    --warn: #9a5800;
+    --warn-soft: #fdf3e1;
+    --info: #343c39;
+    --info-soft: #eceeed;
 
-    --tag: #222927;
-    --tag-ink: #d5dbd8;
-    --tag-adjust: #1a201e;
+    --tag: #eceeed;
+    --tag-ink: #343c39;
+    --tag-adjust: #f4f6f5;
 
-    --shadow-card: 0 0 0 transparent;
-    --shadow-pop: 0 24px 60px -20px rgb(0 0 0 / 0.8);
+    --bubble-bg: #0b0f0e;
+    --bubble-ring: #0b0f0e;
+    --seg-on: #ffffff;
+
+    --shadow-card: 0 1px 2px rgb(11 15 14 / 0.05);
+    --shadow-pop: 0 0 0 1px rgb(11 15 14 / 0.06), 0 24px 48px -20px rgb(11 15 14 / 0.3);
+    --atmos: radial-gradient(1100px 520px at 12% -12%, rgb(15 157 99 / 0.05), transparent 62%);
+    --grid-line: rgb(11 15 14 / 0.028);
   }
-}
-:root[data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #0b0f0e;
-  --surface: #151a18;
-  --surface-2: #1a201e;
-  --subtle: #222927;
-  --ink: #f4f6f5;
-  --ink-soft: #d5dbd8;
-  --muted: #b4bdb9;
-  --faint: #8a9590;
-  --line: #222927;
-  --line-strong: #343c39;
-  --card-line: #222927;
-  --field: #4b5551;
-
-  --brand: #36c784;
-  --brand-strong: #6fdca6;
-  --brand-ink: #6fdca6;
-  --brand-soft: #052419;
-  --on-brand: #0b0f0e;
-  --brand-mark: #36c784;
-  --brand-bright: #36c784;
-
-  --chrome: #050807;
-  --chrome-2: #151a18;
-  --chrome-ink: #f4f6f5;
-
-  --good: #6fdca6;
-  --good-soft: #052419;
-  --good-ink: #6fdca6;
-  --on-good: #0b0f0e;
-  --danger: #f97066;
-  --danger-soft: #3b1512;
-  --warn: #f5a524;
-  --warn-soft: #3a2a0b;
-  --info: #d5dbd8;
-  --info-soft: #222927;
-
-  --tag: #222927;
-  --tag-ink: #d5dbd8;
-  --tag-adjust: #1a201e;
-
-  --shadow-card: 0 0 0 transparent;
-  --shadow-pop: 0 24px 60px -20px rgb(0 0 0 / 0.8);
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Instrument Sans Variable", "Instrument Sans", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Una sola familia con carácter (la del manual de marca) para todo, y una
+     monoespaciada para lo que se lee como dato: códigos, referencias, lotes */
+  --font-sans: "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --color-paper: var(--paper);
   --color-subtle: var(--subtle);
@@ -176,6 +202,7 @@
   --color-brand-mark: var(--brand-mark);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-elevated: var(--elevated);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-muted: var(--muted);
@@ -208,10 +235,10 @@
   --color-tag: var(--tag);
   --color-tag-ink: var(--tag-ink);
 
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 22px;
-  --radius-lg: 28px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
 
   --shadow-card: var(--shadow-card);
   --shadow-pop: var(--shadow-pop);
@@ -265,11 +292,41 @@ html {
 }
 
 body {
-  background: var(--paper);
+  /* Fondo con atmósfera: halo verde muy leve + retícula de 32 px casi invisible
+     (solo arriba, se desvanece al bajar) */
+  background-color: var(--paper);
+  background-image:
+    var(--atmos),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:
+    auto,
+    32px 32px,
+    32px 32px;
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
+  font-size: 14.5px;
+  letter-spacing: -0.003em;
   text-rendering: optimizeLegibility;
+}
+body::before {
+  /* La retícula se apaga hacia abajo para no ensuciar las tablas */
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0, var(--paper) 520px);
+}
+
+/* Lo que se lee como dato: códigos, referencias, lotes, seguimiento */
+.mono,
+code,
+kbd {
+  font-family: var(--font-mono);
+  font-feature-settings: "zero" 0;
+  letter-spacing: 0;
 }
 
 /* Titulares y cifras grandes: Instrument Sans SemiBold, tracking negativo */
@@ -287,10 +344,18 @@ main .grid > * {
   min-width: 0;
 }
 
-/* Tarjeta (estilo panel flotante: blanca sobre gris, esquinas amplias) */
+/* Superficie de trabajo: filo de luz arriba, borde fino, sin sombras grandes */
 .rs-card {
   border: 1px solid var(--card-line);
   box-shadow: var(--shadow-card);
+}
+:root:not([data-mode="light"]) .rs-card {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.018), transparent 120px);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-mode="auto"] .rs-card {
+    background-image: none;
+  }
 }
 
 /* Cifras siempre alineadas */
@@ -388,11 +453,9 @@ body {
   left: 0;
   top: 0;
   z-index: 0;
-  border-radius: 999px;
-  background: var(--ink);
-  box-shadow:
-    0 1px 1px rgb(11 15 14 / 0.08),
-    0 4px 12px -6px rgb(11 15 14 / 0.35);
+  border-radius: var(--bubble-radius, 8px);
+  background: var(--bubble-bg);
+  box-shadow: inset 0 0 0 1px var(--bubble-ring);
   pointer-events: none;
   opacity: 0;
   will-change: transform;
@@ -419,7 +482,7 @@ body {
     color: var(--ink);
   }
   .rs-seg[data-on="true"] {
-    color: var(--paper);
+    color: var(--seg-on);
     transition: color 0.28s ease 0.1s;
   }
   .rs-seg .rs-seg-sub {
@@ -427,7 +490,7 @@ body {
     transition: color 0.2s ease;
   }
   .rs-seg[data-on="true"] .rs-seg-sub {
-    color: color-mix(in srgb, var(--paper) 65%, transparent);
+    color: color-mix(in srgb, var(--seg-on) 65%, transparent);
     transition: color 0.28s ease 0.1s;
   }
 }
@@ -461,9 +524,10 @@ body {
   padding: 0.12rem 0.55rem 0.12rem calc(0.55rem + var(--notch));
   background: var(--tag);
   color: var(--tag-ink);
-  font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1.35;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.45;
   white-space: nowrap;
   clip-path: polygon(var(--notch) 0, 100% 0, 100% 100%, var(--notch) 100%, 0 50%);
   border-radius: 0 3px 3px 0;
@@ -648,8 +712,10 @@ dialog.mi-lightbox {
   }
 }
 
-/* Bloque destacado en tinta (la cifra principal del panel), como en el manual de marca */
+/* Bloque destacado (la cifra principal del panel): tinta con un halo verde */
 .rs-ink-tile {
+  background-image: radial-gradient(420px 220px at 0% 0%, rgb(54 199 132 / 0.16), transparent 70%) !important;
+  box-shadow: inset 0 0 0 1px rgb(54 199 132 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.05) !important;
   --surface: #0b0f0e;
   --surface-2: #151a18;
   --subtle: #222927;
@@ -663,7 +729,13 @@ dialog.mi-lightbox {
   --danger: #f97066;
   --brand: #36c784;
   --brand-ink: #6fdca6;
-  border-color: #0b0f0e;
-  background: #0b0f0e;
+  border-color: transparent;
+  background-color: #0b110f;
   color: #ffffff;
+}
+
+/* Barras de desplazamiento discretas, del color del tema */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }

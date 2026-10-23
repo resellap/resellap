@@ -3,8 +3,9 @@ import { cookies } from "next/headers";
 import { BootSplash } from "@/components/boot-splash";
 import { APPEARANCE_COOKIE, parseAppearanceCookie } from "@/lib/preferences";
 import { SITE_URL } from "@/lib/site";
-import "@fontsource-variable/inter";
 import "@fontsource-variable/instrument-sans";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 
 const DESCRIPTION = "Inventario, ventas detectadas, envíos y beneficio real para quien revende en Vinted, Wallapop y más.";
@@ -31,10 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0f0e" },
-  ],
+  themeColor: "#090c0b",
   viewportFit: "cover",
   width: "device-width",
   initialScale: 1,
@@ -47,7 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="es"
       className="h-full antialiased"
-      data-mode={a.mode === "auto" ? undefined : a.mode}
+      data-mode={a.mode}
       data-motion={a.reduceMotion ? "reduce" : undefined}
       suppressHydrationWarning
     >

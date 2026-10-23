@@ -9,7 +9,7 @@ export function AppearanceSync({ mode, palette, reduceMotion, cookieName, cookie
   useEffect(() => {
     const el = document.documentElement;
     const set = (k: string, v: string | undefined) => (v ? el.setAttribute(k, v) : el.removeAttribute(k));
-    set("data-mode", mode === "auto" ? undefined : mode);
+    set("data-mode", mode);
     set("data-palette", palette === "vinted" ? undefined : palette);
     set("data-motion", reduceMotion ? "reduce" : undefined);
     document.cookie = `${cookieName}=${cookieValue}; path=/; max-age=${60 * 60 * 24 * 400}; samesite=lax${location.protocol === "https:" ? "; secure" : ""}`;

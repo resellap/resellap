@@ -48,7 +48,7 @@ export function AuthLayout({ title, subtitle, children, aside }: { title: string
         </div>
         <ModulePattern className="relative hidden w-full max-w-lg lg:block" />
       </div>
-      <div className="flex items-start justify-center px-5 pb-12 pt-8 sm:px-6 lg:items-center lg:py-12">
+      <div className="flex items-start justify-center border-line bg-surface/60 px-5 pb-12 pt-8 sm:px-6 lg:items-center lg:border-l lg:py-12">
         <div className="w-full max-w-sm animate-rise">
           <h1 className="display text-[30px] text-ink sm:text-[34px]">{title}</h1>
           {subtitle && <div className="mb-6 mt-1.5 text-[14.5px] text-muted">{subtitle}</div>}

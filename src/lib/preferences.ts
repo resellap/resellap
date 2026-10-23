@@ -209,7 +209,7 @@ export type Prefs = {
 
 export const DEFAULT_PREFS: Prefs = {
   dashboard: { widgets: DEFAULT_WIDGETS, period: "mes", compare: true, granularity: "mes", platformId: null },
-  appearance: { mode: "auto", palette: "vinted", reduceMotion: false },
+  appearance: { mode: "dark", palette: "vinted", reduceMotion: false },
   tables: {
     ventas: { columns: salesKeys.map((key) => ({ key, visible: true })), pageSize: 50 },
     productos: { columns: productKeys.map((key) => ({ key, visible: true })), pageSize: 50, sort: "stock" },
@@ -293,7 +293,7 @@ export function appearanceCookieValue(a: Prefs["appearance"]): string {
 export function parseAppearanceCookie(v: string | undefined): Prefs["appearance"] {
   const [mode, palette, rm] = (v ?? "").split(".");
   return {
-    mode: Object.hasOwn(MODES, mode) ? (mode as Prefs["appearance"]["mode"]) : "auto",
+    mode: Object.hasOwn(MODES, mode) ? (mode as Prefs["appearance"]["mode"]) : "dark",
     palette: Object.hasOwn(PALETTES, palette) ? (palette as Palette) : "vinted",
     reduceMotion: rm === "1",
   };

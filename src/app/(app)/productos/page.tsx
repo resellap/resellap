@@ -216,7 +216,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <BubbleGroup
         label="Estado del stock"
         active={first(sp.estado) ?? ""}
-        className="rs-card no-scrollbar mb-3 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full bg-surface p-1"
+        className="rs-card no-scrollbar mb-3 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1"
       >
         {chips.map((c) => {
           const on = (first(sp.estado) ?? "") === c.key;
@@ -227,7 +227,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               aria-current={on ? "page" : undefined}
               data-bubble={c.key}
               data-on={String(on)}
-              className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13.5px] font-medium"
+              className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-2 rounded-[8px] px-3.5 text-[13.5px] font-medium"
             >
               {c.label}
               <span className="rs-seg-sub num text-[12px]">{c.n}</span>

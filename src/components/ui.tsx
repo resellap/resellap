@@ -17,16 +17,16 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const buttonBase =
-  "press inline-flex items-center justify-center gap-1.5 rounded-full font-semibold disabled:cursor-not-allowed disabled:opacity-55 whitespace-nowrap select-none [&_svg]:shrink-0";
+  "press inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] font-semibold tracking-[-0.005em] disabled:cursor-not-allowed disabled:opacity-55 whitespace-nowrap select-none [&_svg]:shrink-0";
 const buttonVariants: Record<Variant, string> = {
-  primary: "bg-brand text-on-brand hover:bg-brand-strong",
-  secondary: "bg-surface text-ink border border-line hover:border-line-strong hover:bg-surface-2",
+  primary: "bg-brand text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.22),0_1px_2px_rgb(0_0_0/0.25)] hover:bg-brand-strong",
+  secondary: "bg-elevated text-ink border border-line-strong shadow-[inset_0_1px_0_rgb(255_255_255/0.03)] hover:bg-subtle",
   ghost: "text-ink-soft hover:bg-subtle hover:text-ink",
-  danger: "bg-surface text-danger border border-danger/35 hover:bg-danger-soft",
+  danger: "bg-transparent text-danger border border-danger/35 hover:bg-danger-soft",
 };
 const buttonSizes: Record<Size, string> = {
-  sm: "h-11 px-4 text-[14px] sm:h-9 sm:px-3.5 sm:text-[13px]",
-  md: "h-11 px-5 text-[14px]",
+  sm: "h-11 px-3.5 text-[14px] sm:h-9 sm:px-3 sm:text-[13px]",
+  md: "h-11 px-4 text-[14px] sm:h-10",
 };
 
 export function buttonClass(variant: Variant = "secondary", size: Size = "md", className?: string) {
@@ -46,7 +46,7 @@ export function LinkButton({ variant = "secondary", size = "md", className, ...p
 // ---------------------------------------------------------------------
 // Texto a 16px en el móvil: así el iPhone no hace zoom al escribir
 const control =
-  "w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3.5 text-base text-ink placeholder:text-faint transition-[border-color,box-shadow] hover:border-field focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20 disabled:bg-paper disabled:text-muted sm:text-[14px]";
+  "w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface-2 px-3 text-base text-ink shadow-[inset_0_1px_2px_rgb(0_0_0/0.12)] placeholder:text-faint transition-[border-color,box-shadow,background-color] hover:border-field focus:border-brand focus:bg-surface focus:outline-none focus:ring-3 focus:ring-brand/20 disabled:opacity-60 sm:text-[14px]";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input {...props} className={clsx(control, "h-11", props.type === "number" && "num", className)} />;
@@ -83,7 +83,7 @@ export function Field({
   required?: boolean;
 }) {
   const text = (
-    <span className="text-[13px] font-medium text-muted">
+    <span className="text-[12.5px] font-medium text-muted">
       {label}
       {required && <span className="text-danger"> *</span>}
     </span>
@@ -158,7 +158,7 @@ export function Panel({
       {(title || actions) && (
         <div className="flex flex-wrap items-start justify-between gap-2 px-5 pb-1 pt-5 sm:px-6">
           <div className="min-w-0">
-            {title && <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>}
+            {title && <h2 className="text-[15.5px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>}
             {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
           </div>
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -185,14 +185,14 @@ export function Figures({
   return (
     <dl
       className={clsx(
-        "stagger grid grid-cols-2 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]",
+        "rs-card grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] bg-line max-sm:[&>*:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))]",
         className,
       )}
     >
       {items.map((it, i) => (
-        <div key={i} className="rs-card rounded-[var(--radius-md)] bg-surface px-5 py-4">
-          <dt className="text-[13px] text-faint">{it.label}</dt>
-          <dd className={clsx("num mt-1.5 text-[26px] font-semibold tracking-[-0.03em] sm:text-[30px]", it.tone === "good" && "text-good", it.tone === "bad" && "text-danger")}>{it.value}</dd>
+        <div key={i} className="bg-surface px-4 py-3.5 sm:px-5 sm:py-4">
+          <dt className="mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint">{it.label}</dt>
+          <dd className={clsx("num mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] sm:text-[28px]", it.tone === "good" && "text-good", it.tone === "bad" && "text-danger")}>{it.value}</dd>
           {it.note && <p className="mt-0.5 text-[12.5px] text-faint">{it.note}</p>}
         </div>
       ))}
@@ -216,7 +216,7 @@ export function Th({ children, num, className }: { children?: ReactNode; num?: b
     <th
       scope="col"
       className={clsx(
-        "sticky top-0 border-b border-line bg-surface px-3 py-3 text-left text-[12px] font-medium text-faint",
+        "mono sticky top-0 z-[1] border-b border-line-strong bg-surface px-3 py-2.5 text-left text-[10.5px] font-medium uppercase tracking-[0.07em] text-faint",
         num && "text-right",
         className,
       )}
@@ -235,7 +235,7 @@ export function Td({ children, num, className, colSpan }: { children?: ReactNode
 }
 
 export function Tr({ children, className, muted }: { children: ReactNode; className?: string; muted?: boolean }) {
-  return <tr className={clsx("transition-colors hover:bg-surface-2", muted && "text-muted", className)}>{children}</tr>;
+  return <tr className={clsx("transition-colors hover:bg-subtle/60", muted && "text-muted", className)}>{children}</tr>;
 }
 
 // ---------------------------------------------------------------------
@@ -252,7 +252,7 @@ const tones: Record<Tone, string> = {
 
 export function Badge({ tone = "neutral", children, className, dot }: { tone?: Tone; children: ReactNode; className?: string; /** Punto de estado delante del texto. */ dot?: boolean }) {
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap", tones[tone], className)}>
+    <span className={clsx("inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-0.5 text-[11.5px] font-semibold leading-[1.35] whitespace-nowrap", tones[tone], className)}>
       {dot && <span aria-hidden className="h-1.5 w-1.5 rounded-[2px] bg-current" />}
       {children}
     </span>
@@ -279,12 +279,12 @@ export function Notice({ tone = "info", title, children, className }: { tone?: T
     <div
       role={tone === "bad" ? "alert" : "status"}
       className={clsx(
-        "animate-rise rounded-[var(--radius-md)] border px-4 py-3 text-sm",
-        tone === "bad" && "border-danger/25 bg-danger-soft text-danger",
-        tone === "warn" && "border-warn/25 bg-warn-soft text-warn",
-        tone === "good" && "border-good/20 bg-good-soft text-good-ink",
-        tone === "info" && "border-line bg-surface text-ink-soft",
-        tone === "neutral" && "border-line bg-paper text-ink-soft",
+        "animate-rise rounded-[var(--radius-sm)] border border-l-[3px] px-4 py-3 text-sm",
+        tone === "bad" && "border-danger/25 border-l-danger bg-danger-soft text-danger",
+        tone === "warn" && "border-warn/25 border-l-warn bg-warn-soft text-warn",
+        tone === "good" && "border-good/20 border-l-good bg-good-soft text-good-ink",
+        tone === "info" && "border-line border-l-line-strong bg-surface text-ink-soft",
+        tone === "neutral" && "border-line border-l-line-strong bg-surface-2 text-ink-soft",
         className,
       )}
     >
@@ -297,7 +297,7 @@ export function Notice({ tone = "info", title, children, className }: { tone?: T
 export function Empty({ title, children, action }: { title: ReactNode; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-start gap-2 px-4 py-12 sm:items-center sm:text-center">
-      <span aria-hidden className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-subtle">
+      <span aria-hidden className="mb-1 flex h-11 w-11 items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-2">
         <svg viewBox="0 0 96 96" width="20" height="20"><path fill="var(--line-strong)" d="M0 0H36V48H0ZM44 0H72A24 24 0 0 1 72 48H44ZM0 56H36V96H0Z" /><path fill="var(--brand-mark)" d="M44 56H68L96 96H72Z" /></svg>
       </span>
       <p className="font-semibold text-ink">{title}</p>
@@ -349,7 +349,7 @@ export function Pagination({ page, size, total, hrefFor }: { page: number; size:
 
 export function Tabs({ items, current }: { items: { href: string; label: string; key: string }[]; current: string }) {
   return (
-    <BubbleGroup label="Secciones" active={current} className="no-scrollbar mb-5 flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface p-1 rs-card">
+    <BubbleGroup label="Secciones" active={current} className="no-scrollbar mb-5 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1 rs-card">
       {items.map((t) => (
         <Link
           key={t.key}
@@ -358,7 +358,7 @@ export function Tabs({ items, current }: { items: { href: string; label: string;
           data-bubble={t.key}
           data-on={String(t.key === current)}
           className={clsx(
-            "rs-seg press flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium",
+            "rs-seg press flex min-h-9 items-center whitespace-nowrap rounded-[8px] px-3.5 text-[13.5px] font-medium",
           )}
         >
           {t.label}

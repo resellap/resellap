@@ -59,7 +59,7 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
                   <Link href={`/ventas/${s.id}`} className="min-w-0 font-bold text-ink after:absolute after:inset-0 after:content-['']">
-                    <span className="whitespace-nowrap">{s.number}</span>
+                    <span className="mono whitespace-nowrap text-[13px] font-medium">{s.number}</span>
                     <span className="num block text-[12.5px] font-normal text-muted sm:ml-2 sm:inline">{date(s.date)}</span>
                   </Link>
                   <span className="num text-[17px] font-semibold tracking-[-0.01em]">{money(s.total)}</span>

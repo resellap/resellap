@@ -59,7 +59,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
       )}
 
       {/* Cifras clave */}
-      <dl className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="rs-card mb-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] bg-line lg:grid-cols-4">
         <Kpi icon={Truck} label="En tránsito" value={String(inTransit?.count ?? 0)} note={inTransit?.value !== null && inTransit?.value !== undefined ? `${money(inTransit.value)} en camino` : undefined} dark />
         <Kpi icon={PackageCheck} label="Entregados" value={String(stats?.totals.delivered ?? 0)} note={`de ${stats?.totals.shipments ?? 0} con seguimiento`} />
         <Kpi icon={Timer} label="Tiempo medio de entrega" value={days(stats?.overall.avg_days)} note={stats?.overall.median_days !== null && stats?.overall.median_days !== undefined ? `mediana ${days(stats.overall.median_days)}` : "aún sin entregas medidas"} />
@@ -73,7 +73,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
 
       {/* Pestañas y búsqueda */}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <BubbleGroup label="Vistas" active={view} className="rs-card no-scrollbar flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full bg-surface p-1">
+        <BubbleGroup label="Vistas" active={view} className="rs-card no-scrollbar flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1">
           {VIEWS.map((v) => {
             const on = v.key === view;
             const n = v.key === "alertas" ? alerts.length : null;
@@ -84,7 +84,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 aria-current={on ? "page" : undefined}
                 data-bubble={v.key}
                 data-on={String(on)}
-                className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium"
+                className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[8px] px-3.5 text-[13.5px] font-medium"
               >
                 {v.key === "alertas" && <Bell size={14} strokeWidth={1.75} />}
                 {v.label}
@@ -164,7 +164,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 <TrackingProgress status={s.status} />
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[13px]">
                   <CarrierIcon name={s.carrier} size={18} className="font-medium" />
-                  <span className="num text-faint">{s.tracking ?? "Sin código"}</span>
+                  <span className="mono text-[12px] text-faint">{s.tracking ?? "Sin código"}</span>
                 </div>
                 <p className="line-clamp-2 min-h-[2.5em] text-[13px] text-ink-soft">
                   {s.lastEvent ?? "Marcado como enviado"}
@@ -202,12 +202,12 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
 
 function Kpi({ icon: Icon, label, value, note, dark }: { icon: typeof Truck; label: string; value: string; note?: string; dark?: boolean }) {
   return (
-    <div className={clsx("min-w-0 rounded-[var(--radius-md)] px-5 py-4", dark ? "bg-[#0B0F0E] text-white shadow-[var(--shadow-card)]" : "rs-card bg-surface")}>
-      <dt className={clsx("flex items-start gap-1.5 text-[12.5px] leading-[1.35]", dark ? "text-[#8A9590]" : "text-faint")}>
-        <Icon size={14} strokeWidth={1.75} className="mt-[1.5px] shrink-0" />
+    <div className={clsx("min-w-0 px-4 py-3.5 sm:px-5 sm:py-4", dark ? "rs-ink-tile" : "bg-surface")}>
+      <dt className={clsx("mono flex items-start gap-1.5 text-[10.5px] font-medium uppercase leading-[1.4] tracking-[0.08em]", dark ? "text-[#8A9590]" : "text-faint")}>
+        <Icon size={13} strokeWidth={1.75} className="mt-[0.5px] shrink-0" />
         {label}
       </dt>
-      <dd className="num mt-1.5 text-[26px] font-semibold tracking-[-0.03em] sm:text-[30px]">{value}</dd>
+      <dd className="num mt-2 text-[24px] font-semibold leading-none tracking-[-0.03em] sm:text-[28px]">{value}</dd>
       {note && <p className={clsx("mt-0.5 truncate text-[12.5px]", dark ? "text-[#6FDCA6]" : "text-faint")}>{note}</p>}
     </div>
   );

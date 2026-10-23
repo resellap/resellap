@@ -136,7 +136,7 @@ export default async function ResponsiblesPage({ searchParams }: { searchParams:
                   <Tr key={l.sale_item_id}>
                     <Td className="num">{date(l.sale_date)}</Td>
                     <Td>
-                      <Link href={`/ventas/${l.sale_id}`} className="whitespace-nowrap font-semibold text-brand-ink hover:underline">
+                      <Link href={`/ventas/${l.sale_id}`} className="mono whitespace-nowrap text-[12.5px] font-medium text-brand-ink hover:underline">
                         {l.sale_number}
                       </Link>
                     </Td>
