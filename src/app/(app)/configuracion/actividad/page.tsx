@@ -29,7 +29,7 @@ export default async function ActivityPage() {
   const t = await getT();
   const user = await requireUser();
   const supabase = await createClient();
-  const rows = (must(await supabase.rpc("my_activity", { p_limit: 100 }), t("tu historial")) ?? []) as { occurred_at: string; action: string; entity: string; summary: string }[];
+  const rows = (must(await supabase.rpc("my_activity", { p_limit: 100 }), "tu historial") ?? []) as { occurred_at: string; action: string; entity: string; summary: string }[];
   return (
     <>
       <PageHeader

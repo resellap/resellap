@@ -101,7 +101,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   if (to) q = q.lte("occurred_at", `${to}T23:59:59`);
   if (user) q = q.ilike("user_email", `%${user}%`);
   const res = await q.order("occurred_at", { ascending: false }).order("id", { ascending: false }).range(a, b);
-  const data = must(res, t("la auditoría"));
+  const data = must(res, "la auditoría");
   const count = res.count;
   const values = { entidad: entity, from, to, usuario: user };
 

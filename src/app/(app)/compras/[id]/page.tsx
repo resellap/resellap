@@ -30,7 +30,7 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
     supabase.from("purchase_orders").select("cancel_reason, source_ref").eq("id", id).maybeSingle(),
     loadSuppliers(),
   ]);
-  const po = must(poRes, t("el pedido"));
+  const po = must(poRes, "el pedido");
   if (!po) notFound();
   const costMap: Record<string, string> = {};
   for (const c of costs ?? []) costMap[c.cost_type] = String(Number(costMap[c.cost_type] ?? 0) + Number(c.amount));

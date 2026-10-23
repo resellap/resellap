@@ -66,7 +66,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
         ])
       : null,
   ]);
-  const product = must(productRes, t("el producto"));
+  const product = must(productRes, "el producto");
   if (!product || product.deleted_at) notFound();
   const p = product as unknown as {
     id: string;
@@ -134,7 +134,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   );
 
   if (!isAdmin || !adminData) {
-    const vs = (sellerVariants ? must(sellerVariants, t("las variantes")) ?? [] : []) as SellableVariant[];
+    const vs = (sellerVariants ? must(sellerVariants, "las variantes") ?? [] : []) as SellableVariant[];
     return (
       <>
         <PageHeader
@@ -187,9 +187,9 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   }
 
   const [variantsRes, lotsRes, movementsRes, opts, invRes] = adminData;
-  const variants = must(variantsRes, t("las variantes"));
-  const lots = must(lotsRes, t("los lotes"));
-  const movements = must(movementsRes, t("los movimientos"));
+  const variants = must(variantsRes, "las variantes");
+  const lots = must(lotsRes, "los lotes");
+  const movements = must(movementsRes, "los movimientos");
   const inv = invRes.data;
   const vs = (variants ?? []) as VariantInv[];
   const totals = vs.reduce(

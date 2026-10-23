@@ -44,8 +44,8 @@ export default async function NewReturn({ searchParams }: { searchParams: Promis
     supabase.from("sales").select("id, sale_number, status, platforms(name)").eq("id", saleId).maybeSingle(),
     supabase.from("v_sale_lines").select("sale_item_id, product_name, variant_name, quantity, returned_qty, unit_price, refunded_amount").eq("sale_id", saleId).order("line_number"),
   ]);
-  const sale = must(saleRes, t("la venta"));
-  const lines = must(linesRes, t("las líneas de la venta"));
+  const sale = must(saleRes, "la venta");
+  const lines = must(linesRes, "las líneas de la venta");
   if (!sale || sale.status !== "activa" || !lines?.length) {
     return (
       <>

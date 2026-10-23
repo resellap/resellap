@@ -1,4 +1,5 @@
 import { msg } from "@/i18n/translate";
+import { rich } from "@/i18n/rich";
 import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -42,7 +43,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   // Todo se calcula en la base de datos (sin límite de filas)
   const requested = first(sp.ver);
-  const o = must(await supabase.rpc("listings_overview", { p_view: requested && requested in VIEWS ? requested : null }), t("los anuncios")) as {
+  const o = must(await supabase.rpc("listings_overview", { p_view: requested && requested in VIEWS ? requested : null }), "los anuncios") as {
     view: ViewKey;
     counts: Record<ViewKey, number>;
     rows: Row[];
@@ -60,11 +61,18 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       />
       {counts["por-retirar"] > 0 && view !== "por-retirar" && (
         <Notice tone="warn" className="mb-4">
-          {t("Tienes {counts}", { counts: counts["por-retirar"] })}{" "}{counts["por-retirar"] === 1 ? "anuncio" : "anuncios"}{" "}{t("de productos sin stock.")}{" "}
-          <Link href="/anuncios?ver=por-retirar" className="font-semibold underline">
-            {t("Quítalos")}
-          </Link>{" "}
-          {t("para no vender algo que ya no tienes.")}
+          {rich(
+            counts["por-retirar"] === 1
+              ? t("Tienes 1 anuncio de productos sin stock. <a>Quítalo</a> para no vender algo que ya no tienes.")
+              : t("Tienes {n} anuncios de productos sin stock. <a>Quítalos</a> para no vender algo que ya no tienes.", { n: counts["por-retirar"] }),
+            {
+              a: (c) => (
+                <Link href="/anuncios?ver=por-retirar" className="font-semibold underline">
+                  {c}
+                </Link>
+              ),
+            },
+          )}
         </Notice>
       )}
       <Tabs

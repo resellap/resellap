@@ -1,4 +1,4 @@
-import { tSync } from "@/i18n/server";
+import { getT } from "@/i18n/server";
 import type { MetadataRoute } from "next";
 
 /**
@@ -6,14 +6,14 @@ import type { MetadataRoute } from "next";
  * inicio del iPhone/iPad (Safari → Compartir → Añadir a pantalla de inicio)
  * y que se abra a pantalla completa, como una app, sin barra de Safari.
  */
-export default function manifest(): MetadataRoute.Manifest {
-  const t = tSync();
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const t = await getT();
   return {
     id: "/",
     name: "Resellap",
     short_name: "Resellap",
     description: t("Inventario, ventas, compras y rentabilidad."),
-    lang: "es",
+    lang: t.locale,
     start_url: "/",
     scope: "/",
     display: "standalone",

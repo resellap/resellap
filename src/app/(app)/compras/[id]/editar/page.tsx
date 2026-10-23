@@ -20,7 +20,7 @@ export default async function EditPO({ params }: PageProps<"/compras/[id]/editar
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
-  const po = must(await supabase.from("purchase_orders").select("id, order_number, supplier_id, order_date, notes, status").eq("id", id).maybeSingle(), t("el pedido"));
+  const po = must(await supabase.from("purchase_orders").select("id, order_number, supplier_id, order_date, notes, status").eq("id", id).maybeSingle(), "el pedido");
   if (!po) notFound();
   if (po.status !== "pendiente") redirect(`/compras/${id}`);
   const [{ data: lines }, { data: costs }, suppliers] = await Promise.all([
