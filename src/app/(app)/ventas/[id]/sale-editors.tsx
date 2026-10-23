@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Button, Field, Input, Notice, Select, Textarea } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
-import { createClient } from "@/lib/supabase/client";
+// El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
+const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 import type { MobileOption, Option, PlatformOption } from "@/lib/types";
 import { LabelButton, labelFileName } from "@/components/label-viewer";
 import { updateSale, updateSaleItem, voidSale } from "../actions";
@@ -44,7 +45,7 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
       return;
     }
     setUploading(true);
-    const supabase = createClient();
+    const supabase = await browserClient();
     const path = `${sale.id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
     const up = await supabase.storage.from("shipping-labels").upload(path, file, { contentType: file.type || undefined });
     if (up.error) {

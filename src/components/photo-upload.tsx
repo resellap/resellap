@@ -1,7 +1,8 @@
 "use client";
 import { addProductPhotos } from "@/app/(app)/productos/photo-actions";
 import { THUMB_SIDE, prepareImage } from "@/lib/image";
-import { createClient } from "@/lib/supabase/client";
+// El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
+const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 
 export type UploadProgress = { done: number; total: number; failed: string[] };
 
@@ -19,7 +20,7 @@ export async function uploadProductPhotos(
   files: File[],
   onProgress?: (p: UploadProgress) => void,
 ): Promise<{ saved: number; errors: string[] }> {
-  const supabase = createClient();
+  const supabase = await browserClient();
   const saved: { path: string; width: number; height: number }[] = [];
   const errors: string[] = [];
   let done = 0;
@@ -74,5 +75,5 @@ export async function createMissingThumb(url: string, path: string): Promise<voi
   const res = await fetch(url);
   if (!res.ok) return;
   const small = await prepareImage(await res.blob(), THUMB_SIDE);
-  await createClient().storage.from("product-photos").upload(thumbOf(path), small.blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: true });
+  await (await browserClient()).storage.from("product-photos").upload(thumbOf(path), small.blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: true });
 }
