@@ -224,15 +224,14 @@ export function Shell({
   const settingsActive = settingsItems.some((i) => isActive(pathname, i.href));
 
   const pill = "rs-card rounded-full bg-surface";
-  // Carril: iconos; al pasar el ratón se despliega un poco y enseña los nombres
-  const railItem = (active: boolean) =>
-    clsx(
-      "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
-      active ? "z-[1] text-paper transition-colors duration-300" : "z-[1] text-ink-soft hover:bg-subtle hover:text-ink",
-    );
+  // Carril: iconos; con la flechita se despliega y enseña los nombres.
+  // El color de la opción activa lo pone la burbuja (rs-seg + data-on).
+  const railBase = "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9";
+  const railItem = () => clsx(railBase, "rs-seg");
+  const settingsBtn = (active: boolean) => clsx(railBase, "transition-colors duration-300", active ? "bg-ink text-paper" : "text-ink-soft hover:text-ink");
   const railLabel = clsx("truncate whitespace-nowrap transition-opacity duration-150", railOpen ? "opacity-100 delay-75" : "pointer-events-none opacity-0");
   const railPill = clsx(
-    "flex flex-col gap-0.5 overflow-hidden rounded-[24px] border border-line-strong/70 bg-surface p-1 shadow-[var(--shadow-card)] transition-[width] duration-200 ease-out",
+    "rs-ease flex flex-col gap-0.5 overflow-hidden rounded-[24px] border border-line-strong/70 bg-surface p-1 shadow-[var(--shadow-card)] [--seg-ink:var(--ink-soft)] transition-[width] duration-[450ms]",
     railOpen ? "w-60" : "w-12",
   );
   // Cualquier opción del carril lo vuelve a recoger
@@ -256,9 +255,9 @@ export function Shell({
               data-bubble={it.href}
               onClick={go(it.href)}
               className={clsx(
-                "press relative z-[1] flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-300 xl:px-4 xl:text-[13.5px]",
-                active ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+                "rs-seg press flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium xl:px-4 xl:text-[13.5px]",
               )}
+              data-on={String(active)}
             >
               {SHORT[it.href] ?? it.label}
               {n > 0 && (
@@ -341,14 +340,14 @@ export function Shell({
       className="fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
     >
       <div ref={themeBox} className={clsx(railPill, "relative shrink-0")}>
-        <LiquidBubble container={themeBox} active={mode} axis="y" />
+        <LiquidBubble container={themeBox} active={mode} />
         {(
           [
             ["light", Sun, "Modo claro"],
             ["dark", Moon, "Modo oscuro"],
           ] as const
         ).map(([m, Icon, label]) => (
-          <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem(mode === m)} data-bubble={m} aria-pressed={mode === m} title={label}>
+          <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem()} data-bubble={m} data-on={String(mode === m)} aria-pressed={mode === m} title={label}>
             <Icon size={18} strokeWidth={1.75} className="shrink-0" />
             <span className={railLabel}>{label}</span>
           </button>
@@ -362,21 +361,21 @@ export function Shell({
         aria-label={railOpen ? "Recoger el menú" : "Desplegar el menú con los nombres"}
         title={railOpen ? "Recoger" : "Ver nombres"}
         className={clsx(
-          "press absolute -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-ink text-paper shadow-[0_0_0_3px_var(--paper),var(--shadow-pop)] transition-[left] duration-200 ease-out hover:bg-ink-soft",
+          "press absolute -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-ink text-paper shadow-[0_0_0_3px_var(--paper),var(--shadow-pop)] rs-ease transition-[left] duration-[450ms] hover:bg-ink-soft",
           railOpen ? "left-[226px]" : "left-[34px]",
         )}
       >
         <ChevronRight size={15} strokeWidth={2.5} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
       </button>
       <nav ref={railNav} aria-label="Gestión" className={clsx(railPill, "no-scrollbar relative min-h-0 shrink overflow-y-auto")}>
-        <LiquidBubble container={railNav} active={railGroups.flatMap((g) => g.items).find((i) => isActive(here, i.href))?.href ?? null} axis="y" />
+        <LiquidBubble container={railNav} active={railGroups.flatMap((g) => g.items).find((i) => isActive(here, i.href))?.href ?? null} />
         {railGroups.map((g, gi) => (
           <div key={gi} className={clsx("flex flex-col gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
             {g.items.map((it) => {
               const active = isActive(here, it.href);
               const n = badgeOf(it);
               return (
-                <NavLink key={it.href} href={it.href} active={isActive(pathname, it.href)} data-bubble={it.href} title={it.label} aria-label={it.label} onClick={() => { closeRail(); setGoingTo(it.href); }} className={railItem(active)}>
+                <NavLink key={it.href} href={it.href} active={isActive(pathname, it.href)} data-bubble={it.href} title={it.label} aria-label={it.label} onClick={() => { closeRail(); setGoingTo(it.href); }} className={railItem()} data-on={String(active)}>
                   <it.icon size={18} strokeWidth={1.75} className="shrink-0" />
                   {n > 0 && (
                     <span
@@ -409,7 +408,7 @@ export function Shell({
               aria-expanded={cfg}
               aria-controls="menu-config"
               title="Configuración"
-              className={railItem(settingsActive || cfg)}
+              className={settingsBtn(settingsActive || cfg)}
             >
               <Settings size={18} strokeWidth={1.75} className={clsx("shrink-0 transition-transform duration-300", cfg && "rotate-90")} />
               <span className={railLabel}>Configuración</span>
@@ -439,10 +438,10 @@ export function Shell({
     { href: "/envios", label: "Envíos", icon: IconEnvios, badge: badges.shipments },
   ];
   const tabsHere = isActive(here, "/") || isActive(here, "/ventas") || isActive(here, "/envios") || here.startsWith("/ventas/nueva");
-  const tabClass = (active: boolean) =>
+  const tabClass = () =>
     clsx(
       "press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium",
-      active ? "z-[1] text-paper transition-colors duration-300" : "z-[1] text-faint",
+      "rs-seg [--seg-ink:var(--faint)]",
     );
   const pendingMore = badges.reviews + badges.emails + badges.detected + badges.listings + badges.alerts;
 
@@ -457,8 +456,8 @@ export function Shell({
           const active = !more && isActive(here, t.href);
           return (
             <li key={t.href} className="flex flex-1">
-              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass(active)}>
-                <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
+              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass()} data-on={String(active)}>
+                <t.icon size={23} strokeWidth={1.75} />
                 {t.label}
               </NavLink>
             </li>
@@ -480,9 +479,9 @@ export function Shell({
           const active = !more && isActive(here, t.href);
           return (
             <li key={t.href} className="flex flex-1">
-              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass(active)}>
+              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass()} data-on={String(active)}>
                 <span className="relative">
-                  <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
+                  <t.icon size={23} strokeWidth={1.75} />
                   {!!t.badge && (
                     <span className="num absolute -right-2.5 -top-1.5 min-w-[18px] rounded-full bg-brand px-1 text-center text-[10.5px] font-semibold leading-[18px] text-on-brand ring-2 ring-surface">
                       {t.badge}
@@ -495,9 +494,9 @@ export function Shell({
           );
         })}
         <li className="flex flex-1">
-          <button type="button" onClick={() => setMore(true)} data-bubble="mas" className={tabClass(!tabsHere || more)} aria-expanded={more} aria-controls="menu-mas">
+          <button type="button" onClick={() => setMore(true)} data-bubble="mas" className={tabClass()} data-on={String(!tabsHere || more)} aria-expanded={more} aria-controls="menu-mas">
             <span className="relative">
-              <LayoutGrid size={23} strokeWidth={1.75} className={!tabsHere || more ? "text-brand-bright" : undefined} />
+              <LayoutGrid size={23} strokeWidth={1.75} />
               {pendingMore > 0 && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-surface" />}
             </span>
             Más
@@ -608,7 +607,7 @@ export function Shell({
 
       <main
         className={clsx(
-          "min-w-0 px-4 pb-32 pt-2 transition-[padding] duration-200 ease-out sm:px-6 lg:pb-12 lg:pr-6 lg:pt-4 2xl:pr-8",
+          "rs-ease min-w-0 px-4 pb-32 pt-2 transition-[padding] duration-[450ms] sm:px-6 lg:pb-12 lg:pr-6 lg:pt-4 2xl:pr-8",
           // Con el menú desplegado, la pantalla se aparta: nada queda detrás del menú
           railOpen ? "lg:pl-[296px] 2xl:pl-[304px]" : "lg:pl-[104px] 2xl:pl-[120px]",
         )}

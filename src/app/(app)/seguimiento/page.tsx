@@ -83,10 +83,8 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 href={{ pathname: "/seguimiento", query: { vista: v.key, ...(q && v.key !== "alertas" ? { q } : {}) } }}
                 aria-current={on ? "page" : undefined}
                 data-bubble={v.key}
-                className={clsx(
-                  "press relative z-[1] inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-300",
-                  on ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
-                )}
+                data-on={String(on)}
+                className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium"
               >
                 {v.key === "alertas" && <Bell size={14} strokeWidth={1.75} />}
                 {v.label}

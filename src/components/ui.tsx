@@ -127,7 +127,7 @@ export function PageHeader({
   back?: { href: string; label: string };
 }) {
   return (
-    <header className="mb-6 flex animate-rise flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {back && <BackLink href={back.href} label={back.label} />}
         <h1 className="display text-[32px] font-semibold tracking-[-0.03em] text-ink text-balance sm:text-[44px]">{title}</h1>
@@ -356,9 +356,9 @@ export function Tabs({ items, current }: { items: { href: string; label: string;
           href={t.href}
           aria-current={t.key === current ? "page" : undefined}
           data-bubble={t.key}
+          data-on={String(t.key === current)}
           className={clsx(
-            "press relative z-[1] flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors duration-300",
-            t.key === current ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+            "rs-seg press flex min-h-9 items-center whitespace-nowrap rounded-full px-4 text-sm font-medium",
           )}
         >
           {t.label}

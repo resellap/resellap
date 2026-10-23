@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BubbleGroup } from "@/components/liquid";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
-import { Badge, Empty, Figures, LinkButton, Notice, PageHeader, Pagination, Panel, StockBadge, Table, Td, Th, Tr, clsx } from "@/components/ui";
+import { Badge, Empty, Figures, LinkButton, Notice, PageHeader, Pagination, Panel, StockBadge, Table, Td, Th, Tr } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { filtersFrom, first, pageFrom, toQuery, type SearchParams } from "@/lib/filters";
@@ -226,13 +226,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               href={`/productos${toQuery({ ...filters, only_in_stock: undefined, estado: c.key || undefined, orden: first(sp.orden) })}`}
               aria-current={on ? "page" : undefined}
               data-bubble={c.key}
-              className={clsx(
-                "press relative z-[1] inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-300",
-                on ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
-              )}
+              data-on={String(on)}
+              className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-3.5 text-[13.5px] font-medium"
             >
               {c.label}
-              <span className={clsx("num text-[12px]", on ? "text-paper/70" : "text-faint")}>{c.n}</span>
+              <span className="rs-seg-sub num text-[12px]">{c.n}</span>
             </Link>
           );
         })}
