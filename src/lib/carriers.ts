@@ -44,7 +44,7 @@ export const PLATFORMS: BrandMark[] = [
   { key: "todocoleccion", name: "todocoleccion", short: "tc", bg: "#3B5998", fg: "#FFFFFF", aliases: ["todocoleccion", "todo coleccion"] },
   { key: "depop", name: "Depop", short: "D", bg: "#FF2300", fg: "#FFFFFF", aliases: ["depop"] },
   { key: "vestiaire", name: "Vestiaire Collective", short: "VC", bg: "#1D1D1B", fg: "#FFFFFF", aliases: ["vestiaire collective", "vestiaire"] },
-  { key: "persona", name: "En persona", short: "EP", bg: "#E9EDEB", fg: "#343C39", aliases: ["en persona", "mano", "en mano"] },
+  { key: "persona", name: "En persona", short: "EP", bg: "#E9EDEB", fg: "#343C39", aliases: ["en persona", "mano", "en mano", "in person", "en main propre", "persönlich", "di persona", "em mão", "em pessoa"] },
 ];
 
 export const CARRIERS: CarrierMark[] = [
@@ -79,6 +79,17 @@ export const CARRIERS: CarrierMark[] = [
   { key: "paack", name: "Paack", short: "PK", bg: "#1D1D1B", fg: "#FFFFFF", aliases: ["paack"], trackingUrl: null },
   { key: "sending", name: "Sending", short: "SD", bg: "#E5231B", fg: "#FFFFFF", aliases: ["sending"], trackingUrl: null },
   { key: "mondial-relay", name: "Mondial Relay", short: "MR", bg: "#96154A", fg: "#FFFFFF", aliases: ["mondial relay"], trackingUrl: (c) => `https://www.mondialrelay.es/seguimiento/?numeroExpedition=${enc(c)}` },
+  // Transportistas habituales fuera de España (espacios en otros idiomas)
+  { key: "evri", name: "Evri", short: "EV", bg: "#007BC4", fg: "#FFFFFF", aliases: ["evri", "hermes uk"], trackingUrl: (c) => `https://www.evri.com/track/parcel/${enc(c)}` },
+  { key: "royal-mail", name: "Royal Mail", short: "RM", bg: "#DA202A", fg: "#FFDD00", aliases: ["royal mail"], trackingUrl: (c) => `https://www.royalmail.com/track-your-item#/tracking-results/${enc(c)}` },
+  { key: "dpd", name: "DPD", short: "DPD", bg: "#DC0032", fg: "#FFFFFF", aliases: ["dpd"], trackingUrl: (c) => `https://tracking.dpd.de/status/en_US/parcel/${enc(c)}` },
+  { key: "hermes", name: "Hermes", short: "H", bg: "#0091CD", fg: "#FFFFFF", aliases: ["hermes"], trackingUrl: (c) => `https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation/#${enc(c)}` },
+  { key: "colissimo", name: "Colissimo", short: "CO", bg: "#F7D30C", fg: "#1D1D1B", aliases: ["colissimo", "la poste"], trackingUrl: (c) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${enc(c)}` },
+  { key: "chronopost", name: "Chronopost", short: "CH", bg: "#004AA3", fg: "#FFFFFF", aliases: ["chronopost"], trackingUrl: (c) => `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${enc(c)}` },
+  { key: "relais-colis", name: "Relais Colis", short: "RC", bg: "#7AB51D", fg: "#FFFFFF", aliases: ["relais colis"], trackingUrl: null },
+  { key: "poste-italiane", name: "Poste Italiane", short: "PI", bg: "#FFE600", fg: "#0047BB", aliases: ["poste italiane", "poste"], trackingUrl: (c) => `https://www.poste.it/cerca/index.html#/risultati-spedizioni/${enc(c)}` },
+  { key: "brt", name: "BRT", short: "BRT", bg: "#E30613", fg: "#FFFFFF", aliases: ["brt", "bartolini"], trackingUrl: null },
+  { key: "ctt-pt", name: "CTT", short: "CTT", bg: "#DF0024", fg: "#FFFFFF", aliases: ["ctt portugal", "ctt correios"], trackingUrl: (c) => `https://www.ctt.pt/feapl_2/app/open/objectSearch/objectSearch.jspx?objects=${enc(c)}` },
   { key: "packeta", name: "Packeta", short: "PA", bg: "#BA1B02", fg: "#FFFFFF", aliases: ["packeta", "zasilkovna"], trackingUrl: (c) => `https://tracking.packeta.com/es/?id=${enc(c)}` },
 ];
 

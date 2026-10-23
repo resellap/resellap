@@ -1,4 +1,5 @@
 import "server-only";
+import { tSync } from "@/i18n/server";
 
 /**
  * Envío de correos transaccionales (invitaciones) con Resend.
@@ -14,9 +15,10 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 export async function sendMail(to: string, subject: string, text: string, link?: { href: string; label: string }): Promise<boolean> {
   if (!mailConfigured()) return false;
+  const t = tSync();
   const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#1d1d1b">
 <p>${esc(text).replace(/\n/g, "<br>")}</p>
-${link ? `<p><a href="${esc(link.href)}" style="display:inline-block;background:#007782;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">${esc(link.label)}</a></p><p style="font-size:13px;color:#666">Si el botón no funciona, copia este enlace: ${esc(link.href)}</p>` : ""}
+${link ? `<p><a href="${esc(link.href)}" style="display:inline-block;background:#007782;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">${esc(link.label)}</a></p><p style="font-size:13px;color:#666">${esc(t("Si el botón no funciona, copia este enlace:"))} ${esc(link.href)}</p>` : ""}
 </div>`;
   try {
     const res = await fetch("https://api.resend.com/emails", {

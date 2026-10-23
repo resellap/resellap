@@ -16,5 +16,6 @@ export const STORED_PATTERNS = [
   msg("Copia comprobada: {0}"),
   msg("Copia de seguridad descargada ({0} tablas, {1} registros)"),
   msg("{0} · ya tiene etiqueta"),
+  msg("Espacio creado: {0}"),
   msg("Gmail conectado ({0})"),
 ];

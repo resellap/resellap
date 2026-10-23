@@ -109,6 +109,57 @@ export const FIELDS: Record<Exclude<SheetType, "ignorar">, FieldDef[]> = {
   responsables: [{ key: "name", label: msg("Responsable"), required: true, synonyms: ["responsable", "nombre", "vendedor"] }],
 };
 
+/**
+ * Encabezados habituales en inglés, francés, alemán, italiano y portugués
+ * (sin tildes y en minúsculas, como se comparan): así un Excel en otro
+ * idioma también se relaciona solo.
+ */
+const MORE_SYNONYMS: Partial<Record<Exclude<SheetType, "ignorar">, Record<string, string[]>>> = {
+  productos: {
+    name: ["product", "product name", "name", "item", "nom", "nom du produit", "produit", "article", "produkt", "produktname", "artikel", "bezeichnung", "prodotto", "nome", "nome prodotto", "articolo", "produto", "nome do produto", "artigo"],
+    description: ["description", "beschreibung", "descrizione", "descricao"],
+    category: ["category", "categorie", "kategorie", "categoria"],
+    brand: ["brand", "marque", "marke", "marchio", "marca"],
+    sku: ["sku", "reference", "code", "artikelnummer", "codice", "codigo"],
+    normal_sale_price: ["price", "sale price", "selling price", "prix", "prix de vente", "preis", "verkaufspreis", "prezzo", "prezzo di vendita", "preco", "preco de venda"],
+    expected_stock: ["stock", "quantity in stock", "bestand", "giacenza", "estoque"],
+  },
+  compras: {
+    order_number: ["order", "order number", "purchase order", "po", "commande", "numero de commande", "bestellung", "bestellnummer", "ordine", "numero ordine", "encomenda", "numero da encomenda"],
+    order_date: ["date", "order date", "purchase date", "date de commande", "datum", "bestelldatum", "data", "data ordine", "data da encomenda"],
+    product_name: ["product", "item", "produit", "article", "produkt", "artikel", "prodotto", "articolo", "produto", "artigo"],
+    quantity: ["quantity", "qty", "units", "quantite", "menge", "anzahl", "stuck", "quantita", "pezzi", "quantidade", "unidades"],
+    unit_cost: ["unit cost", "cost", "purchase price", "cout unitaire", "prix d achat", "stuckpreis", "einkaufspreis", "costo unitario", "prezzo di acquisto", "custo unitario", "preco de compra"],
+    supplier: ["supplier", "vendor", "fournisseur", "lieferant", "fornitore", "fornecedor"],
+    notes: ["notes", "remarques", "notizen", "note", "observacoes"],
+    transporte: ["shipping", "delivery", "freight", "frais de port", "livraison", "versand", "versandkosten", "spedizione", "trasporto", "portes", "envio"],
+    aduanas: ["customs", "douane", "zoll", "dogana", "alfandega"],
+    aranceles: ["duties", "tariffs", "droits de douane", "zollgebuhren", "dazi", "direitos aduaneiros"],
+    comisiones: ["fees", "commission", "commissions", "gebuhren", "provision", "commissioni", "comissoes"],
+  },
+  ventas: {
+    sale_date: ["date", "sale date", "date de vente", "datum", "verkaufsdatum", "data", "data vendita", "data da venda"],
+    responsible: ["seller", "salesperson", "vendeur", "verkaufer", "venditore", "vendedor"],
+    product_name: ["product", "item", "produit", "article", "produkt", "artikel", "prodotto", "articolo", "produto", "artigo"],
+    quantity: ["quantity", "qty", "units", "quantite", "menge", "anzahl", "quantita", "quantidade"],
+    total_price: ["total", "amount", "total price", "montant", "prix total", "betrag", "gesamtpreis", "importo", "totale", "valor total", "montante"],
+    unit_price: ["unit price", "price", "prix unitaire", "prix", "einzelpreis", "preis", "prezzo unitario", "prezzo", "preco unitario", "preco"],
+    purchase_order_number: ["batch", "lot", "order", "purchase order", "lot d origine", "charge", "lotto", "ordine", "lote"],
+    platform: ["platform", "marketplace", "plateforme", "plattform", "piattaforma", "plataforma"],
+    carrier: ["carrier", "courier", "transporteur", "versanddienstleister", "spediziere", "corriere", "transportadora"],
+    shipped: ["shipped", "expedie", "envoye", "versendet", "spedito", "enviado"],
+    notes: ["notes", "remarques", "notizen", "note", "observacoes"],
+    external_reference: ["reference", "order id", "transaction", "referenz", "riferimento", "referencia"],
+  },
+  responsables: { name: ["seller", "name", "vendeur", "nom", "verkaufer", "venditore", "nome"] },
+};
+for (const [type, fields] of Object.entries(MORE_SYNONYMS) as [Exclude<SheetType, "ignorar">, Record<string, string[]>][]) {
+  for (const f of FIELDS[type]) {
+    const extra = fields[f.key];
+    if (extra) f.synonyms = [...f.synonyms, ...extra.filter((x) => !f.synonyms.includes(x))];
+  }
+}
+
 export function fieldsFor(type: SheetType): FieldDef[] {
   return type === "ignorar" ? [] : FIELDS[type];
 }

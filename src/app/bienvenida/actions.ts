@@ -11,7 +11,8 @@ export async function createOrganization(_prev: CreateOrgState, formData: FormDa
   const name = String(formData.get("name") ?? "").trim();
   if (name.length < 2 || name.length > 80) return { error: t("El nombre debe tener entre 2 y 80 caracteres.") };
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_organization", { p_name: name });
+  // Las listas iniciales (plataformas y transportistas) se crean en el idioma de la app
+  const { error } = await supabase.rpc("create_organization_localized", { p_name: name, p_lang: t.locale });
   if (error) return { error: friendlyError(error) };
   redirect("/");
 }
