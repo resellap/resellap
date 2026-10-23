@@ -26,10 +26,16 @@ export const INTL_TAG: Record<Locale, string> = {
   pt: "pt-PT",
 };
 
+/**
+ * Idiomas que ya se pueden elegir (con la traducción completa). Los demás
+ * existen en el código pero no se ofrecen hasta terminar su traducción.
+ */
+export const ENABLED_LOCALES: readonly Locale[] = ["es"];
+
 export const LOCALE_COOKIE = "rs-idioma";
 
 export function isLocale(v: unknown): v is Locale {
-  return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
+  return typeof v === "string" && (ENABLED_LOCALES as readonly string[]).includes(v);
 }
 
 /** Primer idioma admitido de una cabecera Accept-Language («fr-FR,fr;q=0.9,en;q=0.8»). */

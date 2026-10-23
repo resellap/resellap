@@ -171,6 +171,8 @@ function niceStep(raw: number) {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
 }
 
+// Formato fijo (no «compact» de Intl): el servidor y el navegador lo escriben igual
 function compactEur(v: number, tag: string) {
-  return new Intl.NumberFormat(tag, { style: "currency", currency: "EUR", notation: v >= 1000 ? "compact" : "standard", maximumFractionDigits: v >= 1000 ? 1 : 0 }).format(v);
+  if (v >= 1000) return `${(v / 1000).toLocaleString(tag, { maximumFractionDigits: 1 })} ${tag === "es-ES" ? "mil €" : "k €"}`;
+  return `${Math.round(v)} €`;
 }

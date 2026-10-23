@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { setLanguage } from "@/i18n/actions";
 import { useT } from "@/i18n/client";
-import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
+import { ENABLED_LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { clsx } from "./ui";
 
 /** Selector de idioma. Se aplica al momento y se guarda (en este navegador y, con sesión, en tu cuenta). */
@@ -12,6 +12,8 @@ export function LanguagePicker({ current, compact, className }: { current: Local
   const t = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
+  // Con un solo idioma disponible no hay nada que elegir
+  if (ENABLED_LOCALES.length < 2) return null;
   return (
     <label className={clsx("relative inline-flex items-center", className)}>
       <span className="sr-only">{t("Idioma")}</span>
@@ -31,7 +33,7 @@ export function LanguagePicker({ current, compact, className }: { current: Local
           compact ? "h-9 pl-8 text-[13px]" : "h-11 w-full pl-10 text-[15px] sm:h-10 sm:text-[14px]",
         )}
       >
-        {LOCALES.map((l) => (
+        {ENABLED_LOCALES.map((l) => (
           <option key={l} value={l} lang={l}>
             {LOCALE_NAMES[l as Locale]}
           </option>
