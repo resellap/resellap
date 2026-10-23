@@ -6,6 +6,7 @@ import { savePreferences } from "@/app/(app)/configuracion/actions";
 import type { Palette } from "@/lib/preferences";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Logo } from "./brand";
+import { LiquidBubble } from "./liquid";
 import { IconEnvios, IconInicio, IconVentas, type RsIcon } from "./rs-icons";
 import { RememberList, forgetAllLists, useRememberedHref } from "./list-memory";
 import { NAV, type BadgeKey, type NavItem } from "./nav";
@@ -79,6 +80,14 @@ export function Shell({
   const [cfg, setCfg] = useState(false);
   // Carril desplegado con la flechita: nunca se queda fijo
   const [railOpen, setRailOpen] = useState(false);
+  // Destino pulsado: la burbuja sale hacia él al instante, sin esperar a que cargue
+  const [goingTo, setGoingTo] = useState<string | null>(null);
+  const here = goingTo ?? pathname;
+  const go = (href: string) => () => setGoingTo(href.split("?")[0]);
+  const topNav = useRef<HTMLElement>(null);
+  const railNav = useRef<HTMLElement>(null);
+  const themeBox = useRef<HTMLDivElement>(null);
+  const tabList = useRef<HTMLUListElement>(null);
   const railBox = useRef<HTMLElement>(null);
   const cfgBox = useRef<HTMLDivElement>(null);
   const userMenu = useRef<HTMLDetailsElement>(null);
@@ -133,6 +142,7 @@ export function Shell({
   const [lastPath, setLastPath] = useState(pathname);
   if (lastPath !== pathname) {
     setLastPath(pathname);
+    setGoingTo(null);
     setMore(false);
     setCfg(false);
     setRailOpen(false);
@@ -218,7 +228,7 @@ export function Shell({
   const railItem = (active: boolean) =>
     clsx(
       "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
-      active ? "bg-ink text-paper" : "text-ink-soft hover:bg-subtle hover:text-ink",
+      active ? "z-[1] text-paper transition-colors duration-300" : "z-[1] text-ink-soft hover:bg-subtle hover:text-ink",
     );
   const railLabel = clsx("truncate whitespace-nowrap transition-opacity duration-150", railOpen ? "opacity-100 delay-75" : "pointer-events-none opacity-0");
   const railPill = clsx(
@@ -233,18 +243,21 @@ export function Shell({
       <Link href="/" aria-label="Resellap, inicio" className={clsx(pill, "press flex h-12 shrink-0 items-center px-5")}>
         <Logo size={22} />
       </Link>
-      <nav aria-label="Principal" className={clsx(pill, "no-scrollbar flex min-w-0 items-center gap-0.5 overflow-x-auto p-1")}>
+      <nav ref={topNav} aria-label="Principal" className={clsx(pill, "no-scrollbar relative flex min-w-0 items-center gap-0.5 overflow-x-auto p-1")}>
+        <LiquidBubble container={topNav} active={topItems.find((i) => isActive(here, i.href))?.href ?? null} />
         {topItems.map((it) => {
-          const active = isActive(pathname, it.href);
+          const active = isActive(here, it.href);
           const n = badgeOf(it);
           return (
             <NavLink
               key={it.href}
               href={it.href}
-              active={active}
+              active={isActive(pathname, it.href)}
+              data-bubble={it.href}
+              onClick={go(it.href)}
               className={clsx(
-                "press flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium xl:px-4 xl:text-[13.5px]",
-                active ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+                "press relative z-[1] flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-300 xl:px-4 xl:text-[13.5px]",
+                active ? "text-paper" : "text-muted hover:bg-subtle hover:text-ink",
               )}
             >
               {SHORT[it.href] ?? it.label}
@@ -327,14 +340,15 @@ export function Shell({
       ref={railBox}
       className="fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
     >
-      <div className={clsx(railPill, "shrink-0")}>
+      <div ref={themeBox} className={clsx(railPill, "relative shrink-0")}>
+        <LiquidBubble container={themeBox} active={mode} axis="y" />
         {(
           [
             ["light", Sun, "Modo claro"],
             ["dark", Moon, "Modo oscuro"],
           ] as const
         ).map(([m, Icon, label]) => (
-          <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem(mode === m)} aria-pressed={mode === m} title={label}>
+          <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem(mode === m)} data-bubble={m} aria-pressed={mode === m} title={label}>
             <Icon size={18} strokeWidth={1.75} className="shrink-0" />
             <span className={railLabel}>{label}</span>
           </button>
@@ -354,14 +368,15 @@ export function Shell({
       >
         <ChevronRight size={15} strokeWidth={2.5} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
       </button>
-      <nav aria-label="Gestión" className={clsx(railPill, "no-scrollbar min-h-0 shrink overflow-y-auto")}>
+      <nav ref={railNav} aria-label="Gestión" className={clsx(railPill, "no-scrollbar relative min-h-0 shrink overflow-y-auto")}>
+        <LiquidBubble container={railNav} active={railGroups.flatMap((g) => g.items).find((i) => isActive(here, i.href))?.href ?? null} axis="y" />
         {railGroups.map((g, gi) => (
           <div key={gi} className={clsx("flex flex-col gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
             {g.items.map((it) => {
-              const active = isActive(pathname, it.href);
+              const active = isActive(here, it.href);
               const n = badgeOf(it);
               return (
-                <NavLink key={it.href} href={it.href} active={active} title={it.label} aria-label={it.label} onClick={closeRail} className={railItem(active)}>
+                <NavLink key={it.href} href={it.href} active={isActive(pathname, it.href)} data-bubble={it.href} title={it.label} aria-label={it.label} onClick={() => { closeRail(); setGoingTo(it.href); }} className={railItem(active)}>
                   <it.icon size={18} strokeWidth={1.75} className="shrink-0" />
                   {n > 0 && (
                     <span
@@ -423,11 +438,11 @@ export function Shell({
     { href: "/ventas", label: "Ventas", icon: IconVentas },
     { href: "/envios", label: "Envíos", icon: IconEnvios, badge: badges.shipments },
   ];
-  const inTabs = isActive(pathname, "/") || isActive(pathname, "/ventas") || isActive(pathname, "/envios") || pathname.startsWith("/ventas/nueva");
+  const tabsHere = isActive(here, "/") || isActive(here, "/ventas") || isActive(here, "/envios") || here.startsWith("/ventas/nueva");
   const tabClass = (active: boolean) =>
     clsx(
       "press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium",
-      active ? "bg-ink text-paper" : "text-faint",
+      active ? "z-[1] text-paper transition-colors duration-300" : "z-[1] text-faint",
     );
   const pendingMore = badges.reviews + badges.emails + badges.detected + badges.listings + badges.alerts;
 
@@ -436,12 +451,13 @@ export function Shell({
       aria-label="Accesos rápidos"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden no-print"
     >
-      <ul className="rs-card mx-auto flex max-w-md items-center rounded-full bg-surface/95 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-md">
+      <ul ref={tabList} className="rs-card relative mx-auto flex max-w-md items-center rounded-full bg-surface/95 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-md">
+        <LiquidBubble container={tabList} active={more || !tabsHere ? "mas" : (tabs.find((t) => isActive(here, t.href))?.href ?? null)} />
         {tabs.slice(0, 2).map((t) => {
-          const active = isActive(pathname, t.href);
+          const active = !more && isActive(here, t.href);
           return (
             <li key={t.href} className="flex flex-1">
-              <NavLink href={t.href} active={active} className={tabClass(active)}>
+              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass(active)}>
                 <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
                 {t.label}
               </NavLink>
@@ -461,10 +477,10 @@ export function Shell({
           </li>
         )}
         {tabs.slice(2).map((t) => {
-          const active = isActive(pathname, t.href);
+          const active = !more && isActive(here, t.href);
           return (
             <li key={t.href} className="flex flex-1">
-              <NavLink href={t.href} active={active} className={tabClass(active)}>
+              <NavLink href={t.href} active={isActive(pathname, t.href)} data-bubble={t.href} onClick={go(t.href)} className={tabClass(active)}>
                 <span className="relative">
                   <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
                   {!!t.badge && (
@@ -479,9 +495,9 @@ export function Shell({
           );
         })}
         <li className="flex flex-1">
-          <button type="button" onClick={() => setMore(true)} className={tabClass(!inTabs || more)} aria-expanded={more} aria-controls="menu-mas">
+          <button type="button" onClick={() => setMore(true)} data-bubble="mas" className={tabClass(!tabsHere || more)} aria-expanded={more} aria-controls="menu-mas">
             <span className="relative">
-              <LayoutGrid size={23} strokeWidth={1.75} className={!inTabs || more ? "text-brand-bright" : undefined} />
+              <LayoutGrid size={23} strokeWidth={1.75} className={!tabsHere || more ? "text-brand-bright" : undefined} />
               {pendingMore > 0 && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-surface" />}
             </span>
             Más
@@ -521,7 +537,7 @@ export function Shell({
             return (
               <section key={gi}>
                 <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{g.label ?? "Día a día"}</p>
-                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                <ul className="stagger grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {items.map((it) => {
                     const active = isActive(pathname, it.href);
                     const n = badgeOf(it);
@@ -599,7 +615,10 @@ export function Shell({
       >
         <div className="mx-auto w-full max-w-[1440px]">
           {banner}
-          {children}
+          {/* Cada pantalla entra con un fundido suave hacia arriba */}
+          <div key={pathname} className="page-in">
+            {children}
+          </div>
         </div>
       </main>
 
