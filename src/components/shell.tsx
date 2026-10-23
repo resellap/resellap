@@ -348,11 +348,11 @@ export function Shell({
         aria-label={railOpen ? "Recoger el menú" : "Desplegar el menú con los nombres"}
         title={railOpen ? "Recoger" : "Ver nombres"}
         className={clsx(
-          "press absolute top-[9px] z-10 flex h-[26px] w-[18px] items-center justify-center rounded-r-full bg-brand text-on-brand shadow-[var(--shadow-card)] transition-[left] duration-200 ease-out hover:bg-brand-strong [@media(max-height:760px)]:top-[7px]",
-          railOpen ? "left-[239px]" : "left-[47px]",
+          "press absolute -top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-ink text-paper shadow-[0_0_0_3px_var(--paper),var(--shadow-pop)] transition-[left] duration-200 ease-out hover:bg-ink-soft",
+          railOpen ? "left-[226px]" : "left-[34px]",
         )}
       >
-        <ChevronRight size={14} strokeWidth={2.75} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
+        <ChevronRight size={15} strokeWidth={2.5} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
       </button>
       <nav aria-label="Gestión" className={clsx(railPill, "no-scrollbar min-h-0 shrink overflow-y-auto")}>
         {railGroups.map((g, gi) => (
