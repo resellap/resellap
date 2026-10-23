@@ -120,7 +120,7 @@ function Frame({ title, sub, href, children, className, accent }: { title: strin
     <section
       aria-label={title}
       className={clsx(
-        "flex min-w-0 flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface p-4",
+        "flex min-w-0 flex-col gap-2 overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface p-4",
         accent && "rs-ink-tile",
         className,
       )}

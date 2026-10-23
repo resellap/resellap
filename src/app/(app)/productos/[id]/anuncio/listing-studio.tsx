@@ -37,7 +37,7 @@ const PLATFORM_NAME: Record<ListingPlatform, string> = { vinted: "Vinted", walla
 
 function Step({ n, title, children, aside }: { n: number; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
-    <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
+    <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2.5">
           <span className="display flex h-7 w-7 items-center justify-center rounded-full bg-ink text-[16px] text-paper">{n}</span>

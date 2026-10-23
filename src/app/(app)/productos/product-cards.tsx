@@ -29,7 +29,7 @@ export function ProductCards({ items }: { items: CardProduct[] }) {
           <Link
             href={p.href}
             className={clsx(
-              "press flex items-center gap-3 rounded-[var(--radius-md)] border border-line bg-surface p-2.5 pr-3.5 active:border-line-strong",
+              "press flex items-center gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-2.5 pr-3.5 active:border-line-strong",
               p.stock <= 0 && "opacity-70",
             )}
           >

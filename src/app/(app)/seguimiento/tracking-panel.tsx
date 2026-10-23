@@ -28,7 +28,7 @@ export async function TrackingPanel({ shipment: s, showSaleLink }: { shipment: S
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
       <div className="flex flex-col gap-4">
-        <section className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface">
+        <section className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface">
           <div className="flex gap-4 p-4 sm:p-5">
             <ProductThumb src={s.photo} alt={s.product} size={88} rounded={14} />
             <div className="min-w-0 flex-1">

@@ -1,7 +1,9 @@
 "use client";
-import { Bell, LayoutGrid, LogOut, Plus, Settings, X } from "lucide-react";
+import { Bell, ChevronDown, LayoutGrid, LogOut, Mail, Moon, Plus, Settings, Sun, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { savePreferences } from "@/app/(app)/configuracion/actions";
+import type { Palette } from "@/lib/preferences";
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Logo } from "./brand";
 import { IconEnvios, IconInicio, IconVentas, type RsIcon } from "./rs-icons";
@@ -56,6 +58,7 @@ export function Shell({
   orgSwitcher,
   banner,
   permissions = [],
+  appearance,
 }: {
   children: ReactNode;
   role: "admin" | "vendedor" | "almacen";
@@ -68,11 +71,45 @@ export function Shell({
   banner?: ReactNode;
   /** Permisos efectivos (qué apartados ve). */
   permissions?: string[];
+  /** Aspecto guardado (para el botón claro/oscuro). */
+  appearance?: { mode: "auto" | "light" | "dark"; palette: Palette; reduceMotion: boolean };
 }) {
   const pathname = usePathname();
   const [more, setMore] = useState(false);
+  const [cfg, setCfg] = useState(false);
+  const cfgBox = useRef<HTMLDivElement>(null);
+  const userMenu = useRef<HTMLDetailsElement>(null);
+  const router = useRouter();
+  // Claro u oscuro: el elegido, o el del dispositivo si está en automático
+  const [mode, setModeState] = useState<"light" | "dark" | null>(appearance?.mode === "light" || appearance?.mode === "dark" ? appearance.mode : null);
+  useEffect(() => {
+    if (mode) return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const read = () => setModeState(mq.matches ? "dark" : "light");
+    read();
+  }, [mode]);
+  const setMode = (m: "light" | "dark") => {
+    setModeState(m);
+    document.documentElement.setAttribute("data-mode", m);
+    if (appearance) void savePreferences("appearance", { mode: m, palette: appearance.palette, reduceMotion: appearance.reduceMotion }).then(() => router.refresh());
+  };
+  // Cerrar el submenú de Configuración al pulsar fuera o con Escape
+  useEffect(() => {
+    if (!cfg) return;
+    const onDown = (e: MouseEvent) => {
+      if (cfgBox.current && !cfgBox.current.contains(e.target as Node)) setCfg(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setCfg(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [cfg]);
   const visible = (i: NavItem) => (!i.adminOnly || role === "admin") && (!i.perm || role === "admin" || permissions.includes(i.perm));
   const canSell = role === "admin" || permissions.includes("ventas_crear");
+  const canSeeDetected = role === "admin" || permissions.includes("correo");
   const badgeOf = (i: NavItem) => (i.badgeKey ? badges[i.badgeKey] : 0);
 
   // Cerrar la hoja «Más» al cambiar de página
@@ -80,7 +117,11 @@ export function Shell({
   if (lastPath !== pathname) {
     setLastPath(pathname);
     setMore(false);
+    setCfg(false);
   }
+  useEffect(() => {
+    if (userMenu.current) userMenu.current.open = false;
+  }, [pathname]);
   // Hoja «Más»: <dialog> nativo (Escape, foco y fondo los gestiona el navegador)
   const sheet = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -99,7 +140,7 @@ export function Shell({
 
   const account = (
     <div className="flex items-center gap-2">
-      <Link href="/cuenta" className="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-1 hover:bg-subtle/70">
+      <Link href="/cuenta" className="flex min-w-0 flex-1 items-center gap-3 rounded-full p-1 hover:bg-subtle/70">
         <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-subtle text-[13px] font-semibold text-ink-soft">
           {initials || "·"}
         </span>
@@ -110,7 +151,7 @@ export function Shell({
       </Link>
       <form action="/auth/salir" method="post">
         <button
-          className="press flex h-10 w-10 items-center justify-center rounded-[10px] text-faint hover:bg-subtle hover:text-ink"
+          className="press flex h-10 w-10 items-center justify-center rounded-full text-faint hover:bg-subtle hover:text-ink"
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >
@@ -122,7 +163,7 @@ export function Shell({
 
   const itemClass = (active: boolean) =>
     clsx(
-      "press group flex min-h-10 items-center gap-3 rounded-[10px] px-3 text-[14px] font-medium",
+      "press group flex min-h-10 items-center gap-3 rounded-full px-3 text-[14px] font-medium",
       active ? "bg-subtle text-ink" : "text-muted hover:bg-subtle/70 hover:text-ink",
     );
 
@@ -144,22 +185,185 @@ export function Shell({
     </ul>
   );
 
-  // ---------------- Barra lateral (ordenador e iPad en horizontal) ----------------
-  const sideGroups = NAV.filter((g) => !g.footer);
+  // ---------------- Ordenador: barra superior en píldoras + carril de iconos ----------------
+  const SHORT: Record<string, string> = { "/detectadas": "Detectadas", "/envios": "Envíos" };
+  const topItems = (NAV[0]?.items ?? []).filter(visible).filter((i) => i.href !== "/ventas/nueva");
+  const railGroups = NAV.slice(1)
+    .filter((g) => !g.footer)
+    .map((g) => ({ label: g.label, items: g.items.filter(visible).filter((i) => i.href !== "/ventas/nueva") }))
+    .filter((g) => g.items.length);
   const settingsItems = (NAV.find((g) => g.footer)?.items ?? []).filter(visible).filter((i) => i.href !== "/cuenta");
-  const sidebar = (
-    <nav aria-label="Principal" className="flex flex-col gap-5 px-3 pb-4">
-      {sideGroups.map((g, gi) => {
-        const items = g.items.filter(visible).filter((i) => i.href !== "/ventas/nueva");
-        if (!items.length) return null;
-        return (
-          <div key={gi}>
-            {g.label && <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">{g.label}</p>}
-            {renderGroup(items)}
+  const settingsActive = settingsItems.some((i) => isActive(pathname, i.href));
+
+  const pill = "rs-card rounded-full bg-surface";
+  const railBtn = (active: boolean) =>
+    clsx(
+      "press relative flex h-10 w-10 items-center justify-center rounded-full",
+      active ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+    );
+  const tip = (label: string) => (
+    <span
+      role="tooltip"
+      className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 translate-x-[-4px] whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[12.5px] font-medium text-paper opacity-0 shadow-[var(--shadow-pop)] transition group-hover/tip:translate-x-0 group-hover/tip:opacity-100 group-focus-visible/tip:opacity-100"
+    >
+      {label}
+    </span>
+  );
+
+  const topBar = (
+    <header className="sticky top-0 z-40 hidden items-center gap-3 bg-gradient-to-b from-paper from-70% to-transparent px-6 pb-4 pt-4 lg:flex no-print 2xl:px-8">
+      <Link href="/" aria-label="Resellap, inicio" className={clsx(pill, "press flex h-12 shrink-0 items-center px-5")}>
+        <Logo size={22} />
+      </Link>
+      <nav aria-label="Principal" className={clsx(pill, "no-scrollbar flex min-w-0 items-center gap-0.5 overflow-x-auto p-1")}>
+        {topItems.map((it) => {
+          const active = isActive(pathname, it.href);
+          const n = badgeOf(it);
+          return (
+            <NavLink
+              key={it.href}
+              href={it.href}
+              active={active}
+              className={clsx(
+                "press flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium xl:px-4 xl:text-[13.5px]",
+                active ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+              )}
+            >
+              {SHORT[it.href] ?? it.label}
+              {n > 0 && (
+                <span
+                  className={clsx(
+                    "num inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10.5px] font-semibold",
+                    it.badgeKey === "alerts" ? "bg-danger text-white" : "bg-brand text-on-brand",
+                  )}
+                >
+                  {n}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+      <div className="flex-1" />
+      {canSell && (
+        <NavLink
+          href="/ventas/nueva"
+          active={pathname.startsWith("/ventas/nueva")}
+          aria-label="Nueva venta"
+          className="press flex h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-4 text-[14px] font-semibold text-on-brand shadow-[var(--shadow-card)] hover:bg-brand-strong xl:px-5"
+        >
+          <Plus size={18} strokeWidth={2.25} />
+          <span className="hidden xl:inline">Nueva venta</span>
+        </NavLink>
+      )}
+      <div className={clsx(pill, "hidden h-12 shrink-0 items-center gap-0.5 px-1 xl:flex")}>
+        <Link
+          href="/seguimiento?vista=alertas"
+          className="press relative flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-ink"
+          aria-label={badges.alerts > 0 ? `${badges.alerts} ${badges.alerts === 1 ? "alerta" : "alertas"} de envíos` : "Alertas de envíos"}
+          title="Alertas de envíos"
+        >
+          <Bell size={18} strokeWidth={1.75} />
+          {badges.alerts > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger ring-2 ring-surface" />}
+        </Link>
+        {canSeeDetected && (
+          <Link
+            href="/detectadas"
+            className="press relative flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-subtle hover:text-ink"
+            aria-label="Ventas detectadas en el correo"
+            title="Ventas detectadas"
+          >
+            <Mail size={18} strokeWidth={1.75} />
+            {badges.detected > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand ring-2 ring-surface" />}
+          </Link>
+        )}
+      </div>
+      <details ref={userMenu} className="group/user relative shrink-0">
+        <summary className={clsx(pill, "press flex h-12 cursor-pointer list-none items-center gap-2.5 pl-1 pr-3 [&::-webkit-details-marker]:hidden")}>
+          <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-[13px] font-semibold text-paper">
+            {initials || "·"}
+          </span>
+          <span className="hidden max-w-[180px] text-left text-[13px] leading-tight 2xl:block">
+            <span className="block truncate font-semibold text-ink">{userLabel}</span>
+            <span className="block truncate text-[12px] text-faint">{orgName}</span>
+          </span>
+          <ChevronDown size={16} strokeWidth={1.75} className="text-faint transition-transform group-open/user:rotate-180" />
+        </summary>
+        <div className="rs-card absolute right-0 top-[calc(100%+8px)] z-50 w-72 animate-rise rounded-[var(--radius-md)] bg-surface p-2 shadow-[var(--shadow-pop)]">
+          <div className="px-3 pb-2 pt-2">
+            <p className="truncate text-[14px] font-semibold text-ink">{userLabel}</p>
+            <p className="truncate text-[12.5px] text-faint">
+              {ROLE_LABEL[role]} · {orgName}
+            </p>
           </div>
-        );
-      })}
-    </nav>
+          {orgSwitcher && <div className="px-1 pb-2">{orgSwitcher}</div>}
+          <div className="border-t border-line pt-1.5">{account}</div>
+        </div>
+      </details>
+    </header>
+  );
+
+  const rail = (
+    <aside aria-label="Más secciones" className="fixed bottom-6 left-6 top-[88px] z-30 hidden w-12 flex-col gap-3 lg:flex no-print 2xl:left-8">
+      <div className={clsx(pill, "flex flex-col items-center gap-0.5 p-1")}>
+        {(
+          [
+            ["light", Sun, "Modo claro"],
+            ["dark", Moon, "Modo oscuro"],
+          ] as const
+        ).map(([m, Icon, label]) => (
+          <button key={m} type="button" onClick={() => setMode(m)} className={clsx("group/tip", railBtn(mode === m))} aria-pressed={mode === m} aria-label={label}>
+            <Icon size={17} strokeWidth={1.75} />
+            {tip(label)}
+          </button>
+        ))}
+      </div>
+      <nav aria-label="Gestión" className={clsx(pill, "flex flex-col items-center gap-0.5 p-1")}>
+        {railGroups.map((g, gi) => (
+          <div key={gi} className={clsx("flex flex-col items-center gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
+            {g.items.map((it) => {
+              const active = isActive(pathname, it.href);
+              const n = badgeOf(it);
+              return (
+                <NavLink key={it.href} href={it.href} active={active} aria-label={it.label} className={clsx("group/tip", railBtn(active))}>
+                  <it.icon size={18} strokeWidth={1.75} />
+                  {n > 0 && <span className={clsx("absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-surface", it.badgeKey === "alerts" ? "bg-danger" : "bg-brand")} />}
+                  {tip(n > 0 ? `${it.label} · ${n}` : it.label)}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+      <div className="flex-1" />
+      {settingsItems.length > 0 && (
+        <div ref={cfgBox} className="relative">
+          <button
+            type="button"
+            onClick={() => setCfg((v) => !v)}
+            aria-expanded={cfg}
+            aria-controls="menu-config"
+            aria-label="Configuración"
+            className={clsx(pill, "group/tip flex h-12 w-12 items-center justify-center", "press", settingsActive || cfg ? "!bg-ink text-paper" : "text-muted hover:text-ink")}
+          >
+            <Settings size={19} strokeWidth={1.75} className={clsx("transition-transform duration-300", cfg && "rotate-90")} />
+            {!cfg && tip("Configuración")}
+          </button>
+          {cfg && (
+            <div
+              id="menu-config"
+              className="absolute bottom-0 left-full z-50 ml-3 w-64 animate-rise rounded-[var(--radius-md)] border border-line bg-surface-2 p-2 shadow-[var(--shadow-pop)]"
+            >
+              <p className="flex items-center gap-2 px-3 pb-2 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">
+                <Settings size={13} strokeWidth={2} className="text-brand" />
+                Configuración
+              </p>
+              <div className="rounded-[14px] bg-surface p-1 [&_a]:min-h-9 [&_a]:text-[13.5px]">{renderGroup(settingsItems)}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </aside>
   );
 
   // ---------------- Barra inferior (móvil y iPad en vertical) ----------------
@@ -170,21 +374,24 @@ export function Shell({
   ];
   const inTabs = isActive(pathname, "/") || isActive(pathname, "/ventas") || isActive(pathname, "/envios") || pathname.startsWith("/ventas/nueva");
   const tabClass = (active: boolean) =>
-    clsx("press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium", active ? "text-ink" : "text-faint");
+    clsx(
+      "press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium",
+      active ? "bg-ink text-paper" : "text-faint",
+    );
   const pendingMore = badges.reviews + badges.emails + badges.detected + badges.listings + badges.alerts;
 
   const tabBar = (
     <nav
       aria-label="Accesos rápidos"
-      className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden no-print"
+      className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 lg:hidden no-print"
     >
-      <ul className="mx-auto flex max-w-xl items-end px-1">
+      <ul className="rs-card mx-auto flex max-w-md items-center rounded-full bg-surface/95 p-1.5 shadow-[var(--shadow-pop)] backdrop-blur-md">
         {tabs.slice(0, 2).map((t) => {
           const active = isActive(pathname, t.href);
           return (
             <li key={t.href} className="flex flex-1">
               <NavLink href={t.href} active={active} className={tabClass(active)}>
-                <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand" : undefined} />
+                <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
                 {t.label}
               </NavLink>
             </li>
@@ -196,7 +403,7 @@ export function Shell({
               href="/ventas/nueva"
               active={pathname.startsWith("/ventas/nueva")}
               aria-label="Nueva venta"
-              className="press -mt-4 mb-1 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-brand text-on-brand shadow-[0_0_0_4px_var(--surface)]"
+              className="press flex h-[52px] w-[52px] items-center justify-center rounded-full bg-brand text-on-brand"
             >
               <Plus size={26} strokeWidth={2} />
             </NavLink>
@@ -208,7 +415,7 @@ export function Shell({
             <li key={t.href} className="flex flex-1">
               <NavLink href={t.href} active={active} className={tabClass(active)}>
                 <span className="relative">
-                  <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand" : undefined} />
+                  <t.icon size={23} strokeWidth={1.75} className={active ? "text-brand-bright" : undefined} />
                   {!!t.badge && (
                     <span className="num absolute -right-2.5 -top-1.5 min-w-[18px] rounded-full bg-brand px-1 text-center text-[10.5px] font-semibold leading-[18px] text-on-brand ring-2 ring-surface">
                       {t.badge}
@@ -223,7 +430,7 @@ export function Shell({
         <li className="flex flex-1">
           <button type="button" onClick={() => setMore(true)} className={tabClass(!inTabs || more)} aria-expanded={more} aria-controls="menu-mas">
             <span className="relative">
-              <LayoutGrid size={23} strokeWidth={1.75} className={!inTabs || more ? "text-brand" : undefined} />
+              <LayoutGrid size={23} strokeWidth={1.75} className={!inTabs || more ? "text-brand-bright" : undefined} />
               {pendingMore > 0 && <span className="absolute -right-1 -top-0.5 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-surface" />}
             </span>
             Más
@@ -273,11 +480,11 @@ export function Shell({
                           href={it.href}
                           active={active}
                           className={clsx(
-                            "press relative flex h-full min-h-[84px] flex-col items-start justify-between gap-2 rounded-[14px] border p-3 text-[12.5px] font-medium leading-tight",
-                            active ? "border-ink bg-subtle text-ink" : "border-line bg-surface text-ink-soft",
+                            "press relative flex h-full min-h-[84px] flex-col items-start justify-between gap-2 rounded-[20px] p-3 text-[12.5px] font-medium leading-tight",
+                            active ? "bg-ink text-paper" : "bg-surface-2 text-ink-soft",
                           )}
                         >
-                          <it.icon size={21} strokeWidth={1.75} className={active ? "text-brand" : "text-faint"} />
+                          <it.icon size={21} strokeWidth={1.75} className={active ? "text-brand-bright" : "text-faint"} />
                           <span>{it.label}</span>
                           {n > 0 && (
                             <span className="absolute right-2 top-2">
@@ -292,79 +499,36 @@ export function Shell({
               </section>
             );
           })}
-          {orgSwitcher && <div className="rounded-[14px] border border-line p-3">{orgSwitcher}</div>}
-          <div className="rounded-[14px] border border-line p-2">{account}</div>
+          {orgSwitcher && <div className="rounded-[20px] bg-surface-2 p-3">{orgSwitcher}</div>}
+          <div className="rounded-full bg-surface-2 p-1.5">{account}</div>
         </div>
       </div>
     </dialog>
   );
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[248px_minmax(0,1fr)] 2xl:grid-cols-[264px_minmax(0,1fr)]">
+    <div className="min-h-dvh">
       <Suspense fallback={null}>
         <NavProgress />
       </Suspense>
-      {/* Barra lateral (ordenador e iPad en horizontal) */}
-      <aside className="sticky top-0 hidden h-dvh flex-col overflow-hidden border-r border-line bg-surface lg:flex no-print">
-        <div className="shrink-0">
-          <Link href="/" className="block px-6 pb-4 pt-8" aria-label="Resellap, inicio">
-            <Logo size={26} />
-          </Link>
-          <div className="px-3 pb-3">{orgSwitcher ?? <p className="truncate px-3 text-[12.5px] font-medium text-faint">{orgName}</p>}</div>
-          {canSell && (
-            <div className="px-3 pb-5">
-              <NavLink
-                href="/ventas/nueva"
-                active={pathname.startsWith("/ventas/nueva")}
-                className="press flex h-10 items-center justify-center gap-2 rounded-[10px] bg-brand text-[14px] font-semibold text-on-brand hover:bg-brand-strong"
-              >
-                <Plus size={18} strokeWidth={2} />
-                Nueva venta
-              </NavLink>
-            </div>
-          )}
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-1">{sidebar}</div>
-        <div className="flex shrink-0 flex-col gap-1 border-t border-line bg-surface px-3 py-3">
-          {settingsItems.length > 0 && (
-            <details className="group/cfg" open={settingsItems.some((i) => isActive(pathname, i.href)) || undefined}>
-              <summary
-                className={clsx(
-                  itemClass(false),
-                  "cursor-pointer list-none group-open/cfg:bg-subtle group-open/cfg:text-ink [&::-webkit-details-marker]:hidden",
-                )}
-              >
-                <Settings size={19} strokeWidth={1.75} className="text-faint group-open/cfg:text-brand" />
-                <span className="flex-1">Configuración</span>
-                <span aria-hidden className="text-faint transition-transform group-open/cfg:rotate-90">
-                  ›
-                </span>
-              </summary>
-              {/* Submenú: en una caja propia, con una línea a la izquierda, para que no se confunda con el menú principal */}
-              <div className="mt-1 mb-1 rounded-[12px] border border-line bg-subtle/40 p-1.5">
-                <div className="border-l-2 border-brand/50 pl-1.5 [&_a]:min-h-9 [&_a]:text-[13.5px]">{renderGroup(settingsItems)}</div>
-              </div>
-            </details>
-          )}
-          <div className="pt-1">{account}</div>
-        </div>
-      </aside>
+      {topBar}
+      {rail}
 
       {/* Barra superior (móvil y iPad en vertical) */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md lg:hidden no-print">
-        <Link href="/" aria-label="Resellap, inicio" className="flex min-h-10 items-center">
-          <Logo size={22} />
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-gradient-to-b from-paper from-75% to-transparent px-4 pb-3 pt-[max(0.6rem,env(safe-area-inset-top))] lg:hidden no-print">
+        <Link href="/" aria-label="Resellap, inicio" className={clsx(pill, "press flex h-11 items-center px-4")}>
+          <Logo size={20} />
         </Link>
-        <div className="flex min-w-0 items-center gap-1">
-          <span className="min-w-0 truncate text-[12.5px] font-medium text-faint">{orgName}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={clsx(pill, "flex h-11 min-w-0 items-center truncate px-4 text-[12.5px] font-medium text-muted")}>{orgName}</span>
           {badges.alerts > 0 && (
             <Link
               href="/seguimiento?vista=alertas"
-              className="press relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full hover:bg-subtle"
+              className={clsx(pill, "press relative flex h-11 w-11 shrink-0 items-center justify-center")}
               aria-label={`${badges.alerts} ${badges.alerts === 1 ? "alerta" : "alertas"} de envíos`}
             >
-              <Bell size={20} strokeWidth={1.75} />
-              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-surface" />
+              <Bell size={19} strokeWidth={1.75} />
+              <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-surface" />
             </Link>
           )}
         </div>
@@ -375,7 +539,7 @@ export function Shell({
         <RememberList />
       </Suspense>
 
-      <main className="min-w-0 px-4 pb-32 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pb-12 lg:pt-8 2xl:px-10">
+      <main className="min-w-0 px-4 pb-32 pt-2 sm:px-6 lg:pb-12 lg:pl-[104px] lg:pr-6 lg:pt-4 2xl:pl-[120px] 2xl:pr-8">
         <div className="mx-auto w-full max-w-[1440px]">
           {banner}
           {children}

@@ -42,7 +42,7 @@ export default async function DetectedPage() {
       {error && <Notice tone="bad">{error}</Notice>}
 
       {/* Estado de la automatización */}
-      <section className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-[var(--radius-md)] border border-line bg-surface px-4 py-3 text-[13.5px]">
+      <section className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2 rs-card rounded-[var(--radius-md)] bg-surface px-4 py-3 text-[13.5px]">
         <span className="flex items-center gap-2 font-medium">
           <span aria-hidden className={clsx("h-2 w-2 rounded-full", status.connected ? "bg-brand-mark" : "bg-line-strong")} />
           {status.connected ? "Correo conectado" : "Correo sin conectar"}
@@ -58,7 +58,7 @@ export default async function DetectedPage() {
       </section>
 
       {!error && rows.length === 0 ? (
-        <div className="rounded-[var(--radius-md)] border border-line bg-surface">
+        <div className="rs-card rounded-[var(--radius-md)] bg-surface">
           <Empty title="Nada por confirmar">Cuando llegue una venta de Vinted, Wallapop, eBay, Milanuncios o Facebook Marketplace a tu correo, aparecerá aquí con el producto, el transportista y la foto ya identificados.</Empty>
         </div>
       ) : (
@@ -77,7 +77,7 @@ export default async function DetectedPage() {
 function DetectedCard({ sale: r, carriers, responsibles }: { sale: DetectedSale; carriers: Option[]; responsibles: Option[] }) {
   const resp = responsibles.find((x) => x.id === r.responsibleId)?.name ?? null;
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface">
+    <article className="flex h-full flex-col overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface">
       <header className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2.5 text-[13px]">
         <PlatformIcon name={PLATFORM_NAME[r.platform]} size={20} className="font-medium" />
         <Badge tone="good" dot>

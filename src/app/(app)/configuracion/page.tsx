@@ -48,7 +48,7 @@ export default async function SettingsHub() {
                   <li key={i.href}>
                     <Link
                       href={i.href}
-                      className="press flex min-h-16 items-center gap-3 rounded-[var(--radius-md)] border border-line bg-surface p-3.5 shadow-[var(--shadow-card)] hover:border-ink/30"
+                      className="press flex min-h-16 items-center gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-3.5 shadow-[var(--shadow-card)] hover:border-ink/30"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-brand-soft text-brand-ink">
                         <i.icon size={20} strokeWidth={2.25} />

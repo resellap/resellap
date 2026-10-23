@@ -112,7 +112,7 @@ export default function PricingPage() {
         <h2 className="display mt-3 max-w-2xl text-[32px] sm:text-[40px]">Resellap hace el trabajo. Tú solo revisas.</h2>
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {FLOW.map((f) => (
-            <li key={f.n} className="rounded-[var(--radius-md)] border border-line bg-surface p-5">
+            <li key={f.n} className="rs-card rounded-[var(--radius-md)] bg-surface p-5">
               <span className="num flex h-8 w-8 items-center justify-center rounded-[8px] bg-ink text-[14px] font-semibold text-paper">{f.n}</span>
               <p className="mt-4 text-[16px] font-semibold">{f.t}</p>
               <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{f.d}</p>

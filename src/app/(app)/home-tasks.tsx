@@ -34,7 +34,7 @@ export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges;
         Tareas {pending.length > 0 && <span className="num text-brand">· {pending.reduce((a, t) => a + t.n, 0)}</span>}
       </h2>
       {pending.length === 0 ? (
-        <p className="flex items-center gap-2.5 rounded-[var(--radius-md)] border border-line bg-surface px-4 py-3.5 text-sm font-semibold shadow-[var(--shadow-card)]">
+        <p className="flex items-center gap-2.5 rs-card rounded-[var(--radius-md)] bg-surface px-4 py-3.5 text-sm font-semibold shadow-[var(--shadow-card)]">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-good-soft text-good-ink">
             <CheckCheck size={18} strokeWidth={2.5} />
           </span>

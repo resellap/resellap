@@ -119,7 +119,7 @@ export async function ShippingReport({ from, to }: { from: string | null; to: st
 
 function Answer({ q, name, a }: { q: string; name: string | null | undefined; a: string | null }) {
   return (
-    <div className="rounded-[var(--radius-md)] border border-line bg-surface px-4 py-3">
+    <div className="rs-card rounded-[var(--radius-md)] bg-surface px-4 py-3">
       <dt className="text-[12.5px] text-faint">{q}</dt>
       <dd className="mt-1.5 flex flex-wrap items-center gap-2 text-[14px] font-semibold">
         {name ? <CarrierIcon name={name} size={20} /> : null}

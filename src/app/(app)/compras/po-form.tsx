@@ -82,7 +82,7 @@ export function PurchaseOrderForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Proveedor" required className="sm:col-span-2" hint={suppliers.length === 0 ? "Crea primero un proveedor en Proveedores." : "Un pedido pertenece a un solo proveedor."}>
             <Select value={supplier} onChange={(e) => setSupplier(e.target.value)}>
@@ -106,7 +106,7 @@ export function PurchaseOrderForm({
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <h2 className="mb-3 text-[15px] font-bold">Líneas del pedido</h2>
         <ProductPicker
           allowCreate
@@ -151,7 +151,7 @@ export function PurchaseOrderForm({
         )}
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <h2 className="text-[15px] font-bold">Costes del pedido</h2>
         <p className="mb-3 mt-0.5 text-[13px] text-muted">Se reparten entre las líneas en proporción al valor de la mercancía. El resultado es el coste real por unidad de cada lote.</p>
         <CostsEditor costs={costs} setCosts={setCosts} />

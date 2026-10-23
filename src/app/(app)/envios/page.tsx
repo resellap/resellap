@@ -46,7 +46,7 @@ export default async function ShipmentsPage() {
       )}
 
       {!error && total === 0 && (
-        <div className="rounded-[var(--radius-md)] border border-line bg-surface">
+        <div className="rs-card rounded-[var(--radius-md)] bg-surface">
           <Empty title="Todo enviado" action={<LinkButton href="/seguimiento">Ver el seguimiento</LinkButton>}>
             No queda ningún paquete pendiente. Cuando confirmes una venta con envío, aparecerá aquí hasta que la marques como enviada.
           </Empty>
@@ -59,7 +59,7 @@ export default async function ShipmentsPage() {
             <li key={g.key}>
               <Link
                 href={`/envios/${g.key}`}
-                className="press group flex h-full flex-col gap-4 rounded-[var(--radius-md)] border border-line bg-surface p-4 transition-colors hover:border-line-strong focus-visible:border-brand"
+                className="press group flex h-full flex-col gap-4 rs-card rounded-[var(--radius-md)] bg-surface p-4 transition-colors hover:border-line-strong focus-visible:border-brand"
               >
                 <div className="flex items-center gap-3">
                   {g.key === NO_CARRIER ? (

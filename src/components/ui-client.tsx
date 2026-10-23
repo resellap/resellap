@@ -46,7 +46,7 @@ export function Modal({
         onClose();
       }}
       className={clsx(
-        "mi-dialog m-auto w-[calc(100%-1.5rem)] rounded-[var(--radius-lg)] border border-line bg-surface p-0 text-ink shadow-[var(--shadow-pop)]",
+        "mi-dialog m-auto w-[calc(100%-1.5rem)] rs-card rounded-[var(--radius-lg)] bg-surface p-0 text-ink shadow-[var(--shadow-pop)]",
         wide ? "max-w-3xl" : "max-w-lg",
       )}
     >

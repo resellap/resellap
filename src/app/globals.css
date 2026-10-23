@@ -18,19 +18,21 @@
 :root {
   color-scheme: light;
   /* Superficies */
-  --paper: #f4f6f5;
+  --paper: #eceeed;
   --surface: #ffffff;
-  --surface-2: #f4f6f5;
-  --subtle: #e9edeb;
+  --surface-2: #f5f7f6;
+  --subtle: #eef1ef;
   /* Texto */
   --ink: #0b0f0e;
   --ink-soft: #343c39;
   --muted: #4b5551;
   --faint: #66716c;
   /* Bordes */
-  --line: #d5dbd8;
-  --line-strong: #b4bdb9;
+  --line: #e3e7e5;
+  --line-strong: #c9d0cc;
   --field: #8a9590;
+  /* Tarjetas: blancas sobre gris, sin borde (en oscuro, con borde) */
+  --card-line: transparent;
 
   /* Acción y marca: Verde 600 en claro (4,85:1 con blanco) */
   --brand: #0b8253;
@@ -62,7 +64,7 @@
   --tag-ink: #343c39;
   --tag-adjust: #f4f6f5;
 
-  --shadow-card: 0 1px 0 rgb(11 15 14 / 0.03);
+  --shadow-card: 0 1px 2px rgb(11 15 14 / 0.04), 0 8px 24px -16px rgb(11 15 14 / 0.12);
   --shadow-pop: 0 1px 0 rgb(11 15 14 / 0.04), 0 24px 48px -24px rgb(11 15 14 / 0.38);
 }
 
@@ -79,6 +81,7 @@
     --faint: #8a9590;
     --line: #222927;
     --line-strong: #343c39;
+    --card-line: #222927;
     --field: #4b5551;
 
     --brand: #36c784;
@@ -124,6 +127,7 @@
   --faint: #8a9590;
   --line: #222927;
   --line-strong: #343c39;
+  --card-line: #222927;
   --field: #4b5551;
 
   --brand: #36c784;
@@ -199,10 +203,10 @@
   --color-tag: var(--tag);
   --color-tag-ink: var(--tag-ink);
 
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 22px;
+  --radius-lg: 28px;
 
   --shadow-card: var(--shadow-card);
   --shadow-pop: var(--shadow-pop);
@@ -276,6 +280,12 @@ body {
    se desplaza dentro de su caja y la página no se sale de la pantalla */
 main .grid > * {
   min-width: 0;
+}
+
+/* Tarjeta (estilo panel flotante: blanca sobre gris, esquinas amplias) */
+.rs-card {
+  border: 1px solid var(--card-line);
+  box-shadow: var(--shadow-card);
 }
 
 /* Cifras siempre alineadas */

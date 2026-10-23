@@ -35,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       orgSwitcher={myOrgs.length > 1 ? <OrgSwitcher current={user.orgId} orgs={myOrgs} /> : undefined}
       banner={<SubscriptionBanner user={user} />}
       permissions={user.permissions}
+      appearance={a}
     >
       {jar.get(APPEARANCE_COOKIE)?.value !== wanted && (
         <AppearanceSync mode={a.mode} palette={a.palette} reduceMotion={a.reduceMotion} cookieName={APPEARANCE_COOKIE} cookieValue={wanted} />

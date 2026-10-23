@@ -47,7 +47,7 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
         {sales.map((s) => (
           <li
             key={s.id}
-            className="press relative rounded-[var(--radius-md)] border border-line bg-surface p-3 active:border-line-strong"
+            className="press relative rs-card rounded-[var(--radius-md)] bg-surface p-3 active:border-line-strong"
           >
             <div className="flex items-start gap-3">
               {s.shipping && (
