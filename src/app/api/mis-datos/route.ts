@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -10,8 +11,9 @@ export const dynamic = "force-dynamic";
  * otros usuarios ni contraseñas: los permisos los aplica la base de datos.
  */
 export async function GET() {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.active) return new NextResponse("No autorizado", { status: 401 });
+  if (!user?.active) return new NextResponse(t("No autorizado"), { status: 401 });
   const supabase = await createClient();
   const [prefs, activity] = await Promise.all([
     supabase.from("user_preferences").select("prefs, updated_at").eq("user_id", user.id).maybeSingle(),
@@ -26,7 +28,7 @@ export async function GET() {
         .eq("responsible_id", user.responsibleId)
         .order("sale_date")
         .range(from, from + 999);
-      if (error) return new NextResponse("No se han podido preparar tus datos. Inténtalo de nuevo.", { status: 500 });
+      if (error) return new NextResponse(t("No se han podido preparar tus datos. Inténtalo de nuevo."), { status: 500 });
       sales.push(...(data ?? []));
       if (!data || data.length < 1000) break;
     }

@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { randomBytes } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
@@ -7,11 +8,12 @@ export const dynamic = "force-dynamic";
 
 /** Paso 1 de la conexión: manda al administrador a la pantalla de permiso de Google. */
 export async function GET(request: NextRequest) {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin" || !user.active || !user.orgId || !user.hasAccess) return new NextResponse("No autorizado", { status: 403 });
+  if (!user || user.role !== "admin" || !user.active || !user.orgId || !user.hasAccess) return new NextResponse(t("No autorizado"), { status: 403 });
   const back = new URL("/correos", request.nextUrl.origin);
   if (!googleCredentials()) {
-    back.searchParams.set("error", "Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel. Sigue la guía de Ventas por correo.");
+    back.searchParams.set("error", t("Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel. Sigue la guía de Ventas por correo."));
     return NextResponse.redirect(back);
   }
   const state = randomBytes(24).toString("base64url");

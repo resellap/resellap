@@ -1,5 +1,5 @@
 import { msg } from "@/i18n/translate";
-import { getT } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import { ExportLinks, FilterBar, type FilterField } from "@/components/filter-bar";
 import { Empty, Figures, Notice, PageHeader, Pagination, Panel, Table, Tabs, Td, Th, Tr } from "@/components/ui";
@@ -31,6 +31,7 @@ function fmt(c: Column, r: Record<string, unknown>) {
     case "pct":
       return percent(Number(v));
     default:
+      if (c.tr && typeof v === "string") return tSync()(v);
       return String(v);
   }
 }
@@ -53,7 +54,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     return (
       <>
         <PageHeader title={t("Informes")} description={t("Envíos y tiempos de entrega por transportista, con los datos del seguimiento.")} />
-        <Tabs current="envios" items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
+        <Tabs current="envios" items={[...TABS.map((x) => ({ key: x.key as string, label: t(x.label), href: `/informes?tab=${x.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
         <FilterBar
           basePath="/informes?tab=envios"
           values={f}
@@ -133,7 +134,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <PageHeader title={t("Informes")} description={t("Todos se pueden exportar a Excel o CSV con los filtros aplicados.")} />
-      <Tabs current={tab} items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
+      <Tabs current={tab} items={[...TABS.map((x) => ({ key: x.key as string, label: t(x.label), href: `/informes?tab=${x.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
       <FilterBar
         basePath={`/informes?tab=${tab}`}
         values={filters}
@@ -178,7 +179,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               <tr>
                 {report.columns.map((c) => (
                   <Th key={c.key} num={c.kind !== "text" && c.kind !== "date"}>
-                    {c.label}
+                    {t(c.label)}
                   </Th>
                 ))}
               </tr>
