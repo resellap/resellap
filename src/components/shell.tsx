@@ -590,7 +590,13 @@ export function Shell({
         <RememberList />
       </Suspense>
 
-      <main className="min-w-0 px-4 pb-32 pt-2 sm:px-6 lg:pb-12 lg:pl-[104px] lg:pr-6 lg:pt-4 2xl:pl-[120px] 2xl:pr-8">
+      <main
+        className={clsx(
+          "min-w-0 px-4 pb-32 pt-2 transition-[padding] duration-200 ease-out sm:px-6 lg:pb-12 lg:pr-6 lg:pt-4 2xl:pr-8",
+          // Con el menú desplegado, la pantalla se aparta: nada queda detrás del menú
+          railOpen ? "lg:pl-[296px] 2xl:pl-[304px]" : "lg:pl-[104px] 2xl:pl-[120px]",
+        )}
+      >
         <div className="mx-auto w-full max-w-[1440px]">
           {banner}
           {children}
