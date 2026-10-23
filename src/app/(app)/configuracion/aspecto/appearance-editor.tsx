@@ -53,7 +53,7 @@ export function AppearanceEditor({ initial }: { initial: A }) {
                   )}
                 >
                   <Icon size={22} strokeWidth={2.25} />
-                  {m === "auto" ? t("Automático") : MODES[m]}
+                  {m === "auto" ? t("Automático") : t(MODES[m])}
                 </button>
               );
             })}

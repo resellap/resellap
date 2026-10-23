@@ -249,7 +249,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
           { type: "select", name: "brand_id", label: t("Marca"), empty: t("Todas"), options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
           { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
-          { type: "select", name: "orden", label: t("Ordenar"), empty: PRODUCT_SORTS[tp.sort], options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
+          { type: "select", name: "orden", label: t("Ordenar"), empty: t(PRODUCT_SORTS[tp.sort]), options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
         ]}
         extra={<ExportLinks type="inventario" filters={estado === "stock" ? { ...filters, only_in_stock: "true" } : filters} />}
       />
@@ -288,7 +288,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               <tr>
                 {cols.map((c) => (
                   <Th key={c} num={c !== "producto" && c !== "categoria"}>
-                    {PRODUCT_COLUMNS[c]}
+                    {t(PRODUCT_COLUMNS[c])}
                   </Th>
                 ))}
                 <Th num>{t("Beneficio")}</Th>

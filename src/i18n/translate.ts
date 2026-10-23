@@ -54,7 +54,12 @@ export function makeT(locale: Locale, dict: Dict): T {
     if (vars === undefined) {
       for (const { re, to } of patternsOf(dict)) {
         const m = text.match(re);
-        if (m) return to.replace(/\{(\d)\}/g, (_, i: string) => m[Number(i) + 1] ?? "");
+        if (m)
+          return to.replace(/\{(\d)\}/g, (_, i: string) => {
+            // Si el dato es a su vez un texto conocido (p. ej. el nombre de una sección), también se traduce
+            const v = m[Number(i) + 1] ?? "";
+            return dict[v] ?? v;
+          });
       }
     }
     return fill(text, vars);

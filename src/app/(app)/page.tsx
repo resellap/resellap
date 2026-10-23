@@ -131,7 +131,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/">) {
                 data-on={String(period === k)}
                 className="rs-seg press whitespace-nowrap rounded-[8px] px-3 py-1.5 [--seg-ink:var(--ink-soft)]"
               >
-                {PERIODS[k]}
+                {t(PERIODS[k])}
               </Link>
             ))}
           </BubbleGroup>

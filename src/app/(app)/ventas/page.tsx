@@ -301,7 +301,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   </Th>
                   {cols.map((c) => (
                     <Th key={c} num={["uds", "precio", "importe", "beneficio"].includes(c)}>
-                      {SALES_COLUMNS[c]}
+                      {t(SALES_COLUMNS[c])}
                     </Th>
                   ))}
                 </tr>

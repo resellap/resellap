@@ -64,21 +64,21 @@ export function FilterBar({
             return (
               <label key={f.name} className="flex h-11 items-center gap-2 text-[15px] font-medium md:h-9 md:text-[13.5px]">
                 <input type="checkbox" name={f.name} value="true" defaultChecked={values[f.name] === "true"} className="h-5 w-5 accent-[var(--color-brand)] md:h-4 md:w-4" />
-                {f.label}
+                {t(f.label)}
               </label>
             );
           }
           return (
             <div key={f.name} className="flex flex-col gap-1">
               <label htmlFor={id} className="text-xs font-semibold text-muted">
-                {f.label}
+                {t(f.label)}
               </label>
               {f.type === "select" ? (
                 <select id={id} name={f.name} defaultValue={values[f.name] ?? ""} className={`${common} min-w-36 pr-7`}>
-                  <option value="">{f.empty ?? t("Todos")}</option>
+                  <option value="">{f.empty ? t(f.empty) : t("Todos")}</option>
                   {f.options.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.label)}
                     </option>
                   ))}
                 </select>
@@ -88,7 +88,7 @@ export function FilterBar({
                   name={f.name}
                   type={f.type === "number" ? "number" : f.type}
                   defaultValue={values[f.name] ?? ""}
-                  placeholder={"placeholder" in f ? f.placeholder : undefined}
+                  placeholder={"placeholder" in f && f.placeholder ? t(f.placeholder) : undefined}
                   className={`${common} ${f.type === "text" ? (f.width ?? "w-52") : f.type === "number" ? "num w-28" : "num w-[9.5rem]"}`}
                 />
               )}

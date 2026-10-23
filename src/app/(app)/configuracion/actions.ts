@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -9,12 +10,12 @@ import { createClient } from "@/lib/supabase/server";
 
 type Section = keyof StoredPrefs;
 const SECTION_LABEL: Record<Section, string> = {
-  dashboard: "Panel de inicio",
-  appearance: "Aspecto",
-  tables: "Tablas",
-  notifications: "Avisos",
-  sales: "Ventas e inventario",
-  language: "Idioma",
+  dashboard: msg("Panel de inicio"),
+  appearance: msg("Aspecto"),
+  tables: msg("Tablas"),
+  notifications: msg("Avisos"),
+  sales: msg("Ventas e inventario"),
+  language: msg("Idioma"),
 };
 
 async function currentStored(): Promise<{ userId: string; stored: StoredPrefs } | null> {

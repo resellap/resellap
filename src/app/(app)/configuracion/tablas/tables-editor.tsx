@@ -35,13 +35,13 @@ function Columns<K extends string>({ cols, labels, onChange }: { cols: Col<K>[];
                 disabled={fixed || (c.visible && visibleCount === 1)}
                 onChange={(e) => onChange(cols.map((x) => (x.key === c.key ? { ...x, visible: e.target.checked } : x)))}
               />
-              <span className={c.visible ? "font-semibold" : "text-muted"}>{labels[c.key]}</span>
+              <span className={c.visible ? "font-semibold" : "text-muted"}>{t(labels[c.key])}</span>
               {fixed && <Lock size={13} className="text-faint" aria-label={t("Siempre visible")} />}
             </label>
-            <button type="button" aria-label={t("Subir {labels}", { labels: labels[c.key] })} onClick={() => move(i, i - 1)} disabled={i === 0} className="press flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-ink/6 disabled:opacity-30 md:h-9 md:w-9">
+            <button type="button" aria-label={t("Subir {label}", { label: t(labels[c.key]) })} onClick={() => move(i, i - 1)} disabled={i === 0} className="press flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-ink/6 disabled:opacity-30 md:h-9 md:w-9">
               <ArrowUp size={17} />
             </button>
-            <button type="button" aria-label={t("Bajar {labels}", { labels: labels[c.key] })} onClick={() => move(i, i + 1)} disabled={i === cols.length - 1} className="press flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-ink/6 disabled:opacity-30 md:h-9 md:w-9">
+            <button type="button" aria-label={t("Bajar {label}", { label: t(labels[c.key]) })} onClick={() => move(i, i + 1)} disabled={i === cols.length - 1} className="press flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-ink/6 disabled:opacity-30 md:h-9 md:w-9">
               <ArrowDown size={17} />
             </button>
           </li>
@@ -80,7 +80,7 @@ export function TablesEditor({ initial }: { initial: T }) {
               <Select value={tb.productos.sort} onChange={(e) => setTb({ ...tb, productos: { ...tb.productos, sort: e.target.value as T["productos"]["sort"] } })}>
                 {Object.entries(PRODUCT_SORTS).map(([k, v]) => (
                   <option key={k} value={k}>
-                    {v}
+                    {t(v)}
                   </option>
                 ))}
               </Select>

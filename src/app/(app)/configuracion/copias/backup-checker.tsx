@@ -17,28 +17,28 @@ export function BackupChecker() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function onFile(f: File | undefined) {
+  async function onFile(file: File | undefined) {
     setCheck(null);
     setError(null);
-    if (!f) return;
-    if (f.size > 200 * 1024 * 1024) return setError("El archivo es demasiado grande para ser una copia de Resellap.");
+    if (!file) return;
+    if (file.size > 200 * 1024 * 1024) return setError(t("El archivo es demasiado grande para ser una copia de Resellap."));
     setBusy(true);
     try {
       let j: { formato?: string; version?: number; generado?: string; generado_por?: string; recuentos?: Record<string, number>; tablas?: Record<string, unknown[]> };
       try {
-        j = JSON.parse(await f.text());
+        j = JSON.parse(await file.text());
       } catch {
-        return setError("Este archivo no es una copia válida (no se puede leer).");
+        return setError(t("Este archivo no es una copia válida (no se puede leer)."));
       }
       if (typeof j.formato !== "string" || !BACKUP_FORMATS.includes(j.formato) || typeof j.version !== "number" || !j.tablas || !j.recuentos) {
-        return setError("Este archivo no es una copia de seguridad de Resellap.");
+        return setError(t("Este archivo no es una copia de seguridad de Resellap."));
       }
-      if (j.version > 1) return setError("Esta copia es de una versión más nueva de la app.");
+      if (j.version > 1) return setError(t("Esta copia es de una versión más nueva de la app."));
       // Los recuentos deben cuadrar con las filas que trae
-      for (const [t, n] of Object.entries(j.recuentos)) {
-        if (!Array.isArray(j.tablas[t]) || j.tablas[t].length !== n) return setError(`La copia está dañada: la tabla «${t}» no está completa.`);
+      for (const [tb, n] of Object.entries(j.recuentos)) {
+        if (!Array.isArray(j.tablas[tb]) || j.tablas[tb].length !== n) return setError(t("La copia está dañada: la tabla «{table}» no está completa.", { table: tb }));
       }
-      const now = await currentCounts(`${f.name} (${j.generado ?? "sin fecha"})`);
+      const now = await currentCounts(`${file.name} (${j.generado ?? "—"})`);
       if (!now.ok) return setError(now.error);
       setCheck({ generated: j.generado ?? "", by: j.generado_por ?? "", counts: j.recuentos, now: now.data ?? {} });
     } finally {
@@ -75,12 +75,12 @@ export function BackupChecker() {
                 </tr>
               </thead>
               <tbody>
-                {Object.keys(check.counts).map((t) => (
-                  <Tr key={t}>
-                    <Td>{t}</Td>
-                    <Td num>{check.counts[t].toLocaleString("es-ES")}</Td>
-                    <Td num className={(check.now[t] ?? 0) !== check.counts[t] ? "font-semibold text-warn" : undefined}>
-                      {(check.now[t] ?? 0).toLocaleString("es-ES")}
+                {Object.keys(check.counts).map((tb) => (
+                  <Tr key={tb}>
+                    <Td>{tb}</Td>
+                    <Td num>{f.units(check.counts[tb])}</Td>
+                    <Td num className={(check.now[tb] ?? 0) !== check.counts[tb] ? "font-semibold text-warn" : undefined}>
+                      {f.units(check.now[tb] ?? 0)}
                     </Td>
                   </Tr>
                 ))}

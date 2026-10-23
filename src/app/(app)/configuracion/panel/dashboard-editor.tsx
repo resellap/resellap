@@ -1,5 +1,6 @@
 "use client";
 import { useT } from "@/i18n/client";
+import { msg } from "@/i18n/translate";
 import { ArrowDown, ArrowUp, Check, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, Field, Panel, Select, clsx } from "@/components/ui";
@@ -9,9 +10,9 @@ import { resetPreferences, savePreferences } from "../actions";
 import { SaveBar, Toggle } from "../settings-ui";
 
 type D = Prefs["dashboard"];
-const SIZE_LABEL: Record<WidgetSize, string> = { "1x1": "Pequeño", "2x1": "Ancho", "2x2": "Grande" };
+const SIZE_LABEL: Record<WidgetSize, string> = { "1x1": msg("Pequeño"), "2x1": msg("Ancho"), "2x2": msg("Grande") };
 const PREVIEW: Record<WidgetSize, string> = { "1x1": "col-span-1 h-14", "2x1": "col-span-2 h-14", "2x2": "col-span-2 row-span-2 h-[7.75rem]" };
-const GROUPS: WidgetGroup[] = ["Indicadores", "Análisis comercial", "Inventario y actividad"];
+const GROUPS: WidgetGroup[] = [msg("Indicadores"), msg("Análisis comercial"), msg("Inventario y actividad")];
 
 export function DashboardEditor({ initial, platforms }: { initial: D; platforms: { id: string; name: string }[] }) {
   const t = useT();
@@ -52,7 +53,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                     PREVIEW[w.size],
                   )}
                 >
-                  {WIDGET_BY_ID.get(w.id)?.title}
+                  {t(WIDGET_BY_ID.get(w.id)?.title ?? "")}
                 </li>
               ))}
             </ol>
@@ -69,8 +70,8 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                 const def = WIDGET_BY_ID.get(w.id)!;
                 return (
                   <li key={w.id} className="flex flex-wrap items-center gap-2 px-4 py-2.5">
-                    <span className="min-w-0 flex-1 text-sm font-semibold">{def.title}</span>
-                    <div role="radiogroup" aria-label={t("Tamaño de {title}", { title: def.title })} className="flex rounded-full border border-line-strong p-0.5">
+                    <span className="min-w-0 flex-1 text-sm font-semibold">{t(def.title)}</span>
+                    <div role="radiogroup" aria-label={t("Tamaño de {title}", { title: t(def.title) })} className="flex rounded-full border border-line-strong p-0.5">
                       {def.sizes.map((s) => (
                         <button
                           key={s}
@@ -80,18 +81,18 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                           onClick={() => setWidgets(d.widgets.map((x) => (x.id === w.id ? { ...x, size: s } : x)))}
                           className={clsx("min-h-9 rounded-full px-2.5 text-[12.5px] font-semibold", w.size === s ? "bg-ink text-paper" : "text-ink-soft hover:text-ink")}
                         >
-                          {SIZE_LABEL[s]}
+                          {t(SIZE_LABEL[s])}
                         </button>
                       ))}
                     </div>
                     <div className="flex gap-1">
-                      <IconBtn label={t("Subir {title}", { title: def.title })} onClick={() => move(i, i - 1)} disabled={i === 0}>
+                      <IconBtn label={t("Subir {title}", { title: t(def.title) })} onClick={() => move(i, i - 1)} disabled={i === 0}>
                         <ArrowUp size={17} />
                       </IconBtn>
-                      <IconBtn label={t("Bajar {title}", { title: def.title })} onClick={() => move(i, i + 1)} disabled={i === d.widgets.length - 1}>
+                      <IconBtn label={t("Bajar {title}", { title: t(def.title) })} onClick={() => move(i, i + 1)} disabled={i === d.widgets.length - 1}>
                         <ArrowDown size={17} />
                       </IconBtn>
-                      <IconBtn label={t("Quitar {title}", { title: def.title })} onClick={() => setWidgets(d.widgets.filter((x) => x.id !== w.id))} danger>
+                      <IconBtn label={t("Quitar {title}", { title: t(def.title) })} onClick={() => setWidgets(d.widgets.filter((x) => x.id !== w.id))} danger>
                         <Trash2 size={17} />
                       </IconBtn>
                     </div>
@@ -107,23 +108,23 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
       <Panel title={t("Catálogo de widgets")} description={t("Cada widget muestra datos reales de la app. Los que no se pueden calcular explican por qué.")}>
         <div className="flex flex-col gap-5">
           {GROUPS.map((g) => (
-            <section key={g} aria-label={g}>
-              <h3 className="mb-2 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{g}</h3>
+            <section key={g} aria-label={t(g)}>
+              <h3 className="mb-2 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t(g)}</h3>
               <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                 {WIDGETS.filter((w) => w.group === g).map((w) => {
                   const added = inPanel.has(w.id);
                   return (
                     <li key={w.id} className={clsx("flex flex-col gap-2 rounded-[var(--radius-sm)] border p-3", added ? "border-brand/40 bg-brand-soft/40" : "border-line", w.unavailable && "opacity-75")}>
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-[15px] font-semibold">{w.title}</span>
+                        <span className="text-[15px] font-semibold">{t(w.title)}</span>
                         {added && (
                           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-[11.5px] font-bold text-on-brand">
                             <Check size={12} strokeWidth={3} />{" "}{t("Añadido")}
                           </span>
                         )}
                       </div>
-                      <p className="text-[13px] text-muted">{w.unavailable ?? w.description}</p>
-                      <p className="text-[12px] text-faint">{t("Tamaños:")}{" "}{w.sizes.map((s) => SIZE_LABEL[s].toLowerCase()).join(", ")}</p>
+                      <p className="text-[13px] text-muted">{t(w.unavailable ?? w.description)}</p>
+                      <p className="text-[12px] text-faint">{t("Tamaños: {sizes}", { sizes: w.sizes.map((s) => t(SIZE_LABEL[s]).toLowerCase()).join(", ") })}</p>
                       <div className="mt-auto">
                         {w.unavailable ? (
                           <span className="text-[12.5px] font-semibold text-muted">{t("No disponible")}</span>
@@ -153,7 +154,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
             <Select value={d.period} onChange={(e) => setD({ ...d, period: e.target.value as D["period"] })}>
               {Object.entries(PERIODS).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v}
+                  {t(v)}
                 </option>
               ))}
             </Select>
@@ -162,7 +163,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
             <Select value={d.granularity} onChange={(e) => setD({ ...d, granularity: e.target.value as D["granularity"] })}>
               {Object.entries(GRANULARITIES).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v}
+                  {t(v)}
                 </option>
               ))}
             </Select>
