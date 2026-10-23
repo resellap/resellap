@@ -255,7 +255,7 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
         </label>
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>
@@ -325,7 +325,7 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
         )}
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>

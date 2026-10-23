@@ -306,12 +306,12 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
       )}
       {message && (
         <Notice tone="good" className="mt-3">
-          {message}
+          {t(message)}
         </Notice>
       )}
       {error && (
         <Notice tone="bad" className="mt-3">
-          {error}
+          {t(error)}
         </Notice>
       )}
       <p className="mt-3 text-[12px] text-faint">
@@ -562,8 +562,8 @@ function TextStep({
             </Button>
           )}
         </div>
-        {message && <Notice tone="good">{message}</Notice>}
-        {error && <Notice tone="bad">{error}</Notice>}
+        {message && <Notice tone="good">{t(message)}</Notice>}
+        {error && <Notice tone="bad">{t(error)}</Notice>}
       </div>
     </Step>
   );

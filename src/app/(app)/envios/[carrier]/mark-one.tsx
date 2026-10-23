@@ -13,7 +13,7 @@ export function MarkOneShipped({ saleId }: { saleId: string }) {
       <Button size="sm" variant="primary" disabled={pending} onClick={() => run([saleId], "enviado")}>
         {pending ? t("Guardando…") : t("Marcar como enviado")}
       </Button>
-      {error && <span className="text-xs text-danger">{error}</span>}
+      {error && <span className="text-xs text-danger">{t(error)}</span>}
     </span>
   );
 }

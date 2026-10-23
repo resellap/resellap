@@ -125,7 +125,7 @@ export function BulkShippingBar() {
       <Button variant="ghost" size="sm" disabled={pending} onClick={clear}>
         {t("Quitar selección")}
       </Button>
-      {error && <span className="text-[13px] font-medium text-danger">{error}</span>}
+      {error && <span className="text-[13px] font-medium text-danger">{t(error)}</span>}
     </div>
   );
 }

@@ -162,7 +162,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
             </label>
             {readError && (
               <Notice tone="bad" className="mt-3">
-                {readError}
+                {t(readError)}
               </Notice>
             )}
           </Panel>

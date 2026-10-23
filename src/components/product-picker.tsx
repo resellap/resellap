@@ -133,7 +133,7 @@ export function ProductPicker({
           className="absolute z-20 mt-1 max-h-[min(24rem,55dvh)] w-full animate-rise overflow-y-auto rounded-[var(--radius-md)] border border-line-strong bg-surface shadow-[var(--shadow-pop)]"
         >
           {loading && <p className="px-3 py-2.5 text-sm text-muted">{t("Buscando…")}</p>}
-          {!loading && error && <p className="px-3 py-2.5 text-sm text-danger">{error}</p>}
+          {!loading && error && <p className="px-3 py-2.5 text-sm text-danger">{t(error)}</p>}
           {!loading && !error && results.length === 0 && (
             <div className="px-3 py-2.5 text-sm">
               <p className="text-muted">
@@ -277,7 +277,7 @@ function QuickCreate({
       </Notice>
       {error && (
         <Notice tone="bad" className="mt-3">
-          {error}
+          {t(error)}
         </Notice>
       )}
     </Modal>

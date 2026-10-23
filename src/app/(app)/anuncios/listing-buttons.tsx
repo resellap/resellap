@@ -13,7 +13,7 @@ export function RemovedButton({ productId, platform }: { productId: string; plat
       <Button size="sm" variant="danger" disabled={pending} onClick={() => run(productId, platform, "retirado")}>
         {pending ? t("Guardando…") : t("Quitado de {name}", { name })}
       </Button>
-      {error && <span className="text-xs text-danger">{error}</span>}
+      {error && <span className="text-xs text-danger">{t(error)}</span>}
     </span>
   );
 }

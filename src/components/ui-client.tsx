@@ -181,7 +181,7 @@ export function ConfirmAction({
         )}
         {error && (
           <Notice tone="bad" className="mt-3">
-            {error}
+            {t(error)}
           </Notice>
         )}
       </Modal>

@@ -423,7 +423,7 @@ export function SaleForm({
           </dl>
           {error && (
             <Notice tone="bad" className="mt-3">
-              {error}
+              {t(error)}
             </Notice>
           )}
           <Button variant="primary" className="mt-4 w-full max-md:hidden" disabled={!canSave} onClick={save}>

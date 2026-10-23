@@ -92,7 +92,7 @@ export function Field({
   const help = (
     <>
       {hint && !error && <span className="text-xs text-muted">{hint}</span>}
-      {error && <span className="text-xs font-medium text-danger">{error}</span>}
+      {error && <span className="text-xs font-medium text-danger">{typeof error === "string" ? <Tx>{error}</Tx> : error}</span>}
     </>
   );
   if (htmlFor !== undefined) {

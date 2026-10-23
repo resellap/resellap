@@ -32,12 +32,12 @@ export function SaveBar({
       <div className="flex flex-wrap items-center gap-2 rs-card rounded-[var(--radius-md)] bg-surface/95 p-3 shadow-[var(--shadow-pop)] backdrop-blur">
         <p className="min-w-0 flex-1 text-[13px] text-muted" role="status" aria-live="polite">
           {error ? (
-            <span className="font-semibold text-danger">{error}</span>
+            <span className="font-semibold text-danger">{t(error)}</span>
           ) : dirty ? (
             t("Tienes cambios sin guardar.")
           ) : message ? (
             <span className="inline-flex items-center gap-1 font-semibold text-good">
-              <Check size={15} strokeWidth={3} /> {message}
+              <Check size={15} strokeWidth={3} /> {t(message)}
             </span>
           ) : (
             t("Todo guardado.")

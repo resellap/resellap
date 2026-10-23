@@ -97,7 +97,7 @@ function RowEditor({ list, row, kind, onDone }: { list: Parameters<typeof saveLi
           {armed ? t("¿Seguro? Pulsa otra vez") : t("Eliminar")}
         </Button>
       )}
-      {(error || del.error) && <span className="w-full text-xs text-danger">{error ?? del.error}</span>}
+      {(error || del.error) && <span className="w-full text-xs text-danger">{t(error ?? del.error ?? "")}</span>}
     </li>
   );
 }

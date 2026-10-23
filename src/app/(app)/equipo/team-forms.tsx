@@ -126,7 +126,7 @@ export function MemberActions({
           action={() => removeMemberAction(member.user_id)}
         />
       )}
-      {error && <span className="basis-full text-right text-xs text-danger">{error}</span>}
+      {error && <span className="basis-full text-right text-xs text-danger">{t(error)}</span>}
     </div>
   );
 }

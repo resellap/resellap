@@ -167,7 +167,7 @@ function ConfirmDialog({
                 {picked.stock > 0 ? t("{stock} en stock · se descuenta 1 del lote más antiguo", { stock: picked.stock }) : t("Sin stock: no se puede registrar")}
               </p>
               {picked.reasons.length > 0 && picked.id === sale.suggestion?.id && (
-                <p className="mt-0.5 truncate text-[12px] text-faint">{picked.reasons.filter((x) => !/stock/i.test(x)).join(" · ")}</p>
+                <p className="mt-0.5 truncate text-[12px] text-faint">{picked.reasons.filter((x) => !/stock/i.test(x)).map((x) => t(x)).join(" · ")}</p>
               )}
             </div>
             {picked.id === sale.suggestion?.id && <ConfidenceBadge score={picked.score} />}
@@ -275,7 +275,7 @@ function ConfirmDialog({
       </dl>
       {error && (
         <Notice tone="bad" className="mt-3">
-          {error}
+          {t(error)}
         </Notice>
       )}
     </Modal>

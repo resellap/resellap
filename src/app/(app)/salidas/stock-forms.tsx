@@ -266,7 +266,7 @@ export function ExitReasonEditor({ id, reason }: { id: string; reason: string })
           {t("Guardar")}
         </Button>
       )}
-      {error && <span className="text-xs text-danger">{error}</span>}
+      {error && <span className="text-xs text-danger">{t(error)}</span>}
     </span>
   );
 }
