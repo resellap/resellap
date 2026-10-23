@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { PlatformIcon, CarrierIcon } from "@/components/marks";
 import { ProductThumb } from "@/components/thumb";
-import { TrackingBadge } from "@/components/tracking";
-import { Badge, LotTag, clsx } from "@/components/ui";
+import { EnvioBadge, envioState } from "@/components/tracking";
+import { LotTag, clsx } from "@/components/ui";
 import { date, money } from "@/lib/format";
 import { SaleCheckbox, SelectAllCheckbox } from "./bulk-shipping";
 
@@ -19,21 +19,13 @@ export type CardSale = {
   buyer?: string | null;
   carrier?: string | null;
   tracking?: string | null;
+  delivered?: string | null;
   lines: { text: string; quantity: number; lot?: string | null; returned?: number }[];
 };
 
-function ShipBadge({ s, tracking }: { s: CardSale["shipping"]; tracking?: string | null }) {
+function ShipBadge({ s, tracking, delivered }: { s: CardSale["shipping"]; tracking?: string | null; delivered?: string | null }) {
   if (!s) return <span className="text-xs text-muted">En mano</span>;
-  if (s === "enviado" && tracking) return <TrackingBadge status={tracking} />;
-  return s === "enviado" ? (
-    <Badge tone="info" dot>
-      Enviado
-    </Badge>
-  ) : (
-    <Badge tone="warn" dot>
-      Pendiente
-    </Badge>
-  );
+  return <EnvioBadge state={envioState(s, tracking, delivered)} />;
 }
 
 /**
@@ -96,7 +88,7 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
                         {money(s.profit)}
                       </span>
                     )}
-                    <ShipBadge s={s.shipping} tracking={s.tracking} />
+                    <ShipBadge s={s.shipping} tracking={s.tracking} delivered={s.delivered} />
                   </span>
                 </div>
               </div>

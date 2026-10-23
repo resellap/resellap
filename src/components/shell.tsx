@@ -257,7 +257,8 @@ export function Shell({
         </div>
         <div className="flex flex-col gap-5 pb-4">
           {NAV.map((g, gi) => {
-            const items = g.items.filter(visible).filter((i) => !["/", "/ventas", "/envios", "/ventas/nueva"].includes(i.href));
+            // Todo el menú, también lo que ya está en la barra de abajo (Inicio, Ventas, Envíos, Nueva venta)
+            const items = g.items.filter(visible);
             if (!items.length) return null;
             return (
               <section key={gi}>
@@ -327,14 +328,22 @@ export function Shell({
         <div className="flex shrink-0 flex-col gap-1 border-t border-line bg-surface px-3 py-3">
           {settingsItems.length > 0 && (
             <details className="group/cfg" open={settingsItems.some((i) => isActive(pathname, i.href)) || undefined}>
-              <summary className={clsx(itemClass(false), "cursor-pointer list-none [&::-webkit-details-marker]:hidden")}>
-                <Settings size={19} strokeWidth={1.75} className="text-faint" />
+              <summary
+                className={clsx(
+                  itemClass(false),
+                  "cursor-pointer list-none group-open/cfg:bg-subtle group-open/cfg:text-ink [&::-webkit-details-marker]:hidden",
+                )}
+              >
+                <Settings size={19} strokeWidth={1.75} className="text-faint group-open/cfg:text-brand" />
                 <span className="flex-1">Configuración</span>
                 <span aria-hidden className="text-faint transition-transform group-open/cfg:rotate-90">
                   ›
                 </span>
               </summary>
-              <div className="pb-1 pl-2 pt-0.5">{renderGroup(settingsItems)}</div>
+              {/* Submenú: en una caja propia, con una línea a la izquierda, para que no se confunda con el menú principal */}
+              <div className="mt-1 mb-1 rounded-[12px] border border-line bg-subtle/40 p-1.5">
+                <div className="border-l-2 border-brand/50 pl-1.5 [&_a]:min-h-9 [&_a]:text-[13.5px]">{renderGroup(settingsItems)}</div>
+              </div>
             </details>
           )}
           <div className="pt-1">{account}</div>

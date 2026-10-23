@@ -224,16 +224,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       </nav>
       <FilterBar
         basePath="/productos"
-        values={{ ...filters, missing: first(sp.missing) === "true" ? "true" : undefined, orden: first(sp.orden) }}
+        values={{ ...filters, orden: first(sp.orden) }}
+        keep={{ estado: first(sp.estado) }}
         fields={[
           { type: "text", name: "search", label: "Buscar", placeholder: "Nombre o SKU" },
           { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
           { type: "select", name: "brand_id", label: "Marca", empty: "Todas", options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
-          { type: "checkbox", name: "only_in_stock", label: "Solo con stock" },
-          { type: "checkbox", name: "missing", label: "Con datos pendientes" },
           { type: "select", name: "orden", label: "Ordenar", empty: PRODUCT_SORTS[tp.sort], options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
         ]}
-        extra={<ExportLinks type="inventario" filters={filters} />}
+        extra={<ExportLinks type="inventario" filters={estado === "stock" ? { ...filters, only_in_stock: "true" } : filters} />}
       />
       {error && <Notice tone="bad">{error.message}</Notice>}
       {lowStock && (

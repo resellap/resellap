@@ -20,11 +20,14 @@ export function FilterBar({
   values,
   basePath,
   extra,
+  keep,
 }: {
   fields: FilterField[];
   values: Record<string, string | undefined>;
   basePath: string;
   extra?: ReactNode;
+  /** Parámetros de la URL que se conservan al aplicar los filtros (p. ej. la pestaña elegida). */
+  keep?: Record<string, string | undefined>;
 }) {
   const activeCount = fields.filter((f) => values[f.name]).length;
   const active = activeCount > 0;
@@ -50,6 +53,7 @@ export function FilterBar({
         scroll={false}
         className="flex flex-wrap items-end gap-2.5 rounded-[var(--radius-md)] border border-line bg-surface p-3 shadow-[var(--shadow-card)] max-md:hidden max-md:rounded-t-none max-md:border-t-0 max-md:peer-checked:flex max-md:[&>div]:w-full max-md:[&_input:not([type=checkbox])]:w-full max-md:[&_select]:w-full"
       >
+        {Object.entries(keep ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
         {fields.map((f) => {
           const id = `f-${f.name}`;
           const common =
