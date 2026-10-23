@@ -138,6 +138,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   if (estado === "sin") q = q.lte("stock", 0);
   if (missing) q = q.eq("has_missing_data", true);
   if (lowStock) q = q.gte("stock", 1).lte("stock", lowStock);
+  // Pedido/lote nº: los productos que entraron en ese pedido de compra
+  const po = Number(filters.purchase_order_number);
+  if (filters.purchase_order_number) {
+    const { data: inPo } = Number.isInteger(po) && po > 0
+      ? await supabase.from("v_variant_inventory").select("product_id").contains("purchase_order_numbers", [po])
+      : { data: [] };
+    const ids = [...new Set((inPo ?? []).map((r) => r.product_id as string))];
+    q = q.in("product_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+  }
   q =
     sortKey === "nombre"
       ? q.order("product_name")
@@ -236,6 +245,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           { type: "text", name: "search", label: "Buscar", placeholder: "Nombre o SKU" },
           { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
           { type: "select", name: "brand_id", label: "Marca", empty: "Todas", options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
+          { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
           { type: "select", name: "orden", label: "Ordenar", empty: PRODUCT_SORTS[tp.sort], options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
         ]}
         extra={<ExportLinks type="inventario" filters={estado === "stock" ? { ...filters, only_in_stock: "true" } : filters} />}
