@@ -71,7 +71,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
                   <SaleCheckbox saleId={r.id} status="pendiente" label={`la venta ${r.sale_number}`} />
                 </div>
                 <Link href={`/ventas/${r.id}?desde=${carrier}`} className="shrink-0" aria-hidden tabIndex={-1}>
-                  <ProductThumb src={r.photo} alt="" size={72} rounded={12} className="max-sm:h-16 max-sm:w-16" />
+                  <ProductThumb src={r.photo} alt="" size={72} rounded={14} className="max-sm:h-16 max-sm:w-16" />
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0">

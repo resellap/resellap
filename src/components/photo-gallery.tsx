@@ -221,7 +221,7 @@ export function PhotoGallery({
           <div className="flex gap-1.5 overflow-x-auto">
             {uploading.previews.map((p, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={p} src={p} alt="" className={clsx("h-14 w-14 shrink-0 rounded-[8px] object-cover", i < uploading.progress.done ? "opacity-100" : "opacity-40")} />
+              <img key={p} src={p} alt="" className={clsx("h-14 w-14 shrink-0 rounded-[var(--radius-xs)] object-cover", i < uploading.progress.done ? "opacity-100" : "opacity-40")} />
             ))}
           </div>
         </div>
@@ -345,7 +345,7 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
               aria-label={`Ir a la foto ${i + 1}`}
               aria-current={i === index}
               className={clsx(
-                "relative h-14 w-14 shrink-0 overflow-hidden rounded-[8px] border-2 transition-[border-color,opacity] duration-200",
+                "relative h-14 w-14 shrink-0 overflow-hidden rounded-[var(--radius-xs)] border-2 transition-[border-color,opacity] duration-200",
                 i === index ? "border-brand opacity-100" : "border-transparent opacity-60 hover:opacity-100",
               )}
             >
@@ -381,7 +381,7 @@ function Grid({
   return (
     <ul className="grid grid-cols-3 gap-1.5">
       {photos.map((p, i) => (
-        <li key={p.id} className="group relative aspect-square animate-fade overflow-hidden rounded-[10px] border border-line bg-surface-2">
+        <li key={p.id} className="group relative aspect-square animate-fade overflow-hidden rounded-[var(--radius-sm)] border border-line bg-surface-2">
           <button type="button" onClick={() => onOpen(i)} className="block h-full w-full" aria-label={`Ver foto ${i + 1} en grande`}>
             <FadeImg src={p.thumb} alt={`${name} · foto ${i + 1}`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
           </button>

@@ -14,7 +14,7 @@ export function TrackingCode({ code, link }: { code: string; link: string | null
       <span className="num truncate font-medium">{code}</span>
       <button
         type="button"
-        className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-faint hover:bg-subtle hover:text-ink"
+        className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-xs)] text-faint hover:bg-subtle hover:text-ink"
         aria-label="Copiar código"
         title={copied ? "Copiado" : "Copiar"}
         onClick={async () => {
@@ -34,7 +34,7 @@ export function TrackingCode({ code, link }: { code: string; link: string | null
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-faint hover:bg-subtle hover:text-ink"
+          className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-xs)] text-faint hover:bg-subtle hover:text-ink"
           aria-label="Ver en la web del transportista"
           title="Ver en la web del transportista"
         >

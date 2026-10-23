@@ -50,7 +50,7 @@ export default async function SettingsHub() {
                       href={i.href}
                       className="press flex min-h-16 items-center gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-3.5 shadow-[var(--shadow-card)] hover:border-ink/30"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-brand-soft text-brand-ink">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-ink">
                         <i.icon size={20} strokeWidth={2.25} />
                       </span>
                       <span className="min-w-0 flex-1">

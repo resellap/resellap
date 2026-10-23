@@ -4,7 +4,7 @@
  */
 import { clsx } from "./ui";
 
-export function ProductThumb({ src, alt, size = 56, className, rounded = 10 }: { src: string | null | undefined; alt: string; size?: number; className?: string; rounded?: number }) {
+export function ProductThumb({ src, alt, size = 56, className, rounded = 12 }: { src: string | null | undefined; alt: string; size?: number; className?: string; rounded?: number }) {
   const box = { width: size, height: size, borderRadius: rounded };
   if (!src) {
     return (

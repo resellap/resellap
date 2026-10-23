@@ -2,7 +2,7 @@
 import { clsx } from "./ui";
 
 function Bar({ className }: { className?: string }) {
-  return <div className={clsx("skeleton rounded-[8px]", className)} />;
+  return <div className={clsx("skeleton rounded-[var(--radius-xs)]", className)} />;
 }
 
 export function ListSkeleton({ rows = 8, filters = true }: { rows?: number; filters?: boolean }) {

@@ -219,7 +219,7 @@ function ConnectionPanel({
           <div className="flex items-center gap-3">
             <span
               className={clsx(
-                "flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px]",
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px]",
                 tone === "good" ? "bg-good text-on-good" : tone === "bad" ? "bg-danger text-white" : "bg-ink/8 text-ink-soft",
               )}
             >

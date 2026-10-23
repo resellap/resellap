@@ -58,7 +58,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
       )}
 
       {/* Cifras clave */}
-      <dl className="mb-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] border border-line bg-line lg:grid-cols-4">
+      <dl className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi icon={Truck} label="En tránsito" value={String(inTransit?.count ?? 0)} note={inTransit?.value !== null && inTransit?.value !== undefined ? `${money(inTransit.value)} en camino` : undefined} dark />
         <Kpi icon={PackageCheck} label="Entregados" value={String(stats?.totals.delivered ?? 0)} note={`de ${stats?.totals.shipments ?? 0} con seguimiento`} />
         <Kpi icon={Timer} label="Tiempo medio de entrega" value={days(stats?.overall.avg_days)} note={stats?.overall.median_days !== null && stats?.overall.median_days !== undefined ? `mediana ${days(stats.overall.median_days)}` : "aún sin entregas medidas"} />
@@ -101,7 +101,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
               name="q"
               defaultValue={q}
               placeholder="Código, comprador o nº de venta"
-              className="h-11 w-full rounded-[10px] border border-line-strong bg-surface pl-9 pr-3 text-base placeholder:text-faint focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20 sm:h-10 sm:text-[14px]"
+              className="h-11 w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface pl-9 pr-3 text-base placeholder:text-faint focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20 sm:h-10 sm:text-[14px]"
             />
           </form>
         )}
@@ -150,8 +150,8 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 href={`/seguimiento/${s.id}`}
                 className="press group flex h-full flex-col gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-4 transition-colors hover:border-line-strong"
               >
-                <div className="flex gap-3">
-                  <ProductThumb src={s.photo} alt="" size={60} rounded={12} />
+                <div className="flex items-start gap-3">
+                  <ProductThumb src={s.photo} alt="" size={60} rounded={14} />
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{s.product}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted">
@@ -202,12 +202,12 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
 
 function Kpi({ icon: Icon, label, value, note, dark }: { icon: typeof Truck; label: string; value: string; note?: string; dark?: boolean }) {
   return (
-    <div className={clsx("px-4 py-3.5", dark ? "bg-[#0B0F0E] text-white" : "bg-surface")}>
-      <dt className={clsx("flex items-center gap-1.5 text-[12.5px]", dark ? "text-[#8A9590]" : "text-faint")}>
-        <Icon size={14} strokeWidth={1.75} />
+    <div className={clsx("min-w-0 rounded-[var(--radius-md)] px-5 py-4", dark ? "bg-[#0B0F0E] text-white shadow-[var(--shadow-card)]" : "rs-card bg-surface")}>
+      <dt className={clsx("flex items-start gap-1.5 text-[12.5px] leading-[1.35]", dark ? "text-[#8A9590]" : "text-faint")}>
+        <Icon size={14} strokeWidth={1.75} className="mt-[1.5px] shrink-0" />
         {label}
       </dt>
-      <dd className="num mt-1 text-[24px] font-semibold tracking-[-0.02em]">{value}</dd>
+      <dd className="num mt-1.5 text-[26px] font-semibold tracking-[-0.03em] sm:text-[30px]">{value}</dd>
       {note && <p className={clsx("mt-0.5 truncate text-[12.5px]", dark ? "text-[#6FDCA6]" : "text-faint")}>{note}</p>}
     </div>
   );

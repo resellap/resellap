@@ -242,7 +242,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
                 aria-pressed={on}
                 aria-label={`Foto ${i + 1}${on ? ", elegida" : ""}`}
                 className={clsx(
-                  "relative block aspect-square w-full overflow-hidden rounded-[10px] border-2 transition-[border-color,transform] duration-200 active:scale-[0.97]",
+                  "relative block aspect-square w-full overflow-hidden rounded-[var(--radius-sm)] border-2 transition-[border-color,transform] duration-200 active:scale-[0.97]",
                   on ? "border-brand" : "border-transparent",
                 )}
               >

@@ -315,7 +315,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
       return (
         <Frame title={def.title} sub="Ahora" className={cls} href="/envios">
           <div className="flex items-center gap-3">
-            <span className={clsx("flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px]", p > 0 ? "bg-brand text-on-brand" : "bg-good-soft text-good-ink")}>
+            <span className={clsx("flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-sm)]", p > 0 ? "bg-brand text-on-brand" : "bg-good-soft text-good-ink")}>
               <Truck size={22} strokeWidth={2.25} />
             </span>
             <Big small>{units(p)}</Big>

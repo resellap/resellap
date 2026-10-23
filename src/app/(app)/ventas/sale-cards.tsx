@@ -55,12 +55,12 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
                   <SaleCheckbox saleId={s.id} status={s.shipping} label={`la venta ${s.number}`} />
                 </span>
               )}
-              {s.photo !== undefined && <ProductThumb src={s.photo} alt="" size={56} rounded={10} />}
+              {s.photo !== undefined && <ProductThumb src={s.photo} alt="" size={56} rounded={14} />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
-                  <Link href={`/ventas/${s.id}`} className="font-bold text-ink after:absolute after:inset-0 after:content-['']">
-                    {s.number}
-                    <span className="num ml-2 text-[12.5px] font-normal text-muted">{date(s.date)}</span>
+                  <Link href={`/ventas/${s.id}`} className="min-w-0 font-bold text-ink after:absolute after:inset-0 after:content-['']">
+                    <span className="whitespace-nowrap">{s.number}</span>
+                    <span className="num block text-[12.5px] font-normal text-muted sm:ml-2 sm:inline">{date(s.date)}</span>
                   </Link>
                   <span className="num text-[17px] font-semibold tracking-[-0.01em]">{money(s.total)}</span>
                 </div>

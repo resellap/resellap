@@ -63,7 +63,7 @@ export default async function ShipmentsPage() {
               >
                 <div className="flex items-center gap-3">
                   {g.key === NO_CARRIER ? (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-dashed border-line-strong text-[13px] text-faint">?</span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-xs)] border border-dashed border-line-strong text-[13px] text-faint">?</span>
                   ) : (
                     <CarrierIcon name={g.name} size={40} showName={false} />
                   )}
@@ -81,7 +81,7 @@ export default async function ShipmentsPage() {
                       <ProductThumb key={i} src={p} alt="" size={40} rounded={10} className="ring-2 ring-surface" />
                     ))}
                     {g.count > g.photos.length && (
-                      <span className="num flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-surface-2 text-[12px] font-semibold text-muted ring-2 ring-surface">
+                      <span className="num flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-2 text-[12px] font-semibold text-muted ring-2 ring-surface">
                         +{g.count - g.photos.length}
                       </span>
                     )}

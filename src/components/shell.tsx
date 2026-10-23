@@ -217,7 +217,7 @@ export function Shell({
   // Carril: iconos; al pasar el ratón se despliega un poco y enseña los nombres
   const railItem = (active: boolean) =>
     clsx(
-      "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[11px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
+      "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[10px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
       active ? "bg-ink text-paper" : "text-ink-soft hover:bg-subtle hover:text-ink",
     );
   const railLabel = clsx("truncate whitespace-nowrap transition-opacity duration-150", railOpen ? "opacity-100 delay-75" : "pointer-events-none opacity-0");
@@ -335,7 +335,7 @@ export function Shell({
           ] as const
         ).map(([m, Icon, label]) => (
           <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem(mode === m)} aria-pressed={mode === m} title={label}>
-            <Icon size={17} strokeWidth={1.75} className="shrink-0" />
+            <Icon size={18} strokeWidth={1.75} className="shrink-0" />
             <span className={railLabel}>{label}</span>
           </button>
         ))}
@@ -366,7 +366,7 @@ export function Shell({
                   {n > 0 && (
                     <span
                       className={clsx(
-                        clsx("absolute left-[27px] top-1.5 h-2 w-2 rounded-full ring-2 ring-surface transition-opacity", railOpen && "opacity-0"),
+                        clsx("absolute left-[24px] top-1.5 h-2 w-2 rounded-full ring-2 ring-surface transition-opacity", railOpen && "opacity-0"),
                         it.badgeKey === "alerts" ? "bg-danger" : "bg-brand",
                       )}
                     />
@@ -396,7 +396,7 @@ export function Shell({
               title="Configuración"
               className={railItem(settingsActive || cfg)}
             >
-              <Settings size={19} strokeWidth={1.75} className={clsx("shrink-0 transition-transform duration-300", cfg && "rotate-90")} />
+              <Settings size={18} strokeWidth={1.75} className={clsx("shrink-0 transition-transform duration-300", cfg && "rotate-90")} />
               <span className={railLabel}>Configuración</span>
             </button>
           </div>
