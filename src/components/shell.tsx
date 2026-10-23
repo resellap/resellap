@@ -196,19 +196,14 @@ export function Shell({
   const settingsActive = settingsItems.some((i) => isActive(pathname, i.href));
 
   const pill = "rs-card rounded-full bg-surface";
-  const railBtn = (active: boolean) =>
+  // Carril: iconos; al pasar el ratón se despliega un poco y enseña los nombres
+  const railItem = (active: boolean) =>
     clsx(
-      "press relative flex h-10 w-10 items-center justify-center rounded-full",
+      "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[11px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
       active ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
     );
-  const tip = (label: string) => (
-    <span
-      role="tooltip"
-      className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 translate-x-[-4px] whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[12.5px] font-medium text-paper opacity-0 shadow-[var(--shadow-pop)] transition group-hover/tip:translate-x-0 group-hover/tip:opacity-100 group-focus-visible/tip:opacity-100"
-    >
-      {label}
-    </span>
-  );
+  const railLabel = "truncate whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/rail:opacity-100 group-hover/rail:delay-75 group-focus-within/rail:opacity-100";
+  const railPill = "rs-card flex w-12 flex-col gap-0.5 overflow-hidden rounded-[24px] bg-surface p-1 transition-[width] duration-200 ease-out group-hover/rail:w-60 group-hover/rail:delay-75 group-focus-within/rail:w-60";
 
   const topBar = (
     <header className="sticky top-0 z-40 hidden items-center gap-3 bg-gradient-to-b from-paper from-70% to-transparent px-6 pb-4 pt-4 lg:flex no-print 2xl:px-8">
@@ -304,55 +299,72 @@ export function Shell({
   );
 
   const rail = (
-    <aside aria-label="Más secciones" className="fixed bottom-6 left-6 top-[88px] z-30 hidden w-12 flex-col gap-3 lg:flex no-print 2xl:left-8">
-      <div className={clsx(pill, "flex flex-col items-center gap-0.5 p-1")}>
+    <aside
+      aria-label="Más secciones"
+      className="group/rail fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
+    >
+      <div className={clsx(railPill, "shrink-0")}>
         {(
           [
             ["light", Sun, "Modo claro"],
             ["dark", Moon, "Modo oscuro"],
           ] as const
         ).map(([m, Icon, label]) => (
-          <button key={m} type="button" onClick={() => setMode(m)} className={clsx("group/tip", railBtn(mode === m))} aria-pressed={mode === m} aria-label={label}>
-            <Icon size={17} strokeWidth={1.75} />
-            {tip(label)}
+          <button key={m} type="button" onClick={() => setMode(m)} className={railItem(mode === m)} aria-pressed={mode === m} title={label}>
+            <Icon size={17} strokeWidth={1.75} className="shrink-0" />
+            <span className={railLabel}>{label}</span>
           </button>
         ))}
       </div>
-      <nav aria-label="Gestión" className={clsx(pill, "flex flex-col items-center gap-0.5 p-1")}>
+      <nav aria-label="Gestión" className={clsx(railPill, "no-scrollbar min-h-0 shrink overflow-y-auto")}>
         {railGroups.map((g, gi) => (
-          <div key={gi} className={clsx("flex flex-col items-center gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
+          <div key={gi} className={clsx("flex flex-col gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
             {g.items.map((it) => {
               const active = isActive(pathname, it.href);
               const n = badgeOf(it);
               return (
-                <NavLink key={it.href} href={it.href} active={active} aria-label={it.label} className={clsx("group/tip", railBtn(active))}>
-                  <it.icon size={18} strokeWidth={1.75} />
-                  {n > 0 && <span className={clsx("absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-surface", it.badgeKey === "alerts" ? "bg-danger" : "bg-brand")} />}
-                  {tip(n > 0 ? `${it.label} · ${n}` : it.label)}
+                <NavLink key={it.href} href={it.href} active={active} title={it.label} className={railItem(active)}>
+                  <it.icon size={18} strokeWidth={1.75} className="shrink-0" />
+                  {n > 0 && (
+                    <span
+                      className={clsx(
+                        "absolute left-[27px] top-1.5 h-2 w-2 rounded-full ring-2 ring-surface transition-opacity group-hover/rail:opacity-0",
+                        it.badgeKey === "alerts" ? "bg-danger" : "bg-brand",
+                      )}
+                    />
+                  )}
+                  <span className={clsx(railLabel, "flex-1")}>{it.label}</span>
+                  {n > 0 && (
+                    <span className={clsx(railLabel, "shrink-0")}>
+                      <Counter n={n} k={it.badgeKey} />
+                    </span>
+                  )}
                 </NavLink>
               );
             })}
           </div>
         ))}
       </nav>
-      <div className="flex-1" />
+      <div className="min-h-0 flex-1" />
       {settingsItems.length > 0 && (
-        <div ref={cfgBox} className="relative">
-          <button
-            type="button"
-            onClick={() => setCfg((v) => !v)}
-            aria-expanded={cfg}
-            aria-controls="menu-config"
-            aria-label="Configuración"
-            className={clsx(pill, "group/tip flex h-12 w-12 items-center justify-center", "press", settingsActive || cfg ? "!bg-ink text-paper" : "text-muted hover:text-ink")}
-          >
-            <Settings size={19} strokeWidth={1.75} className={clsx("transition-transform duration-300", cfg && "rotate-90")} />
-            {!cfg && tip("Configuración")}
-          </button>
+        <div ref={cfgBox} className="relative shrink-0">
+          <div className={railPill}>
+            <button
+              type="button"
+              onClick={() => setCfg((v) => !v)}
+              aria-expanded={cfg}
+              aria-controls="menu-config"
+              title="Configuración"
+              className={railItem(settingsActive || cfg)}
+            >
+              <Settings size={19} strokeWidth={1.75} className={clsx("shrink-0 transition-transform duration-300", cfg && "rotate-90")} />
+              <span className={railLabel}>Configuración</span>
+            </button>
+          </div>
           {cfg && (
             <div
               id="menu-config"
-              className="absolute bottom-0 left-full z-50 ml-3 w-64 animate-rise rounded-[var(--radius-md)] border border-line bg-surface-2 p-2 shadow-[var(--shadow-pop)]"
+              className="absolute bottom-0 left-[60px] z-50 max-h-[calc(100dvh-110px)] w-64 animate-rise transition-[left] duration-200 group-hover/rail:left-[252px] group-focus-within/rail:left-[252px] overflow-y-auto rounded-[var(--radius-md)] border border-line bg-surface-2 p-2 shadow-[var(--shadow-pop)]"
             >
               <p className="flex items-center gap-2 px-3 pb-2 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">
                 <Settings size={13} strokeWidth={2} className="text-brand" />
