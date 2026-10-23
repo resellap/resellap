@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { ExportLinks, FilterBar, type FilterField } from "@/components/filter-bar";
 import { Empty, Figures, Notice, PageHeader, Pagination, Panel, Table, Tabs, Td, Th, Tr } from "@/components/ui";
@@ -9,7 +11,7 @@ import { REPORTS, type Column, type ReportType } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
 import { ShippingReport } from "./shipping-report";
 
-export const metadata: Metadata = { title: "Informes" };
+export const metadata: Metadata = { title: msg("Informes") };
 
 function fmt(c: Column, r: Record<string, unknown>) {
   const v = c.value(r);
@@ -31,14 +33,15 @@ function fmt(c: Column, r: Record<string, unknown>) {
 }
 
 const TABS: { key: ReportType; label: string }[] = [
-  { key: "ventas", label: "Ventas" },
-  { key: "inventario", label: "Inventario" },
-  { key: "compras", label: "Compras" },
-  { key: "responsables", label: "Responsables" },
-  { key: "salidas", label: "Salidas sin venta" },
+  { key: "ventas", label: msg("Ventas") },
+  { key: "inventario", label: msg("Inventario") },
+  { key: "compras", label: msg("Compras") },
+  { key: "responsables", label: msg("Responsables") },
+  { key: "salidas", label: msg("Salidas sin venta") },
 ];
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("costes");
   const sp = await searchParams;
   if (first(sp.tab) === "envios") {
@@ -46,14 +49,14 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     const d = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
     return (
       <>
-        <PageHeader title="Informes" description="Envíos y tiempos de entrega por transportista, con los datos del seguimiento." />
-        <Tabs current="envios" items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: "Envíos", href: "/informes?tab=envios" }]} />
+        <PageHeader title={t("Informes")} description={t("Envíos y tiempos de entrega por transportista, con los datos del seguimiento.")} />
+        <Tabs current="envios" items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
         <FilterBar
           basePath="/informes?tab=envios"
           values={f}
           fields={[
-            { type: "date", name: "from", label: "Enviados desde" },
-            { type: "date", name: "to", label: "Hasta" },
+            { type: "date", name: "from", label: t("Enviados desde") },
+            { type: "date", name: "to", label: t("Hasta") },
           ]}
           extra={<input type="hidden" name="tab" value="envios" />}
         />
@@ -77,34 +80,34 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
   const fieldsByTab: Record<ReportType, FilterField[]> = {
     ventas: [
-      { type: "date", name: "from", label: "Desde" },
-      { type: "date", name: "to", label: "Hasta" },
-      { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
-      { type: "select", name: "product_id", label: "Producto", options: productOpts },
-      { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: catOpts },
-      { type: "select", name: "responsible_id", label: "Responsable", options: sale.responsibles.map((r) => ({ value: r.id, label: r.name })) },
-      { type: "select", name: "platform_id", label: "Plataforma", empty: "Todas", options: sale.platforms.map((p) => ({ value: p.id, label: p.name })) },
+      { type: "date", name: "from", label: t("Desde") },
+      { type: "date", name: "to", label: t("Hasta") },
+      { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
+      { type: "select", name: "product_id", label: t("Producto"), options: productOpts },
+      { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: catOpts },
+      { type: "select", name: "responsible_id", label: t("Responsable"), options: sale.responsibles.map((r) => ({ value: r.id, label: r.name })) },
+      { type: "select", name: "platform_id", label: t("Plataforma"), empty: t("Todas"), options: sale.platforms.map((p) => ({ value: p.id, label: p.name })) },
     ],
     inventario: [
-      { type: "text", name: "search", label: "Producto", placeholder: "Nombre o SKU" },
-      { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: catOpts },
-      { type: "select", name: "brand_id", label: "Marca", empty: "Todas", options: cat.brands.map((b) => ({ value: b.id, label: b.name })) },
-      { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
-      { type: "checkbox", name: "only_in_stock", label: "Solo con stock" },
+      { type: "text", name: "search", label: t("Producto"), placeholder: t("Nombre o SKU") },
+      { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: catOpts },
+      { type: "select", name: "brand_id", label: t("Marca"), empty: t("Todas"), options: cat.brands.map((b) => ({ value: b.id, label: b.name })) },
+      { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
+      { type: "checkbox", name: "only_in_stock", label: t("Solo con stock") },
     ],
     compras: [
-      { type: "date", name: "from", label: "Desde" },
-      { type: "date", name: "to", label: "Hasta" },
-      { type: "number", name: "purchase_order_number", label: "Nº pedido" },
-      { type: "select", name: "supplier_id", label: "Proveedor", options: suppliers.map((s) => ({ value: s.id, label: s.name })) },
-      { type: "select", name: "product_id", label: "Producto", options: productOpts },
+      { type: "date", name: "from", label: t("Desde") },
+      { type: "date", name: "to", label: t("Hasta") },
+      { type: "number", name: "purchase_order_number", label: t("Nº pedido") },
+      { type: "select", name: "supplier_id", label: t("Proveedor"), options: suppliers.map((s) => ({ value: s.id, label: s.name })) },
+      { type: "select", name: "product_id", label: t("Producto"), options: productOpts },
     ],
     responsables: [
-      { type: "date", name: "from", label: "Desde" },
-      { type: "date", name: "to", label: "Hasta" },
-      { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
-      { type: "select", name: "product_id", label: "Producto", options: productOpts },
-      { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: catOpts },
+      { type: "date", name: "from", label: t("Desde") },
+      { type: "date", name: "to", label: t("Hasta") },
+      { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
+      { type: "select", name: "product_id", label: t("Producto"), options: productOpts },
+      { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: catOpts },
     ],
     salidas: [],
   };
@@ -126,8 +129,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title="Informes" description="Todos se pueden exportar a Excel o CSV con los filtros aplicados." />
-      <Tabs current={tab} items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: "Envíos", href: "/informes?tab=envios" }]} />
+      <PageHeader title={t("Informes")} description={t("Todos se pueden exportar a Excel o CSV con los filtros aplicados.")} />
+      <Tabs current={tab} items={[...TABS.map((t) => ({ key: t.key as string, label: t.label, href: `/informes?tab=${t.key}` })), { key: "envios", label: t("Envíos"), href: "/informes?tab=envios" }]} />
       <FilterBar
         basePath={`/informes?tab=${tab}`}
         values={filters}
@@ -144,11 +147,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <Figures
           className="mb-4"
           items={[
-            { label: "Pedidos", value: units(s.orders) },
-            { label: "Unidades", value: units(s.units) },
-            { label: "Facturación", value: money(s.net_amount) },
-            { label: "Coste (de cada lote)", value: money(s.cost_amount) },
-            { label: "Beneficio", value: money(s.profit), tone: s.profit < 0 ? "bad" : "good" },
+            { label: t("Pedidos"), value: units(s.orders) },
+            { label: t("Unidades"), value: units(s.units) },
+            { label: t("Facturación"), value: money(s.net_amount) },
+            { label: t("Coste (de cada lote)"), value: money(s.cost_amount) },
+            { label: t("Beneficio"), value: money(s.profit), tone: s.profit < 0 ? "bad" : "good" },
           ]}
         />
       )}
@@ -156,16 +159,16 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <Figures
           className="mb-4"
           items={[
-            { label: "Unidades", value: units(s.units) },
-            { label: "Valor almacén", value: money(s.stock_value) },
-            { label: "Valor potencial", value: money(s.potential_value) },
-            { label: "Beneficio potencial", value: money(s.potential_profit), tone: "good" },
+            { label: t("Unidades"), value: units(s.units) },
+            { label: t("Valor almacén"), value: money(s.stock_value) },
+            { label: t("Valor potencial"), value: money(s.potential_value) },
+            { label: t("Beneficio potencial"), value: money(s.potential_profit), tone: "good" },
           ]}
         />
       )}
       <Panel padded={false}>
         {rows.length === 0 ? (
-          <Empty title="No hay datos con estos filtros" />
+          <Empty title={t("No hay datos con estos filtros")} />
         ) : (
           <Table>
             <thead>

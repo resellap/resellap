@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { ChevronsUpDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -6,11 +7,12 @@ import { switchOrganization } from "@/app/(app)/espacio/actions";
 
 /** Selector del espacio de trabajo (solo aparece si perteneces a varios). */
 export function OrgSwitcher({ current, orgs }: { current: string; orgs: { id: string; name: string }[] }) {
+  const t = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   return (
     <label className="relative flex items-center">
-      <span className="sr-only">Espacio de trabajo</span>
+      <span className="sr-only">{t("Espacio de trabajo")}</span>
       <select
         value={current}
         disabled={pending}

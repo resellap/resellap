@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import "server-only";
 import { saleThumbs } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +32,7 @@ export type PendingShipment = {
  * lo garantiza la seguridad de la base de datos (RLS), no esta consulta.
  */
 export async function loadPendingShipments(): Promise<{ rows: PendingShipment[]; error: string | null }> {
+  const t = await getT();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("sales")
@@ -83,7 +85,7 @@ export async function loadPendingShipments(): Promise<{ rows: PendingShipment[];
     deadline: r.shipping_deadline,
     photo: photos.get(r.id) ?? null,
   }));
-  return { rows, error: error ? "No se han podido cargar los envíos pendientes." : null };
+  return { rows, error: error ? t("No se han podido cargar los envíos pendientes.") : null };
 }
 
 export type CarrierGroup = { key: string; name: string; count: number; oldest: string; withoutLabel: number; photos: string[]; deadline: string | null };

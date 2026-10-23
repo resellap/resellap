@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BubbleGroup } from "@/components/liquid";
@@ -16,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type SellableVariant, variantDisplay } from "@/lib/types";
 import { ProductCards, ProductThumb } from "./product-cards";
 
-export const metadata: Metadata = { title: "Inventario" };
+export const metadata: Metadata = { title: msg("Inventario") };
 
 type ProductRow = {
   product_id: string;
@@ -36,6 +38,7 @@ type ProductRow = {
 };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const supabase = await createClient();
@@ -51,12 +54,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     return (
       <>
         <PageHeader
-          title="Inventario"
-          description="Stock disponible y precio normal de cada producto."
+          title={t("Inventario")}
+          description={t("Stock disponible y precio normal de cada producto.")}
           actions={
             canCreate ? (
               <LinkButton href="/productos/nuevo" variant="primary">
-                Nuevo producto
+                {t("Nuevo producto")}
               </LinkButton>
             ) : undefined
           }
@@ -65,8 +68,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           basePath="/productos"
           values={{ search: q, only_in_stock: first(sp.only_in_stock) }}
           fields={[
-            { type: "text", name: "search", label: "Buscar", placeholder: "Nombre, marca o SKU" },
-            { type: "checkbox", name: "only_in_stock", label: "Solo con stock" },
+            { type: "text", name: "search", label: t("Buscar"), placeholder: t("Nombre, marca o SKU") },
+            { type: "checkbox", name: "only_in_stock", label: t("Solo con stock") },
           ]}
         />
         <ProductCards
@@ -82,16 +85,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         />
         <Panel padded={false} className={rows.length ? "max-lg:hidden" : undefined}>
           {rows.length === 0 ? (
-            <Empty title="No hay productos con esa búsqueda" />
+            <Empty title={t("No hay productos con esa búsqueda")} />
           ) : (
             <Table>
               <thead>
                 <tr>
-                  <Th>Producto</Th>
-                  <Th>Marca</Th>
-                  <Th>SKU</Th>
-                  <Th num>Stock</Th>
-                  <Th num>Precio</Th>
+                  <Th>{t("Producto")}</Th>
+                  <Th>{t("Marca")}</Th>
+                  <Th>{t("SKU")}</Th>
+                  <Th num>{t("Stock")}</Th>
+                  <Th num>{t("Precio")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -168,10 +171,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   ]);
   const sum = (summary.data ?? null) as { units?: number; stock_value?: number; potential_value?: number; potential_profit?: number } | null;
   const chips = [
-    { key: "", label: "Todos", n: all.count ?? 0 },
-    { key: "stock", label: "En stock", n: inStock.count ?? 0 },
-    { key: "sin", label: "Sin stock", n: Math.max(0, (all.count ?? 0) - (inStock.count ?? 0)) },
-    { key: "pendientes", label: "Datos pendientes", n: missingN.count ?? 0 },
+    { key: "", label: t("Todos"), n: all.count ?? 0 },
+    { key: "stock", label: t("En stock"), n: inStock.count ?? 0 },
+    { key: "sin", label: t("Sin stock"), n: Math.max(0, (all.count ?? 0) - (inStock.count ?? 0)) },
+    { key: "pendientes", label: t("Datos pendientes"), n: missingN.count ?? 0 },
   ];
   const cols = tp.columns.filter((c) => c.visible).map((c) => c.key);
   const rows = (data ?? []) as ProductRow[];
@@ -192,12 +195,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader
-        title="Inventario"
-        description="Todo lo que tienes: stock, lo que te costó, a cuánto lo vendes y lo que ganas con cada producto."
+        title={t("Inventario")}
+        description={t("Todo lo que tienes: stock, lo que te costó, a cuánto lo vendes y lo que ganas con cada producto.")}
         actions={
           canCreate ? (
             <LinkButton href="/productos/nuevo" variant="primary">
-              Nuevo producto
+              {t("Nuevo producto")}
             </LinkButton>
           ) : undefined
         }
@@ -206,15 +209,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <Figures
           className="mb-4"
           items={[
-            { label: "Stock disponible", value: `${units(sum.units ?? 0)} uds.`, note: `${inStock.count ?? 0} productos con stock` },
-            { label: "Valor del inventario", value: money(sum.stock_value ?? 0), note: "a lo que te costó" },
-            { label: "Valor de venta", value: money(sum.potential_value ?? 0), note: "a tu precio normal" },
-            { label: "Beneficio potencial", value: money(sum.potential_profit ?? 0), tone: "good" },
+            { label: t("Stock disponible"), value: `${units(sum.units ?? 0)} uds.`, note: t("{v} productos con stock", { v: inStock.count ?? 0 }) },
+            { label: t("Valor del inventario"), value: money(sum.stock_value ?? 0), note: t("a lo que te costó") },
+            { label: t("Valor de venta"), value: money(sum.potential_value ?? 0), note: t("a tu precio normal") },
+            { label: t("Beneficio potencial"), value: money(sum.potential_profit ?? 0), tone: "good" },
           ]}
         />
       )}
       <BubbleGroup
-        label="Estado del stock"
+        label={t("Estado del stock")}
         active={first(sp.estado) ?? ""}
         className="rs-card no-scrollbar mb-3 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1"
       >
@@ -240,19 +243,19 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         values={{ ...filters, orden: first(sp.orden) }}
         keep={{ estado: first(sp.estado) }}
         fields={[
-          { type: "text", name: "search", label: "Buscar", placeholder: "Nombre o SKU" },
-          { type: "select", name: "category_id", label: "Categoría", empty: "Todas", options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
-          { type: "select", name: "brand_id", label: "Marca", empty: "Todas", options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
-          { type: "number", name: "purchase_order_number", label: "Pedido/lote nº" },
-          { type: "select", name: "orden", label: "Ordenar", empty: PRODUCT_SORTS[tp.sort], options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
+          { type: "text", name: "search", label: t("Buscar"), placeholder: t("Nombre o SKU") },
+          { type: "select", name: "category_id", label: t("Categoría"), empty: t("Todas"), options: opts.categories.map((c) => ({ value: c.id, label: c.name })) },
+          { type: "select", name: "brand_id", label: t("Marca"), empty: t("Todas"), options: opts.brands.map((c) => ({ value: c.id, label: c.name })) },
+          { type: "number", name: "purchase_order_number", label: t("Pedido/lote nº") },
+          { type: "select", name: "orden", label: t("Ordenar"), empty: PRODUCT_SORTS[tp.sort], options: (Object.keys(PRODUCT_SORTS) as ProductSort[]).filter((k) => k !== tp.sort).map((k) => ({ value: k, label: PRODUCT_SORTS[k] })) },
         ]}
         extra={<ExportLinks type="inventario" filters={estado === "stock" ? { ...filters, only_in_stock: "true" } : filters} />}
       />
       {error && <Notice tone="bad">{error.message}</Notice>}
       {lowStock && (
         <Notice tone="info" className="mb-3">
-          Mostrando productos con stock bajo (entre 1 y {lowStock} {lowStock === 1 ? "unidad" : "unidades"}).{" "}
-          <Link href="/productos">Ver todos</Link>
+          {t("Mostrando productos con stock bajo (entre 1 y {lowStock}", { lowStock })}{" "}{lowStock === 1 ? "unidad" : "unidades"}).{" "}
+          <Link href="/productos">{t("Ver todos")}</Link>
         </Notice>
       )}
       <ProductCards
@@ -267,16 +270,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           stock: r.stock,
           price: refPrice(r),
           extra: [
-            { label: "Coste", value: money(r.weighted_avg_cost) },
-            ...(profitOf(r) !== null ? [{ label: "Gana", value: money(profitOf(r)) }] : []),
-            ...(marginOf(r) !== null ? [{ label: "Margen", value: percent(marginOf(r)) }] : []),
+            { label: t("Coste"), value: money(r.weighted_avg_cost) },
+            ...(profitOf(r) !== null ? [{ label: t("Gana"), value: money(profitOf(r)) }] : []),
+            ...(marginOf(r) !== null ? [{ label: t("Margen"), value: percent(marginOf(r)) }] : []),
           ],
           warn: r.has_missing_data ? "Datos pendientes" : null,
         }))}
       />
       <Panel padded={false} className={rows.length ? "max-lg:mt-3 max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none" : undefined}>
         {rows.length === 0 ? (
-          <Empty title="No hay productos con estos filtros" action={canCreate ? <LinkButton href="/productos/nuevo">Crear producto</LinkButton> : undefined} />
+          <Empty title={t("No hay productos con estos filtros")} action={canCreate ? <LinkButton href="/productos/nuevo">{t("Crear producto")}</LinkButton> : undefined} />
         ) : (
           <Table className="max-lg:hidden">
             <thead>
@@ -286,8 +289,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     {PRODUCT_COLUMNS[c]}
                   </Th>
                 ))}
-                <Th num>Beneficio</Th>
-                <Th num>Margen</Th>
+                <Th num>{t("Beneficio")}</Th>
+                <Th num>{t("Margen")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -314,7 +317,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                           </Td>
                         );
                       case "categoria":
-                        return <Td key={c}>{r.category_name ?? <Badge tone="warn">Pendiente</Badge>}</Td>;
+                        return <Td key={c}>{r.category_name ?? <Badge tone="warn">{t("Pendiente")}</Badge>}</Td>;
                       case "stock":
                         return (
                           <Td key={c} num>

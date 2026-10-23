@@ -5,13 +5,13 @@
  * 3 tono y plataforma → 4 hashtags y extensión → generar → copiar o editar.
  * Los datos que se rellenan aquí NO se guardan en la ficha del producto.
  */
+import { useFormat, useT } from "@/i18n/client";
 import { Check, ChevronDown, Copy, Eraser, History, Pencil, RefreshCw, Trash2, WandSparkles, X } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, Notice, Select, Textarea, clsx } from "@/components/ui";
 import { Modal } from "@/components/ui-client";
 import { ProductThumb } from "@/app/(app)/productos/product-cards";
-import { dateTime, money } from "@/lib/format";
 import { type SellableVariant, variantDisplay } from "@/lib/types";
 import { generateDescriptions, type GenerateRequest, type GeneratedItem } from "./actions";
 import { CONDITIONS, LENGTHS, MAX_PRODUCTS, PLATFORMS, TONES, type Length, type PlatformKey, type ProductDetails, type Tone } from "./options";
@@ -104,6 +104,8 @@ function Section({ n, title, children, className }: { n: number; title: string; 
 }
 
 export function DescriptionGenerator({ configured }: { configured: boolean }) {
+  const t = useT();
+  const f = useFormat();
   const [selected, setSelected] = useState<Selected[]>([]);
   const [tone, setTone] = useState<Tone>("natural");
   const [platform, setPlatform] = useState<PlatformKey>("wallapop");
@@ -206,10 +208,10 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
     <div className="grid gap-5 max-md:pb-24 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-5">
         {/* 1 · Productos */}
-        <Section n={1} title="Productos">
-          <ProductPicker onSelect={add} placeholder="Busca por nombre, marca o referencia (p. ej. Oakley Encoder)" />
+        <Section n={1} title={t("Productos")}>
+          <ProductPicker onSelect={add} placeholder={t("Busca por nombre, marca o referencia (p. ej. Oakley Encoder)")} />
           <p className="mt-2 text-[12.5px] text-muted">
-            {full ? `Máximo ${MAX_PRODUCTS} productos a la vez.` : `Puedes elegir hasta ${MAX_PRODUCTS}. Se genera una descripción para cada uno.`}
+            {full ? t("Máximo {MAX_PRODUCTS} productos a la vez.", { MAX_PRODUCTS }) : t("Puedes elegir hasta {MAX_PRODUCTS}. Se genera una descripción para cada uno.", { MAX_PRODUCTS })}
           </p>
           {selected.length > 0 && (
             <ul className="mt-3 flex flex-col gap-2">
@@ -225,7 +227,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                         s.variant.brand_name,
                         s.variant.sku,
                         s.variant.stock > 0 ? `${s.variant.stock} en stock` : "Sin stock",
-                        s.variant.normal_sale_price !== null ? money(s.variant.normal_sale_price) : null,
+                        s.variant.normal_sale_price !== null ? f.money(s.variant.normal_sale_price) : null,
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -235,7 +237,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                     type="button"
                     onClick={() => remove(s.key)}
                     className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-ink/6 hover:text-danger"
-                    aria-label={`Quitar ${s.variant.product_name}`}
+                    aria-label={t("Quitar {product_name}", { product_name: s.variant.product_name })}
                   >
                     <X size={18} strokeWidth={2.5} />
                   </button>
@@ -247,9 +249,9 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
 
         {/* 2 · Características */}
         {selected.length > 0 && (
-          <Section n={2} title="Características">
+          <Section n={2} title={t("Características")}>
             <p className="mb-3 text-[12.5px] text-muted">
-              Ya vienen rellenas con lo que hay en el inventario. Lo que cambies aquí solo se usa para este anuncio.
+              {t("Ya vienen rellenas con lo que hay en el inventario. Lo que cambies aquí solo se usa para este anuncio.")}
             </p>
             <div className="flex flex-col gap-2.5">
               {selected.map((s) => {
@@ -268,27 +270,27 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                     </button>
                     {s.open && (
                       <div className="grid animate-rise gap-3 p-3 sm:grid-cols-2">
-                        <Field label="Marca">
+                        <Field label={t("Marca")}>
                           <Input {...f("brand")} maxLength={300} />
                         </Field>
-                        <Field label="Modelo">
+                        <Field label={t("Modelo")}>
                           <Input {...f("model")} maxLength={300} />
                         </Field>
-                        <Field label="Tipo de producto">
-                          <Input {...f("category")} maxLength={300} placeholder="Gafas de sol, Lego…" />
+                        <Field label={t("Tipo de producto")}>
+                          <Input {...f("category")} maxLength={300} placeholder={t("Gafas de sol, Lego…")} />
                         </Field>
-                        <Field label="Variante">
+                        <Field label={t("Variante")}>
                           <Input {...f("variant")} maxLength={300} />
                         </Field>
-                        <Field label="Color de la montura">
-                          <Input {...f("frameColor")} maxLength={300} placeholder="Negro mate" />
+                        <Field label={t("Color de la montura")}>
+                          <Input {...f("frameColor")} maxLength={300} placeholder={t("Negro mate")} />
                         </Field>
-                        <Field label="Color o tipo de lente">
-                          <Input {...f("lens")} maxLength={300} placeholder="Transparente" />
+                        <Field label={t("Color o tipo de lente")}>
+                          <Input {...f("lens")} maxLength={300} placeholder={t("Transparente")} />
                         </Field>
-                        <Field label="Estado">
+                        <Field label={t("Estado")}>
                           <Select {...f("condition")}>
-                            <option value="">Sin indicar</option>
+                            <option value="">{t("Sin indicar")}</option>
                             {CONDITIONS.map((c) => (
                               <option key={c} value={c}>
                                 {c}
@@ -296,19 +298,19 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                             ))}
                           </Select>
                         </Field>
-                        <Field label="Precio de venta (€)" hint="Opcional. Déjalo vacío para no mencionarlo.">
+                        <Field label={t("Precio de venta (€)")} hint={t("Opcional. Déjalo vacío para no mencionarlo.")}>
                           <Input {...f("price")} inputMode="decimal" maxLength={20} />
                         </Field>
-                        <Field label="Accesorios incluidos" className="sm:col-span-2">
-                          <Input {...f("accessories")} maxLength={300} placeholder="Funda, caja, bolsa…" />
+                        <Field label={t("Accesorios incluidos")} className="sm:col-span-2">
+                          <Input {...f("accessories")} maxLength={300} placeholder={t("Funda, caja, bolsa…")} />
                         </Field>
-                        <Field label="Características a destacar" className="sm:col-span-2">
+                        <Field label={t("Características a destacar")} className="sm:col-span-2">
                           <Textarea {...f("features")} maxLength={800} className="min-h-16" />
                         </Field>
-                        <Field label="Defectos o desperfectos" className="sm:col-span-2" hint="Si no indicas ninguno, no se menciona nada.">
+                        <Field label={t("Defectos o desperfectos")} className="sm:col-span-2" hint={t("Si no indicas ninguno, no se menciona nada.")}>
                           <Textarea {...f("defects")} maxLength={800} className="min-h-14" />
                         </Field>
-                        <Field label="Información adicional" className="sm:col-span-2">
+                        <Field label={t("Información adicional")} className="sm:col-span-2">
                           <Textarea {...f("extra")} maxLength={800} className="min-h-14" />
                         </Field>
                       </div>
@@ -321,9 +323,9 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         )}
 
         {/* 3 · Tono y plataforma */}
-        <Section n={selected.length ? 3 : 2} title="Tono y plataforma">
-          <p className="mb-2 text-[13px] font-semibold text-ink-soft">Tono</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Tono">
+        <Section n={selected.length ? 3 : 2} title={t("Tono y plataforma")}>
+          <p className="mb-2 text-[13px] font-semibold text-ink-soft">{t("Tono")}</p>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Tono")}>
             {(Object.keys(TONES) as Tone[]).map((t) => (
               <Chip key={t} active={tone === t} onClick={() => setTone(t)} title={TONES[t].hint}>
                 {TONES[t].label}
@@ -331,8 +333,8 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
             ))}
           </div>
           <p className="mt-1.5 text-[12.5px] text-muted">{TONES[tone].hint}.</p>
-          <p className="mb-2 mt-4 text-[13px] font-semibold text-ink-soft">Plataforma</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Plataforma">
+          <p className="mb-2 mt-4 text-[13px] font-semibold text-ink-soft">{t("Plataforma")}</p>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Plataforma")}>
             {(Object.keys(PLATFORMS) as PlatformKey[]).map((p) => (
               <Chip key={p} active={platform === p} onClick={() => setPlatform(p)}>
                 {PLATFORMS[p]}
@@ -340,29 +342,29 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
             ))}
           </div>
           {platform === "otra" && (
-            <Field label="Nombre de la plataforma" className="mt-3 animate-rise">
-              <Input value={otherPlatform} onChange={(e) => setOtherPlatform(e.target.value)} maxLength={60} placeholder="Todocolección, Depop…" />
+            <Field label={t("Nombre de la plataforma")} className="mt-3 animate-rise">
+              <Input value={otherPlatform} onChange={(e) => setOtherPlatform(e.target.value)} maxLength={60} placeholder={t("Todocolección, Depop…")} />
             </Field>
           )}
         </Section>
 
         {/* 4 · Hashtags, extensión e indicaciones */}
-        <Section n={selected.length ? 4 : 3} title="Hashtags y extensión">
+        <Section n={selected.length ? 4 : 3} title={t("Hashtags y extensión")}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="mb-2 text-[13px] font-semibold text-ink-soft">Hashtags</p>
-              <div className="flex gap-2" role="radiogroup" aria-label="Hashtags">
+              <p className="mb-2 text-[13px] font-semibold text-ink-soft">{t("Hashtags")}</p>
+              <div className="flex gap-2" role="radiogroup" aria-label={t("Hashtags")}>
                 <Chip active={hashtags} onClick={() => setHashtags(true)}>
-                  Incluir
+                  {t("Incluir")}
                 </Chip>
                 <Chip active={!hashtags} onClick={() => setHashtags(false)}>
-                  No incluir
+                  {t("No incluir")}
                 </Chip>
               </div>
             </div>
             <div>
-              <p className="mb-2 text-[13px] font-semibold text-ink-soft">Extensión</p>
-              <div className="flex gap-2" role="radiogroup" aria-label="Extensión">
+              <p className="mb-2 text-[13px] font-semibold text-ink-soft">{t("Extensión")}</p>
+              <div className="flex gap-2" role="radiogroup" aria-label={t("Extensión")}>
                 {(Object.keys(LENGTHS) as Length[]).map((l) => (
                   <Chip key={l} active={length === l} onClick={() => setLength(l)}>
                     {LENGTHS[l]}
@@ -372,9 +374,9 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
             </div>
           </div>
           <Field
-            label="Instrucciones adicionales"
+            label={t("Instrucciones adicionales")}
             className="mt-4"
-            hint="Por ejemplo: «No utilices emojis», «Destaca que nunca se han usado», «No menciones el precio»."
+            hint={t("Por ejemplo: «No utilices emojis», «Destaca que nunca se han usado», «No menciones el precio».")}
           >
             <Textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} maxLength={800} className="min-h-16" />
           </Field>
@@ -389,24 +391,24 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
           onClick={() => generate()}
         >
           <WandSparkles size={18} strokeWidth={2.25} />
-          {pending && !busyKey ? "Generando…" : selected.length > 1 ? `Generar ${selected.length} descripciones` : "Generar descripción"}
+          {pending && !busyKey ? t("Generando…") : selected.length > 1 ? t("Generar {length} descripciones", { length: selected.length }) : t("Generar descripción")}
         </Button>
       </div>
 
       {/* 5-6 · Resultados */}
       <div ref={resultsRef} className="flex min-w-0 scroll-mt-20 flex-col gap-5">
         <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]" aria-live="polite">
-          <h2 className="display mb-3 text-[22px]">Resultado</h2>
+          <h2 className="display mb-3 text-[22px]">{t("Resultado")}</h2>
           {pending && !busyKey && (
-            <div className="flex flex-col gap-2.5" aria-label="Generando">
+            <div className="flex flex-col gap-2.5" aria-label={t("Generando")}>
               {(selected.length ? selected : [null]).map((_, i) => (
                 <div key={i} className="h-36 animate-pulse rounded-[var(--radius-sm)] bg-surface-2" />
               ))}
-              <p className="text-[13px] text-muted">Escribiendo {selected.length > 1 ? "las descripciones" : "la descripción"}… suele tardar unos segundos.</p>
+              <p className="text-[13px] text-muted">{t("Escribiendo")}{" "}{selected.length > 1 ? t("las descripciones") : t("la descripción")}{t("… suele tardar unos segundos.")}</p>
             </div>
           )}
           {!pending && results.length === 0 && (
-            <p className="text-sm text-muted">Aquí aparecerá el texto listo para copiar y pegar en {platformName}. No se publica nada automáticamente.</p>
+            <p className="text-sm text-muted">{t("Aquí aparecerá el texto listo para copiar y pegar en {platformName}. No se publica nada automáticamente.", { platformName })}</p>
           )}
           {(!pending || busyKey) && results.length > 0 && (
             <div className="flex flex-col gap-4">
@@ -425,7 +427,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                         readOnly={!r.editing}
                         onChange={(e) => updateResult(r.key, { text: e.target.value })}
                         className={clsx("min-h-48 font-[inherit] leading-relaxed", !r.editing && "bg-surface-2", busy && "opacity-50")}
-                        aria-label={`Descripción de ${r.title}`}
+                        aria-label={t("Descripción de {title}", { title: r.title })}
                       />
                     )}
                     <div className="mt-2.5 flex flex-wrap gap-2">
@@ -442,24 +444,24 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                           }}
                         >
                           {r.copied ? <Check size={16} strokeWidth={2.75} className="text-good" /> : <Copy size={16} strokeWidth={2.25} />}
-                          {r.copied ? "¡Copiado!" : "Copiar"}
+                          {r.copied ? t("¡Copiado!") : t("Copiar")}
                         </Button>
                       )}
                       {sel && (
                         <Button size="sm" disabled={pending} onClick={() => generate(sel)}>
                           <RefreshCw size={16} strokeWidth={2.25} className={busy ? "animate-spin" : undefined} />
-                          {busy ? "Generando…" : "Volver a generar"}
+                          {busy ? t("Generando…") : t("Volver a generar")}
                         </Button>
                       )}
                       {!r.error && (
                         <Button size="sm" variant="ghost" onClick={() => updateResult(r.key, { editing: !r.editing })}>
                           <Pencil size={15} strokeWidth={2.25} />
-                          {r.editing ? "Listo" : "Editar"}
+                          {r.editing ? t("Listo") : t("Editar")}
                         </Button>
                       )}
                       <Button size="sm" variant="ghost" onClick={() => setResults((rs) => rs.filter((x) => x.key !== r.key))}>
                         <Eraser size={15} strokeWidth={2.25} />
-                        Limpiar
+                        {t("Limpiar")}
                       </Button>
                     </div>
                   </article>
@@ -474,20 +476,20 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
             <summary className="press flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3">
               <span className="display flex items-center gap-2 text-[20px]">
                 <History size={18} strokeWidth={2.25} className="text-brand" />
-                Historial
+                {t("Historial")}
                 <span className="num text-[15px] text-muted">({history.length})</span>
               </span>
               <ChevronDown size={18} className="transition-transform group-open:rotate-180" />
             </summary>
             <div className="border-t border-line px-4 pb-4 pt-2">
-              <p className="mb-2 text-[12px] text-muted">Las últimas {HISTORY_MAX} descripciones, guardadas solo en este dispositivo.</p>
+              <p className="mb-2 text-[12px] text-muted">{t("Las últimas {HISTORY_MAX} descripciones, guardadas solo en este dispositivo.", { HISTORY_MAX })}</p>
               <ul className="flex flex-col divide-y divide-line">
                 {history.map((h) => (
                   <li key={h.id}>
                     <button type="button" onClick={() => setShowHistory(h)} className="press flex w-full flex-col items-start gap-0.5 py-2.5 text-left">
                       <span className="text-sm font-semibold">{h.title}</span>
                       <span className="text-[12px] text-muted">
-                        {dateTime(h.at)} · {h.platform} · {h.tone}
+                        {f.dateTime(h.at)} · {h.platform} · {h.tone}
                       </span>
                     </button>
                   </li>
@@ -503,7 +505,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                 }}
               >
                 <Trash2 size={15} strokeWidth={2.25} />
-                Borrar historial
+                {t("Borrar historial")}
               </Button>
             </div>
           </details>
@@ -520,12 +522,12 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         >
           <WandSparkles size={18} strokeWidth={2.25} />
           {pending && !busyKey
-            ? "Generando…"
+            ? t("Generando…")
             : !selected.length
-              ? "Elige un producto"
+              ? t("Elige un producto")
               : selected.length > 1
-                ? `Generar ${selected.length} descripciones`
-                : "Generar descripción"}
+                ? t("Generar {length} descripciones", { length: selected.length })
+                : t("Generar descripción")}
         </Button>
       </div>
 
@@ -535,14 +537,14 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         title={showHistory?.title ?? ""}
         footer={
           <>
-            <Button onClick={() => setShowHistory(null)}>Cerrar</Button>
+            <Button onClick={() => setShowHistory(null)}>{t("Cerrar")}</Button>
             <Button
               variant="primary"
               onClick={async () => {
                 if (showHistory && (await copyText(showHistory.text))) setShowHistory(null);
               }}
             >
-              <Copy size={16} /> Copiar
+              <Copy size={16} />{" "}{t("Copiar")}
             </Button>
           </>
         }
@@ -550,7 +552,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         {showHistory && (
           <>
             <p className="mb-2 text-[12px] text-muted">
-              {dateTime(showHistory.at)} · {showHistory.platform} · {showHistory.tone}
+              {f.dateTime(showHistory.at)} · {showHistory.platform} · {showHistory.tone}
             </p>
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{showHistory.text}</p>
           </>

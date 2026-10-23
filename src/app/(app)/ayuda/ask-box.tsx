@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { Check, LoaderCircle, Send, Sparkles } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Button, Notice } from "@/components/ui";
@@ -12,6 +13,7 @@ type State =
   | { step: "sent" };
 
 export function AskBox() {
+  const t = useT();
   const [question, setQuestion] = useState("");
   const [state, setState] = useState<State>({ step: "idle" });
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +60,12 @@ export function AskBox() {
   if (state.step === "solved" || state.step === "sent") {
     return (
       <div className="flex flex-col items-start gap-3">
-        <Notice tone="good" title={state.step === "solved" ? "¡Genial!" : "Enviado a soporte"}>
+        <Notice tone="good" title={state.step === "solved" ? t("¡Genial!") : t("Enviado a soporte")}>
           {state.step === "solved"
-            ? "Nos alegra que te haya servido."
-            : "Te responderemos lo antes posible. Verás la respuesta en «Tus consultas» y también te llegará por correo."}
+            ? t("Nos alegra que te haya servido.")
+            : t("Te responderemos lo antes posible. Verás la respuesta en «Tus consultas» y también te llegará por correo.")}
         </Notice>
-        <Button onClick={reset}>Hacer otra pregunta</Button>
+        <Button onClick={reset}>{t("Hacer otra pregunta")}</Button>
       </div>
     );
   }
@@ -72,31 +74,31 @@ export function AskBox() {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-[13px] text-muted">
-          Tu pregunta: <span className="text-ink-soft">{state.question}</span>
+          {t("Tu pregunta:")}{" "}<span className="text-ink-soft">{state.question}</span>
         </p>
         {state.answer ? (
           <div className="rounded-[var(--radius-md)] border border-line bg-surface-2 p-4">
             <p className="mono mb-2 flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-[0.1em] text-faint">
               <Sparkles size={13} strokeWidth={2} className="text-brand" />
-              Respuesta automática
+              {t("Respuesta automática")}
             </p>
             <RichText text={state.answer} className="flex flex-col gap-2.5 text-[14.5px] leading-relaxed text-ink-soft" />
           </div>
         ) : (
-          <Notice tone="info">No hemos encontrado una respuesta automática. ¿La enviamos a soporte para que te responda una persona?</Notice>
+          <Notice tone="info">{t("No hemos encontrado una respuesta automática. ¿La enviamos a soporte para que te responda una persona?")}</Notice>
         )}
         {error && <Notice tone="bad">{error}</Notice>}
         <div className="flex flex-wrap items-center gap-2">
-          {state.answer && <span className="mr-1 text-[14px] font-medium text-ink">¿Te ha servido?</span>}
+          {state.answer && <span className="mr-1 text-[14px] font-medium text-ink">{t("¿Te ha servido?")}</span>}
           {state.answer && (
             <Button onClick={() => resolve(state, true)} disabled={pending}>
               {busy === "yes" ? <LoaderCircle size={16} className="animate-spin" /> : <Check size={16} strokeWidth={2} />}
-              Sí, resuelto
+              {t("Sí, resuelto")}
             </Button>
           )}
           <Button variant="primary" onClick={() => resolve(state, false)} disabled={pending}>
             {busy === "no" ? <LoaderCircle size={16} className="animate-spin" /> : <Send size={15} strokeWidth={2} />}
-            {state.answer ? "No, enviar a soporte" : "Enviar a soporte"}
+            {state.answer ? t("No, enviar a soporte") : t("Enviar a soporte")}
           </Button>
         </div>
       </div>
@@ -112,14 +114,14 @@ export function AskBox() {
       }}
     >
       <label className="flex flex-col gap-1.5">
-        <span className="text-[12.5px] font-medium text-muted">Tu pregunta, duda o problema</span>
+        <span className="text-[12.5px] font-medium text-muted">{t("Tu pregunta, duda o problema")}</span>
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           rows={3}
           maxLength={2000}
           required
-          placeholder="Por ejemplo: ¿cómo cambio el precio de una venta ya registrada?"
+          placeholder={t("Por ejemplo: ¿cómo cambio el precio de una venta ya registrada?")}
           className="min-h-24 w-full rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3.5 py-2.5 text-[15px] text-ink outline-none placeholder:text-faint focus:border-brand"
         />
       </label>
@@ -127,7 +129,7 @@ export function AskBox() {
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" variant="primary" disabled={pending || question.trim().length < 3}>
           {busy === "ask" ? <LoaderCircle size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2} />}
-          {busy === "ask" ? "Buscando la respuesta…" : "Preguntar"}
+          {busy === "ask" ? t("Buscando la respuesta…") : t("Preguntar")}
         </Button>
         <button
           type="button"
@@ -135,7 +137,7 @@ export function AskBox() {
           disabled={pending || question.trim().length < 3}
           className="press min-h-10 rounded-[var(--radius-sm)] px-3 text-[13.5px] font-medium text-muted hover:text-ink disabled:opacity-50"
         >
-          {busy === "direct" ? "Enviando…" : "Prefiero escribir directamente a soporte"}
+          {busy === "direct" ? t("Enviando…") : t("Prefiero escribir directamente a soporte")}
         </button>
       </div>
     </form>

@@ -1,4 +1,5 @@
 /** Esqueletos mientras carga una pantalla (aparecen al instante al tocar un enlace). */
+import { tSync } from "@/i18n/server";
 import { clsx } from "./ui";
 
 function Bar({ className }: { className?: string }) {
@@ -6,8 +7,9 @@ function Bar({ className }: { className?: string }) {
 }
 
 export function ListSkeleton({ rows = 8, filters = true }: { rows?: number; filters?: boolean }) {
+  const t = tSync();
   return (
-    <div aria-busy aria-label="Cargando" className="animate-fade">
+    <div aria-busy aria-label={t("Cargando")} className="animate-fade">
       <Bar className="mb-2 h-9 w-48" />
       <Bar className="mb-5 h-4 w-72 max-w-full" />
       {filters && <Bar className="mb-4 h-11 w-full md:h-[66px]" />}
@@ -28,8 +30,9 @@ export function ListSkeleton({ rows = 8, filters = true }: { rows?: number; filt
 }
 
 export function DetailSkeleton() {
+  const t = tSync();
   return (
-    <div aria-busy aria-label="Cargando" className="animate-fade">
+    <div aria-busy aria-label={t("Cargando")} className="animate-fade">
       <Bar className="mb-2 h-4 w-24" />
       <Bar className="mb-6 h-9 w-72 max-w-full" />
       <div className="grid gap-5 lg:grid-cols-[minmax(300px,380px)_1fr]">

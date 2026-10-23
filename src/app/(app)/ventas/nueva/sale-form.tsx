@@ -1,9 +1,9 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, LotTag, Notice, Select, Textarea, clsx } from "@/components/ui";
-import { money } from "@/lib/format";
 // El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
 const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 import type { AvailableLot, MobileOption, Option, PlatformOption, SellableVariant } from "@/lib/types";
@@ -40,6 +40,8 @@ export function SaleForm({
   carriers: Option[];
   mobiles: MobileOption[];
 }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const [date, setDate] = useState(today);
   const [responsible, setResponsible] = useState(ownResponsible?.id ?? (responsibles.length === 1 ? responsibles[0].id : ""));
@@ -175,7 +177,7 @@ export function SaleForm({
   return (
     <div className="grid gap-5 max-md:pb-24 lg:grid-cols-[1fr_340px]">
       {/* Pasos (solo móvil) */}
-      <ol className="grid grid-cols-3 gap-2 md:hidden" aria-label="Pasos">
+      <ol className="grid grid-cols-3 gap-2 md:hidden" aria-label={t("Pasos")}>
         {steps.map((label, i) => {
           const n = (i + 1) as 1 | 2 | 3;
           const reachable = n === 1 || (n === 2 && productsOk) || (n === 3 && productsOk && dataOk);
@@ -201,11 +203,11 @@ export function SaleForm({
       <div className="flex min-w-0 flex-col gap-5">
         <section className={clsx("rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(1))}>
           <h2 className="display mb-3 text-[22px]">
-            <span className="md:hidden">¿Qué vendes?</span>
-            <span className="max-md:hidden">Productos</span>
+            <span className="md:hidden">{t("¿Qué vendes?")}</span>
+            <span className="max-md:hidden">{t("Productos")}</span>
           </h2>
           <ProductPicker onSelect={addVariant} allowCreate={isAdmin} autoFocus />
-          {lines.length === 0 && <p className="mt-3 text-sm text-muted">Busca un producto para añadirlo. Una venta puede tener varios productos.</p>}
+          {lines.length === 0 && <p className="mt-3 text-sm text-muted">{t("Busca un producto para añadirlo. Una venta puede tener varios productos.")}</p>}
           <ul className="mt-3 flex flex-col gap-3">
             {lines.map((l) => {
               const lot = l.lots?.find((x) => x.lot_id === l.lotId);
@@ -217,28 +219,28 @@ export function SaleForm({
                       <p className="font-semibold">{variantDisplay(l.variant.product_name, l.variant.variant_name, l.variant.variant_count)}</p>
                       <p className="text-xs text-muted">{[l.variant.brand_name, l.variant.sku].filter(Boolean).join(", ") || " "}</p>
                     </div>
-                    <Button size="sm" variant="ghost" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label="Quitar producto">
-                      Quitar
+                    <Button size="sm" variant="ghost" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label={t("Quitar producto")}>
+                      {t("Quitar")}
                     </Button>
                   </div>
                   <div className="mt-3 grid gap-3 sm:grid-cols-[1.6fr_0.7fr_0.9fr]">
-                    <Field label="Pedido / lote de procedencia" required htmlFor={`lote-${l.key}`}>
+                    <Field label={t("Pedido / lote de procedencia")} required htmlFor={`lote-${l.key}`}>
                       {l.lots === null ? (
-                        <p className="h-10 text-sm leading-10 text-muted">Cargando lotes…</p>
+                        <p className="h-10 text-sm leading-10 text-muted">{t("Cargando lotes…")}</p>
                       ) : l.lots.length === 0 ? (
-                        <p className="h-10 text-sm leading-10 text-danger">Sin stock en ningún lote</p>
+                        <p className="h-10 text-sm leading-10 text-danger">{t("Sin stock en ningún lote")}</p>
                       ) : (
                         <Select id={`lote-${l.key}`} value={l.lotId} onChange={(e) => update(l.key, { lotId: e.target.value })}>
-                          <option value="">Elige el lote…</option>
+                          <option value="">{t("Elige el lote…")}</option>
                           {l.lots.map((x) => (
                             <option key={x.lot_id} value={x.lot_id}>
-                              {x.label}: {x.quantity_available} uds.{x.unit_cost !== null ? `, coste ${money(x.unit_cost)}` : ""}
+                              {x.label}: {x.quantity_available}{" "}{t("uds.")}{x.unit_cost !== null ? t(", coste {unit_cost}", { unit_cost: f.money(x.unit_cost) }) : ""}
                             </option>
                           ))}
                         </Select>
                       )}
                     </Field>
-                    <Field label="Unidades" required>
+                    <Field label={t("Unidades")} required>
                       <Input
                         type="number"
                         min={1}
@@ -248,20 +250,20 @@ export function SaleForm({
                         onChange={(e) => update(l.key, { quantity: e.target.value })}
                       />
                     </Field>
-                    <Field label="Precio por unidad (€)" required>
+                    <Field label={t("Precio por unidad (€)")} required>
                       <Input inputMode="decimal" value={l.price} onChange={(e) => update(l.key, { price: e.target.value })} placeholder="0,00" />
                     </Field>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <Input
                       className="h-10 max-w-md sm:h-9 sm:text-[13px]"
-                      placeholder="Detalle (color, estado…), opcional"
+                      placeholder={t("Detalle (color, estado…), opcional")}
                       value={l.notes}
                       onChange={(e) => update(l.key, { notes: e.target.value })}
                     />
                     <span className="flex items-center gap-2 text-sm">
                       {lot && <LotTag label={lot.label} />}
-                      <span className="display num text-[20px]">{money((Number(l.quantity) || 0) * (Number(l.price.replace(",", ".")) || 0))}</span>
+                      <span className="display num text-[20px]">{f.money((Number(l.quantity) || 0) * (Number(l.price.replace(",", ".")) || 0))}</span>
                     </span>
                   </div>
                   {problem && <p className="mt-2 text-[13px] font-medium text-danger">{problem}</p>}
@@ -272,13 +274,13 @@ export function SaleForm({
         </section>
 
         <section className={clsx("rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(2))}>
-          <h2 className="display mb-3 text-[22px]">Datos de la venta</h2>
+          <h2 className="display mb-3 text-[22px]">{t("Datos de la venta")}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <span className="text-[13px] font-semibold text-ink-soft">
-                Plataforma<span className="text-danger"> *</span>
+                {t("Plataforma")}<span className="text-danger"> *</span>
               </span>
-              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Plataforma">
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Plataforma")}>
                 {platforms.map((p) => (
                   <button
                     key={p.id}
@@ -296,13 +298,13 @@ export function SaleForm({
                 ))}
               </div>
             </div>
-            <Field label="Fecha" required>
+            <Field label={t("Fecha")} required>
               <Input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
             </Field>
             {isAdmin ? (
-              <Field label="Responsable" required hint={responsibles.length === 0 ? "Crea primero un responsable en Responsables." : undefined}>
+              <Field label={t("Responsable")} required hint={responsibles.length === 0 ? t("Crea primero un responsable en Responsables.") : undefined}>
                 <Select value={responsible} onChange={(e) => setResponsible(e.target.value)}>
-                  <option value="">Elige…</option>
+                  <option value="">{t("Elige…")}</option>
                   {responsibles.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
@@ -311,16 +313,16 @@ export function SaleForm({
                 </Select>
               </Field>
             ) : (
-              <Field label="Responsable">
+              <Field label={t("Responsable")}>
                 <Input value={ownResponsible?.name ?? "Sin vincular"} disabled />
               </Field>
             )}
-            <Field label="Móvil utilizado">
+            <Field label={t("Móvil utilizado")}>
               <Select value={mobileId} onChange={(e) => setMobileId(e.target.value)}>
-                <option value="">Sin indicar</option>
+                <option value="">{t("Sin indicar")}</option>
                 {mobiles.map((m) => (
                   <option key={m.id} value={m.id}>
-                    Móvil {m.number}
+                    {t("Móvil {number}", { number: m.number })}
                     {m.name && m.name !== `Móvil ${m.number}` ? ` (${m.name})` : ""}
                   </option>
                 ))}
@@ -329,8 +331,8 @@ export function SaleForm({
             {needsShipping && (
               <>
                 <div className="flex animate-rise flex-col gap-1.5 sm:col-span-2">
-                  <span className="text-[13px] font-semibold text-ink-soft">Paquetería</span>
-                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Paquetería">
+                  <span className="text-[13px] font-semibold text-ink-soft">{t("Paquetería")}</span>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Paquetería")}>
                     {carriers.map((c) => (
                       <button
                         key={c.id}
@@ -350,21 +352,21 @@ export function SaleForm({
                     ))}
                   </div>
                 </div>
-                <Field label="Estado del envío">
+                <Field label={t("Estado del envío")}>
                   <Select value={shipping} onChange={(e) => setShipping(e.target.value as "pendiente" | "enviado")}>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="enviado">Enviado</option>
+                    <option value="pendiente">{t("Pendiente")}</option>
+                    <option value="enviado">{t("Enviado")}</option>
                   </Select>
                 </Field>
-                <Field label="Etiqueta de envío" hint="PDF o imagen, máximo 10 MB." className="sm:col-span-2">
+                <Field label={t("Etiqueta de envío")} hint={t("PDF o imagen, máximo 10 MB.")} className="sm:col-span-2">
                   <Input type="file" accept="application/pdf,image/*" className="py-1.5" onChange={(e) => setLabel(e.target.files?.[0] ?? null)} />
                 </Field>
               </>
             )}
-            <Field label="Referencia de la venta" hint="Opcional, por ejemplo el número de pedido de Vinted.">
+            <Field label={t("Referencia de la venta")} hint={t("Opcional, por ejemplo el número de pedido de Vinted.")}>
               <Input value={reference} onChange={(e) => setReference(e.target.value)} />
             </Field>
-            <Field label="Notas">
+            <Field label={t("Notas")}>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-10" />
             </Field>
           </div>
@@ -373,7 +375,7 @@ export function SaleForm({
 
       <aside className={clsx("lg:sticky lg:top-6 lg:self-start", stepHidden(3))}>
         <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]">
-          <h2 className="display text-[22px]">Resumen</h2>
+          <h2 className="display text-[22px]">{t("Resumen")}</h2>
           {/* Repaso de todo (solo móvil, en el paso 3) */}
           <div className="mt-3 flex flex-col gap-3 md:hidden">
             <ul className="flex flex-col gap-2">
@@ -387,7 +389,7 @@ export function SaleForm({
                       </span>
                       {lot && <LotTag label={lot.label} />}
                     </span>
-                    <span className="num font-semibold">{money((Number(l.quantity) || 0) * (Number(l.price.replace(",", ".")) || 0))}</span>
+                    <span className="num font-semibold">{f.money((Number(l.quantity) || 0) * (Number(l.price.replace(",", ".")) || 0))}</span>
                   </li>
                 );
               })}
@@ -402,21 +404,21 @@ export function SaleForm({
               ]
                 .filter(Boolean)
                 .join(" · ")}
-              {label && <span className="block">Etiqueta: {label.name}</span>}
+              {label && <span className="block">{t("Etiqueta:")}{" "}{label.name}</span>}
             </p>
           </div>
           <dl className="mt-3 flex flex-col gap-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-muted">Productos</dt>
+              <dt className="text-muted">{t("Productos")}</dt>
               <dd className="num">{lines.length}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted">Unidades</dt>
+              <dt className="text-muted">{t("Unidades")}</dt>
               <dd className="num">{totalUnits}</dd>
             </div>
             <div className="flex items-baseline justify-between border-t border-line pt-2">
-              <dt className="text-base font-bold">Total</dt>
-              <dd className="display num text-[34px]">{money(total)}</dd>
+              <dt className="text-base font-bold">{t("Total")}</dt>
+              <dd className="display num text-[34px]">{f.money(total)}</dd>
             </div>
           </dl>
           {error && (
@@ -425,10 +427,10 @@ export function SaleForm({
             </Notice>
           )}
           <Button variant="primary" className="mt-4 w-full max-md:hidden" disabled={!canSave} onClick={save}>
-            {pending ? "Guardando…" : "Registrar venta"}
+            {pending ? t("Guardando…") : t("Registrar venta")}
           </Button>
-          {!platformId && lines.length > 0 && <p className="mt-2 text-xs text-muted">Falta elegir la plataforma.</p>}
-          {isAdmin && !responsible && lines.length > 0 && <p className="mt-1 text-xs text-muted">Falta elegir el responsable.</p>}
+          {!platformId && lines.length > 0 && <p className="mt-2 text-xs text-muted">{t("Falta elegir la plataforma.")}</p>}
+          {isAdmin && !responsible && lines.length > 0 && <p className="mt-1 text-xs text-muted">{t("Falta elegir el responsable.")}</p>}
         </section>
       </aside>
 
@@ -437,28 +439,28 @@ export function SaleForm({
         <div className="mx-auto flex max-w-xl items-center gap-3 rs-card rounded-[var(--radius-lg)] bg-surface/95 p-2 pl-4 shadow-[var(--shadow-pop)] backdrop-blur-md">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
-              {lines.length ? `${totalUnits} ${totalUnits === 1 ? "ud." : "uds."}` : "Sin productos"}
+              {lines.length ? `${totalUnits} ${totalUnits === 1 ? "ud." : "uds."}` : t("Sin productos")}
             </p>
-            <p className="display num text-[24px] leading-none">{money(total)}</p>
+            <p className="display num text-[24px] leading-none">{f.money(total)}</p>
           </div>
           {step > 1 && (
-            <Button variant="ghost" onClick={() => goTo((step - 1) as 1 | 2)} aria-label="Paso anterior">
-              Atrás
+            <Button variant="ghost" onClick={() => goTo((step - 1) as 1 | 2)} aria-label={t("Paso anterior")}>
+              {t("Atrás")}
             </Button>
           )}
           {step === 1 && (
             <Button variant="primary" disabled={!productsOk} onClick={() => goTo(2)}>
-              Siguiente →
+              {t("Siguiente →")}
             </Button>
           )}
           {step === 2 && (
             <Button variant="primary" disabled={!dataOk} onClick={() => goTo(3)}>
-              Siguiente →
+              {t("Siguiente →")}
             </Button>
           )}
           {step === 3 && (
             <Button variant="primary" disabled={!canSave} onClick={save}>
-              {pending ? "Guardando…" : "Registrar venta"}
+              {pending ? t("Guardando…") : t("Registrar venta")}
             </Button>
           )}
         </div>

@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -10,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ProductThumb } from "../productos/product-cards";
 import { RemovedButton } from "./listing-buttons";
 
-export const metadata: Metadata = { title: "Anuncios" };
+export const metadata: Metadata = { title: msg("Anuncios") };
 
 type Status = "borrador" | "publicado" | "retirado";
 type Row = {
@@ -31,6 +33,7 @@ const VIEWS = {
 type ViewKey = keyof typeof VIEWS;
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("anuncios");
   const sp = await searchParams;
   const supabase = await createClient();
@@ -49,16 +52,16 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader
-        title="Anuncios"
-        description="Qué tienes anunciado en Vinted y Wallapop. La app no publica por ti (las plataformas no lo permiten), pero te lo deja preparado y lleva la cuenta."
+        title={t("Anuncios")}
+        description={t("Qué tienes anunciado en Vinted y Wallapop. La app no publica por ti (las plataformas no lo permiten), pero te lo deja preparado y lleva la cuenta.")}
       />
       {counts["por-retirar"] > 0 && view !== "por-retirar" && (
         <Notice tone="warn" className="mb-4">
-          Tienes {counts["por-retirar"]} {counts["por-retirar"] === 1 ? "anuncio" : "anuncios"} de productos sin stock.{" "}
+          {t("Tienes {counts}", { counts: counts["por-retirar"] })}{" "}{counts["por-retirar"] === 1 ? "anuncio" : "anuncios"}{" "}{t("de productos sin stock.")}{" "}
           <Link href="/anuncios?ver=por-retirar" className="font-semibold underline">
-            Quítalos
+            {t("Quítalos")}
           </Link>{" "}
-          para no vender algo que ya no tienes.
+          {t("para no vender algo que ya no tienes.")}
         </Notice>
       )}
       <Tabs
@@ -66,7 +69,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
         items={(Object.keys(VIEWS) as ViewKey[]).map((k) => ({ key: k, label: `${VIEWS[k]} (${counts[k]})`, href: `/anuncios?ver=${k}` }))}
       />
       {list.length === 0 ? (
-        <Empty title={view === "por-retirar" ? "Nada que quitar" : view === "sin-anunciar" ? "Todo lo que tienes en stock está anunciado" : "Nada por aquí"} />
+        <Empty title={view === "por-retirar" ? t("Nada que quitar") : view === "sin-anunciar" ? t("Todo lo que tienes en stock está anunciado") : t("Nada por aquí")} />
       ) : (
         <ul className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface shadow-[var(--shadow-card)]">
           {list.map((r) => (
@@ -76,7 +79,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold group-hover:text-brand-ink">{r.name}</span>
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[12px]">
-                    <span className={clsx("num", r.stock === 0 ? "font-semibold text-danger" : "text-muted")}>{r.stock === 0 ? "Sin stock" : `${r.stock} en stock`}</span>
+                    <span className={clsx("num", r.stock === 0 ? "font-semibold text-danger" : "text-muted")}>{r.stock === 0 ? t("Sin stock") : t("{stock} en stock", { stock: r.stock })}</span>
                     <Chip name="Vinted" s={r.vinted} />
                     <Chip name="Wallapop" s={r.wallapop} />
                   </span>
@@ -98,6 +101,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
 }
 
 function Chip({ name, s }: { name: string; s: Status | null }) {
+  const t = tSync();
   const on = s === "publicado";
   return (
     <span
@@ -107,7 +111,7 @@ function Chip({ name, s }: { name: string; s: Status | null }) {
       )}
     >
       {name}
-      {s === "borrador" && " · borrador"}
+      {s === "borrador" && t(" · borrador")}
     </span>
   );
 }

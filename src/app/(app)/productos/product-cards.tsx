@@ -1,7 +1,8 @@
+import { Tx } from "@/i18n/tx";
 import { ProductThumb as Thumb } from "@/components/thumb";
 import Link from "next/link";
 import { clsx } from "@/components/ui";
-import { money, units } from "@/lib/format";
+import { Fmt } from "@/i18n/fmt";
 
 export type CardProduct = {
   key: string;
@@ -41,11 +42,11 @@ export function ProductCards({ items }: { items: CardProduct[] }) {
               {p.warn && <span className="mt-0.5 block text-[12px] font-semibold text-warn">{p.warn}</span>}
             </span>
             <span className="flex shrink-0 flex-col items-end gap-1">
-              <span className="num text-[17px] font-semibold tracking-[-0.01em]">{p.price !== null ? money(p.price) : "—"}</span>
+              <span className="num text-[17px] font-semibold tracking-[-0.01em]">{p.price !== null ? <Fmt kind="money" value={p.price} /> : "—"}</span>
               <span
                 className={clsx("num rounded-full px-2 text-[11.5px] font-bold leading-5", p.stock > 0 ? "bg-good-soft text-good-ink" : "bg-subtle text-muted")}
               >
-                {p.stock > 0 ? `${units(p.stock)} en stock` : "Sin stock"}
+                {p.stock > 0 ? <><Fmt kind="units" value={p.stock} /> <Tx>en stock</Tx></> : <Tx>Sin stock</Tx>}
               </span>
             </span>
           </Link>

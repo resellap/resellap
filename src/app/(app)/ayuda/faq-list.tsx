@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { clsx } from "@/components/ui";
@@ -15,6 +16,7 @@ const norm = (s: string) =>
 const INDEX = FAQ.flatMap((g) => g.items.map((f) => ({ id: f.id, text: norm(`${f.q} ${f.tags ?? ""} ${f.a}`) })));
 
 export function FaqList() {
+  const t = useT();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
 
@@ -36,7 +38,7 @@ export function FaqList() {
   return (
     <div>
       <label className="relative mb-6 block">
-        <span className="sr-only">Buscar en la ayuda</span>
+        <span className="sr-only">{t("Buscar en la ayuda")}</span>
         <Search size={18} strokeWidth={1.75} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
         <input
           type="text"
@@ -44,11 +46,11 @@ export function FaqList() {
           role="searchbox"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Busca tu duda: importar, Gmail, devolución…"
+          placeholder={t("Busca tu duda: importar, Gmail, devolución…")}
           className="h-12 w-full rounded-[var(--radius-md)] border border-line bg-surface-2 pl-11 pr-11 text-[15px] text-ink outline-none placeholder:text-faint focus:border-brand"
         />
         {q && (
-          <button type="button" onClick={() => setQ("")} aria-label="Borrar búsqueda" className="press absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-faint hover:text-ink">
+          <button type="button" onClick={() => setQ("")} aria-label={t("Borrar búsqueda")} className="press absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-faint hover:text-ink">
             <X size={16} strokeWidth={2} />
           </button>
         )}
@@ -56,7 +58,7 @@ export function FaqList() {
 
       {hits && hits.size === 0 && (
         <p className="mb-6 rounded-[var(--radius-md)] border border-dashed border-line px-5 py-6 text-center text-[14px] text-muted">
-          No hay ninguna pregunta con «{q}». Escríbela abajo y te respondemos.
+          {t("No hay ninguna pregunta con «{q}». Escríbela abajo y te respondemos.", { q })}
         </p>
       )}
 

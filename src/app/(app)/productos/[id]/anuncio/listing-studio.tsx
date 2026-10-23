@@ -1,11 +1,11 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, Copy, Download, ExternalLink, Share2, Sparkles } from "lucide-react";
 import { FadeImg, type GalleryPhotoView } from "@/components/photo-gallery";
 import { Badge, Button, Field, Input, Notice, Select, Textarea, clsx } from "@/components/ui";
-import { date, money } from "@/lib/format";
 import { freshCopy } from "@/lib/image";
 import { setPhotosUsed } from "../../photo-actions";
 import { generateListingText, saveListing, setListingStatus, type ListingPlatform } from "../../../anuncios/actions";
@@ -71,12 +71,14 @@ export function ListingStudio({
   history: PriceHistory | null;
   aiReady: boolean;
 }) {
+  const t = useT();
+  const f = useFormat();
   const [platform, setPlatform] = useState<ListingPlatform>("vinted");
   const cost = history?.avg_cost ?? avgCost;
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-4">
-        {stock === 0 && <Notice tone="warn">Este producto no tiene stock ahora mismo. Puedes preparar el anuncio igualmente.</Notice>}
+        {stock === 0 && <Notice tone="warn">{t("Este producto no tiene stock ahora mismo. Puedes preparar el anuncio igualmente.")}</Notice>}
         <PhotosStep productId={productId} name={name} photos={photos} />
         <TextStep
           key={platform}
@@ -101,6 +103,8 @@ export function ListingStudio({
 // 1 · Fotos: elegir, guardar en el móvil y marcar dónde se han usado
 // ---------------------------------------------------------------------
 function PhotosStep({ productId, name, photos }: { productId: string; name: string; photos: GalleryPhotoView[] }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(() => new Set(photos.map((p) => p.id)));
   const [files, setFiles] = useState<File[] | null>(null);
@@ -201,10 +205,10 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
 
   if (photos.length === 0) {
     return (
-      <Step n={1} title="Fotos">
-        <p className="text-sm text-muted">Este producto aún no tiene fotos.</p>
+      <Step n={1} title={t("Fotos")}>
+        <p className="text-sm text-muted">{t("Este producto aún no tiene fotos.")}</p>
         <Link href={`/productos/${productId}`} className="mt-2 inline-block text-sm font-semibold text-brand-ink hover:underline">
-          Subir fotos en la ficha del producto
+          {t("Subir fotos en la ficha del producto")}
         </Link>
       </Step>
     );
@@ -214,18 +218,18 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
   return (
     <Step
       n={1}
-      title="Fotos"
+      title={t("Fotos")}
       aside={
         <div className="flex flex-wrap gap-1.5 text-[12.5px]">
           <button type="button" className="press rounded-full border border-line-strong px-2.5 py-1 font-semibold" onClick={() => pick(photos.map((p) => p.id))}>
-            Todas
+            {t("Todas")}
           </button>
           <button type="button" className="press rounded-full border border-line-strong px-2.5 py-1 font-semibold" onClick={() => pick([])}>
-            Ninguna
+            {t("Ninguna")}
           </button>
           {unusedVinted.length > 0 && unusedVinted.length < photos.length && (
             <button type="button" className="press rounded-full border border-line-strong px-2.5 py-1 font-semibold" onClick={() => pick(unusedVinted)}>
-              Sin usar en Vinted ({unusedVinted.length})
+              {t("Sin usar en Vinted ({length})", { length: unusedVinted.length })}
             </button>
           )}
         </div>
@@ -240,7 +244,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
                 type="button"
                 onClick={() => toggle(p.id)}
                 aria-pressed={on}
-                aria-label={`Foto ${i + 1}${on ? ", elegida" : ""}`}
+                aria-label={t("Foto {v}{v2}", { v: i + 1, v2: on ? ", elegida" : "" })}
                 className={clsx(
                   "relative block aspect-square w-full overflow-hidden rounded-[var(--radius-sm)] border-2 transition-[border-color,transform] duration-200 active:scale-[0.97]",
                   on ? "border-brand" : "border-transparent",
@@ -259,7 +263,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
                   <span className="absolute bottom-1 left-1 flex flex-wrap gap-0.5">
                     {p.usedOn.map((u) => (
                       <span key={u} className="rounded-full bg-black/65 px-1.5 py-0.5 text-[9.5px] font-bold text-white">
-                        {u === "vinted" ? "Vinted" : "Wallapop"}
+                        {u === "vinted" ? t("Vinted") : t("Wallapop")}
                       </span>
                     ))}
                   </span>
@@ -274,29 +278,29 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
         {!files ? (
           <Button variant="primary" onClick={prepare} disabled={!chosen.length || !!busy}>
             <Download size={16} strokeWidth={2.5} />
-            {busy ?? `Preparar ${chosen.length} ${chosen.length === 1 ? "foto" : "fotos"}`}
+            {busy ?? t("Preparar {length} {v}", { length: chosen.length, v: chosen.length === 1 ? "foto" : "fotos" })}
           </Button>
         ) : (
           <Button variant="primary" onClick={save}>
             <Share2 size={16} strokeWidth={2.5} />
-            Guardar {files.length} en el móvil
+            {t("Guardar {length} en el móvil", { length: files.length })}
           </Button>
         )}
-        <span className="text-[12.5px] text-muted">Se crean copias nuevas en JPG, sin fecha, móvil ni ubicación dentro.</span>
+        <span className="text-[12.5px] text-muted">{t("Se crean copias nuevas en JPG, sin fecha, móvil ni ubicación dentro.")}</span>
       </div>
-      {files && <p className="mt-2 text-[12.5px] text-muted">En el iPhone, en la hoja que se abre, toca «Guardar imágenes».</p>}
+      {files && <p className="mt-2 text-[12.5px] text-muted">{t("En el iPhone, en la hoja que se abre, toca «Guardar imágenes».")}</p>}
 
       {askUsed && (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[var(--radius-sm)] bg-ink/5 p-3 text-sm animate-fade">
-          <span className="font-semibold">¿Dónde vas a usar estas fotos?</span>
+          <span className="font-semibold">{t("¿Dónde vas a usar estas fotos?")}</span>
           <Button size="sm" onClick={() => markUsed("vinted")}>
-            Vinted
+            {t("Vinted")}
           </Button>
           <Button size="sm" onClick={() => markUsed("wallapop")}>
-            Wallapop
+            {t("Wallapop")}
           </Button>
           <button type="button" className="text-[13px] text-muted underline" onClick={() => setAskUsed(false)}>
-            Ahora no
+            {t("Ahora no")}
           </button>
         </div>
       )}
@@ -311,8 +315,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
         </Notice>
       )}
       <p className="mt-3 text-[12px] text-faint">
-        Las fotos marcadas como usadas en Vinted llevan la etiqueta «Vinted». Vinted puede detectar fotos repetidas aunque sean copias nuevas: si te las bloquea, usa
-        fotos sin estrenar.
+        {t("Las fotos marcadas como usadas en Vinted llevan la etiqueta «Vinted». Vinted puede detectar fotos repetidas aunque sean copias nuevas: si te las bloquea, usa fotos sin estrenar.")}
       </p>
     </Step>
   );
@@ -322,6 +325,8 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
 // 2 · Texto, precio y estado del anuncio en cada plataforma
 // ---------------------------------------------------------------------
 function CopyButton({ text, label }: { text: string; label: string }) {
+  const t = useT();
+  const f = useFormat();
   const [done, setDone] = useState(false);
   return (
     <Button
@@ -343,15 +348,17 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       }}
     >
       {done ? <Check size={15} strokeWidth={3} className="text-good" /> : <Copy size={15} />}
-      {done ? "Copiado" : label}
+      {done ? t("Copiado") : label}
     </Button>
   );
 }
 
 function StatusBadge({ l }: { l: ListingDraft | null }) {
-  if (!l || l.status === "borrador") return <Badge tone="neutral">Sin publicar</Badge>;
-  if (l.status === "publicado") return <Badge tone="good">Publicado</Badge>;
-  return <Badge tone="warn">Retirado</Badge>;
+  const t = useT();
+  const f = useFormat();
+  if (!l || l.status === "borrador") return <Badge tone="neutral">{t("Sin publicar")}</Badge>;
+  if (l.status === "publicado") return <Badge tone="good">{t("Publicado")}</Badge>;
+  return <Badge tone="warn">{t("Retirado")}</Badge>;
 }
 
 function TextStep({
@@ -373,6 +380,8 @@ function TextStep({
   aiReady: boolean;
   cost: number | null;
 }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const l = listings[platform];
   const other: ListingPlatform = platform === "vinted" ? "wallapop" : "vinted";
@@ -432,7 +441,7 @@ function TextStep({
   return (
     <Step
       n={2}
-      title="Texto y publicación"
+      title={t("Texto y publicación")}
       aside={
         <div role="tablist" className="flex rounded-full border border-line-strong bg-surface p-0.5 text-[13px] font-semibold">
           {(["vinted", "wallapop"] as const).map((p) => (
@@ -453,10 +462,10 @@ function TextStep({
     >
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
         <StatusBadge l={l} />
-        {l?.status === "publicado" && l.published_at && <span className="text-[12.5px] text-muted">desde el {date(l.published_at)}</span>}
+        {l?.status === "publicado" && l.published_at && <span className="text-[12.5px] text-muted">{t("desde el")}{" "}{f.date(l.published_at)}</span>}
         {l?.url && (
           <a href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand-ink hover:underline">
-            Abrir anuncio <ExternalLink size={13} />
+            {t("Abrir anuncio")}{" "}<ExternalLink size={13} />
           </a>
         )}
       </div>
@@ -465,17 +474,17 @@ function TextStep({
         <details className="mb-3 rounded-[var(--radius-sm)] border border-line bg-surface-2 p-3 [&_summary::-webkit-details-marker]:hidden" open={!text}>
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold">
             <Sparkles size={16} className="text-brand" />
-            Escribir con el generador
+            {t("Escribir con el generador")}
           </summary>
           <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-            <Field label="Estado">
+            <Field label={t("Estado")}>
               <Select value={condition} onChange={(e) => setCondition(e.target.value)}>
                 {CONDITIONS.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </Select>
             </Field>
-            <Field label="Tono">
+            <Field label={t("Tono")}>
               <Select value={tone} onChange={(e) => setTone(e.target.value as Tone)}>
                 {Object.entries(TONES).map(([k, t]) => (
                   <option key={k} value={k}>
@@ -484,29 +493,29 @@ function TextStep({
                 ))}
               </Select>
             </Field>
-            <Field label="Qué destacar" className="sm:col-span-2">
-              <Input value={features} onChange={(e) => setFeatures(e.target.value)} placeholder="Ej.: con caja, precintado, poco uso" />
+            <Field label={t("Qué destacar")} className="sm:col-span-2">
+              <Input value={features} onChange={(e) => setFeatures(e.target.value)} placeholder={t("Ej.: con caja, precintado, poco uso")} />
             </Field>
-            <Field label="Defectos (si los hay)" className="sm:col-span-2">
-              <Input value={defects} onChange={(e) => setDefects(e.target.value)} placeholder="Déjalo vacío si no tiene" />
+            <Field label={t("Defectos (si los hay)")} className="sm:col-span-2">
+              <Input value={defects} onChange={(e) => setDefects(e.target.value)} placeholder={t("Déjalo vacío si no tiene")} />
             </Field>
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
               <input type="checkbox" checked={hashtags} onChange={(e) => setHashtags(e.target.checked)} className="h-4 w-4 accent-[var(--color-brand)]" />
-              Añadir hashtags
+              {t("Añadir hashtags")}
             </label>
           </div>
           <Button variant="primary" size="sm" className="mt-3" onClick={generate} disabled={generating}>
             <Sparkles size={15} />
-            {generating ? "Escribiendo…" : `Generar para ${PLATFORM_NAME[platform]}`}
+            {generating ? t("Escribiendo…") : t("Generar para {PLATFORM_NAME}", { PLATFORM_NAME: PLATFORM_NAME[platform] })}
           </Button>
         </details>
       )}
 
       <div className="flex flex-col gap-3">
-        <Field label="Título">
+        <Field label={t("Título")}>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={name} maxLength={200} />
         </Field>
-        <Field label="Descripción">
+        <Field label={t("Descripción")}>
           <Textarea value={text} onChange={(e) => setText(e.target.value)} className="min-h-44" />
         </Field>
         {!text && o?.description && (
@@ -518,36 +527,36 @@ function TextStep({
               setText(o.description ?? "");
             }}
           >
-            Usar el texto de {PLATFORM_NAME[other]}
+            {t("Usar el texto de {PLATFORM_NAME}", { PLATFORM_NAME: PLATFORM_NAME[other] })}
           </button>
         )}
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Precio (€)" error={!priceValid ? "Precio no válido" : undefined} hint={cost !== null && priceNum ? `Ganarías ${money(priceNum - cost)} por unidad` : undefined}>
+          <Field label={t("Precio (€)")} error={!priceValid ? t("Precio no válido") : undefined} hint={cost !== null && priceNum ? t("Ganarías {v} por unidad", { v: f.money(priceNum - cost) }) : undefined}>
             <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className="num" placeholder="0,00" />
           </Field>
-          <Field label="Enlace del anuncio (opcional)" hint="Compartir → Copiar enlace, en la app.">
-            <Input value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" placeholder="https://…" />
+          <Field label={t("Enlace del anuncio (opcional)")} hint={t("Compartir → Copiar enlace, en la app.")}>
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" placeholder={t("https://…")} />
           </Field>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <CopyButton text={title} label="Copiar título" />
-          <CopyButton text={text} label="Copiar texto" />
-          <CopyButton text={priceNum !== null && priceValid ? String(priceNum).replace(".", ",") : ""} label="Copiar precio" />
+          <CopyButton text={title} label={t("Copiar título")} />
+          <CopyButton text={text} label={t("Copiar texto")} />
+          <CopyButton text={priceNum !== null && priceValid ? String(priceNum).replace(".", ",") : ""} label={t("Copiar precio")} />
         </div>
 
         <div className="flex flex-wrap gap-2 border-t border-line pt-3">
           <Button onClick={() => save()} disabled={pending || !dirty}>
-            {pending ? "Guardando…" : dirty ? "Guardar" : "Guardado"}
+            {pending ? t("Guardando…") : dirty ? t("Guardar") : t("Guardado")}
           </Button>
           {l?.status !== "publicado" ? (
             <Button variant="primary" onClick={() => status("publicado")} disabled={pending}>
               <Check size={16} strokeWidth={2.75} />
-              Ya está publicado en {PLATFORM_NAME[platform]}
+              {t("Ya está publicado en {PLATFORM_NAME}", { PLATFORM_NAME: PLATFORM_NAME[platform] })}
             </Button>
           ) : (
             <Button variant="danger" onClick={() => status("retirado")} disabled={pending}>
-              Lo he quitado de {PLATFORM_NAME[platform]}
+              {t("Lo he quitado de {PLATFORM_NAME}", { PLATFORM_NAME: PLATFORM_NAME[platform] })}
             </Button>
           )}
         </div>
@@ -562,39 +571,41 @@ function TextStep({
 // 3 · Ayuda con el precio (solo datos reales)
 // ---------------------------------------------------------------------
 function PriceHelp({ history, cost, normalPrice, stock }: { history: PriceHistory | null; cost: number | null; normalPrice: number | null; stock: number }) {
+  const t = useT();
+  const f = useFormat();
   const h = history;
   const has = !!h && h.count > 0;
   const margins = [20, 30, 50];
   return (
-    <Step n={3} title="Precio">
+    <Step n={3} title={t("Precio")}>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
         <div>
-          <dt className="text-[12px] text-muted">Te cuesta (coste medio)</dt>
-          <dd className="display num text-[24px] leading-tight">{cost !== null ? money(cost, { precise: true }) : "—"}</dd>
+          <dt className="text-[12px] text-muted">{t("Te cuesta (coste medio)")}</dt>
+          <dd className="display num text-[24px] leading-tight">{cost !== null ? f.money(cost, { precise: true }) : "—"}</dd>
         </div>
         <div>
-          <dt className="text-[12px] text-muted">En stock</dt>
+          <dt className="text-[12px] text-muted">{t("En stock")}</dt>
           <dd className="display num text-[24px] leading-tight">{stock}</dd>
         </div>
         {has && (
           <>
             <div>
-              <dt className="text-[12px] text-muted">Lo has vendido de media a</dt>
-              <dd className="display num text-[24px] leading-tight text-brand-ink">{money(h!.avg)}</dd>
+              <dt className="text-[12px] text-muted">{t("Lo has vendido de media a")}</dt>
+              <dd className="display num text-[24px] leading-tight text-brand-ink">{f.money(h!.avg)}</dd>
             </div>
             <div>
-              <dt className="text-[12px] text-muted">Entre</dt>
+              <dt className="text-[12px] text-muted">{t("Entre")}</dt>
               <dd className="num text-[15px] font-semibold leading-tight">
-                {money(h!.min)} y {money(h!.max)}
+                {f.money(h!.min)} y {f.money(h!.max)}
               </dd>
             </div>
             <div>
-              <dt className="text-[12px] text-muted">Ventas</dt>
+              <dt className="text-[12px] text-muted">{t("Ventas")}</dt>
               <dd className="num font-semibold">{h!.count}</dd>
             </div>
             <div>
-              <dt className="text-[12px] text-muted">Tarda en venderse</dt>
-              <dd className="num font-semibold">{h!.avg_days !== null ? `${h!.avg_days} días de media` : "—"}</dd>
+              <dt className="text-[12px] text-muted">{t("Tarda en venderse")}</dt>
+              <dd className="num font-semibold">{h!.avg_days !== null ? t("{avg_days} días de media", { avg_days: h!.avg_days }) : "—"}</dd>
             </div>
           </>
         )}
@@ -602,11 +613,11 @@ function PriceHelp({ history, cost, normalPrice, stock }: { history: PriceHistor
 
       {has && Object.keys(h!.by_platform).length > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">Por plataforma</p>
+          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">{t("Por plataforma")}</p>
           <ul className="flex flex-wrap gap-1.5 text-[13px]">
             {Object.entries(h!.by_platform).map(([p, v]) => (
               <li key={p} className="num rounded-full bg-ink/5 px-2.5 py-1">
-                {p}: <strong>{money(v.avg)}</strong> <span className="text-muted">({v.count})</span>
+                {p}: <strong>{f.money(v.avg)}</strong> <span className="text-muted">({v.count})</span>
               </li>
             ))}
           </ul>
@@ -614,33 +625,33 @@ function PriceHelp({ history, cost, normalPrice, stock }: { history: PriceHistor
       )}
       {has && h!.recent.length > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">Últimas ventas</p>
+          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">{t("Últimas ventas")}</p>
           <ul className="divide-y divide-line text-[13px]">
             {h!.recent.map((r, i) => (
               <li key={i} className="num flex justify-between py-1.5">
                 <span className="text-muted">
                   {r.date.split("-").reverse().join("/")} · {r.platform}
                 </span>
-                <span className="font-semibold">{money(r.price)}</span>
+                <span className="font-semibold">{f.money(r.price)}</span>
               </li>
             ))}
           </ul>
         </div>
       )}
-      {!has && <p className="mt-3 text-[13px] text-muted">Todavía no has vendido este producto, así que no hay precios de referencia. Abajo tienes lo que ganarías a cada precio.</p>}
+      {!has && <p className="mt-3 text-[13px] text-muted">{t("Todavía no has vendido este producto, así que no hay precios de referencia. Abajo tienes lo que ganarías a cada precio.")}</p>}
 
       {cost !== null && cost > 0 && (
         <div className="mt-4">
-          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">Para ganar…</p>
+          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-muted">{t("Para ganar…")}</p>
           <ul className="grid grid-cols-3 gap-1.5 text-center">
             {margins.map((m) => (
               <li key={m} className="rounded-[var(--radius-sm)] border border-line px-2 py-2">
-                <p className="text-[12px] text-muted">un {m} %</p>
-                <p className="num font-semibold">{money(cost * (1 + m / 100))}</p>
+                <p className="text-[12px] text-muted">{t("un {m} %", { m })}</p>
+                <p className="num font-semibold">{f.money(cost * (1 + m / 100))}</p>
               </li>
             ))}
           </ul>
-          {normalPrice !== null && <p className="mt-2 text-[12.5px] text-muted">Precio normal en la ficha: {money(normalPrice)}.</p>}
+          {normalPrice !== null && <p className="mt-2 text-[12.5px] text-muted">{t("Precio normal en la ficha: {normalPrice}.", { normalPrice: f.money(normalPrice) })}</p>}
         </div>
       )}
     </Step>

@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,9 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 import { SupplierButton } from "../supplier-form";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Proveedor" };
+export const metadata: Metadata = { title: msg("Proveedor") };
 
 export default async function SupplierDetail({ params }: PageProps<"/proveedores/[id]">) {
+  const t = await getT();
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
@@ -28,37 +31,36 @@ export default async function SupplierDetail({ params }: PageProps<"/proveedores
   return (
     <>
       <PageHeader
-        back={{ href: "/proveedores", label: "Proveedores" }}
+        back={{ href: "/proveedores", label: t("Proveedores") }}
         title={s.name}
-        description={[s.contact_name, s.email, s.phone].filter(Boolean).join(", ") || "Sin datos de contacto"}
-        actions={<SupplierButton initial={{ id: s.id, name: s.is_placeholder ? "" : s.name, contact_name: s.contact_name, email: s.email, phone: s.phone, notes: s.notes }} label={s.is_placeholder ? "Poner el nombre real" : undefined} />}
+        description={[s.contact_name, s.email, s.phone].filter(Boolean).join(", ") || t("Sin datos de contacto")}
+        actions={<SupplierButton initial={{ id: s.id, name: s.is_placeholder ? "" : s.name, contact_name: s.contact_name, email: s.email, phone: s.phone, notes: s.notes }} label={s.is_placeholder ? t("Poner el nombre real") : undefined} />}
       />
       {s.is_placeholder && (
         <Notice tone="warn" className="mb-4">
-          Este proveedor se creó en la importación porque el Excel no indicaba de quién era cada pedido. Puedes ponerle el nombre real, o crear los proveedores reales y cambiar cada
-          pedido desde su ficha.
+          {t("Este proveedor se creó en la importación porque el Excel no indicaba de quién era cada pedido. Puedes ponerle el nombre real, o crear los proveedores reales y cambiar cada pedido desde su ficha.")}
         </Notice>
       )}
       <Figures
         className="mb-5"
         items={[
-          { label: "Pedidos", value: units(active.length) },
-          { label: "Importe total comprado", value: money(total) },
-          { label: "Unidades recibidas", value: units(active.reduce((a, p) => a + p.units_received, 0)) },
+          { label: t("Pedidos"), value: units(active.length) },
+          { label: t("Importe total comprado"), value: money(total) },
+          { label: t("Unidades recibidas"), value: units(active.reduce((a, p) => a + p.units_received, 0)) },
         ]}
       />
-      <Panel title="Historial de compras" padded={false}>
+      <Panel title={t("Historial de compras")} padded={false}>
         {(pos ?? []).length === 0 ? (
-          <Empty title="Sin pedidos todavía" />
+          <Empty title={t("Sin pedidos todavía")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Pedido</Th>
-                <Th>Fecha</Th>
-                <Th>Estado</Th>
-                <Th num>Unidades</Th>
-                <Th num>Coste total</Th>
+                <Th>{t("Pedido")}</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Estado")}</Th>
+                <Th num>{t("Unidades")}</Th>
+                <Th num>{t("Coste total")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -66,7 +68,7 @@ export default async function SupplierDetail({ params }: PageProps<"/proveedores
                 <Tr key={p.id} muted={p.status === "cancelado"}>
                   <Td>
                     <Link href={`/compras/${p.id}`}>
-                      <LotTag label={`Pedido #${p.order_number}`} />
+                      <LotTag label={t("Pedido #{order_number}", { order_number: p.order_number })} />
                     </Link>
                   </Td>
                   <Td className="num">{date(p.order_date)}</Td>
@@ -82,7 +84,7 @@ export default async function SupplierDetail({ params }: PageProps<"/proveedores
         )}
       </Panel>
       {s.notes && (
-        <Panel title="Notas" className="mt-5">
+        <Panel title={t("Notas")} className="mt-5">
           <p className="whitespace-pre-line text-sm">{s.notes}</p>
         </Panel>
       )}

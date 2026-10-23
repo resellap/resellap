@@ -21,18 +21,18 @@ export async function generateMetadata(): Promise<Metadata> {
   robots: { index: false, follow: false },
   // Instalada desde Safari («Añadir a pantalla de inicio») se abre como una app
   applicationName: "Resellap",
-  appleWebApp: { capable: true, title: "Resellap", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: t("Resellap"), statusBarStyle: "default" },
   icons: { apple: [{ url: "/icons/apple-icon-180.png", sizes: "180x180" }] },
   formatDetection: { telephone: false },
   openGraph: {
     type: "website",
     siteName: "Resellap",
-    title: "Resellap",
+    title: t("Resellap"),
     description: DESCRIPTION,
     locale: INTL_TAG[t.locale].replace("-", "_"),
-    images: [{ url: "/brand/og.png", width: 1200, height: 630, alt: "Resellap" }],
+    images: [{ url: "/brand/og.png", width: 1200, height: 630, alt: t("Resellap") }],
   },
-  twitter: { card: "summary_large_image", title: "Resellap", description: DESCRIPTION, images: ["/brand/og.png"] },
+  twitter: { card: "summary_large_image", title: t("Resellap"), description: DESCRIPTION, images: ["/brand/og.png"] },
   };
 }
 

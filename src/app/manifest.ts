@@ -1,3 +1,4 @@
+import { tSync } from "@/i18n/server";
 import type { MetadataRoute } from "next";
 
 /**
@@ -6,11 +7,12 @@ import type { MetadataRoute } from "next";
  * y que se abra a pantalla completa, como una app, sin barra de Safari.
  */
 export default function manifest(): MetadataRoute.Manifest {
+  const t = tSync();
   return {
     id: "/",
     name: "Resellap",
     short_name: "Resellap",
-    description: "Inventario, ventas, compras y rentabilidad.",
+    description: t("Inventario, ventas, compras y rentabilidad."),
     lang: "es",
     start_url: "/",
     scope: "/",

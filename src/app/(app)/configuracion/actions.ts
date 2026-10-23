@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
@@ -37,11 +38,12 @@ async function setAppearanceCookie(stored: StoredPrefs) {
 
 /** Guarda una sección de los ajustes del usuario (solo las suyas). */
 export async function savePreferences<S extends Section>(section: S, value: StoredPrefs[S]): Promise<ActionResult> {
+  const t = await getT();
   const cur = await currentStored();
-  if (!cur) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
-  if (!(section in SECTION_LABEL)) return { ok: false, error: "Sección no válida." };
+  if (!cur) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
+  if (!(section in SECTION_LABEL)) return { ok: false, error: t("Sección no válida.") };
   const next = prefsSchema.safeParse({ ...cur.stored, [section]: value });
-  if (!next.success) return { ok: false, error: "Algún valor no es válido. Revisa los cambios." };
+  if (!next.success) return { ok: false, error: t("Algún valor no es válido. Revisa los cambios.") };
   const supabase = await createClient();
   const { error } = await supabase
     .from("user_preferences")
@@ -50,13 +52,14 @@ export async function savePreferences<S extends Section>(section: S, value: Stor
   if (section === "appearance") await setAppearanceCookie(next.data);
   await supabase.rpc("log_user_event", { p_action: "preferencias", p_summary: `Ajustes guardados: ${SECTION_LABEL[section]}` });
   revalidatePath("/", "layout");
-  return { ok: true, message: "Cambios guardados." };
+  return { ok: true, message: t("Cambios guardados.") };
 }
 
 /** Vuelve a los valores por defecto (todas las secciones o una). Nunca toca datos del negocio. */
 export async function resetPreferences(section?: Section): Promise<ActionResult> {
+  const t = await getT();
   const cur = await currentStored();
-  if (!cur) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
+  if (!cur) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
   const supabase = await createClient();
   const rest: StoredPrefs = section ? { ...cur.stored, [section]: undefined } : {};
   const { error } = section
@@ -69,13 +72,14 @@ export async function resetPreferences(section?: Section): Promise<ActionResult>
     p_summary: section ? `Restablecido: ${SECTION_LABEL[section]}` : "Restablecidos todos los ajustes personales",
   });
   revalidatePath("/", "layout");
-  return { ok: true, message: section ? "Restablecido." : "Ajustes restablecidos. Tus datos no se han tocado." };
+  return { ok: true, message: section ? t("Restablecido.") : t("Ajustes restablecidos. Tus datos no se han tocado.") };
 }
 
 /** Cierra la sesión en todos los dispositivos (también en este). */
 export async function signOutEverywhere(): Promise<ActionResult> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Tu sesión ha caducado." };
+  if (!user) return { ok: false, error: t("Tu sesión ha caducado.") };
   const supabase = await createClient();
   await supabase.rpc("log_user_event", { p_action: "cerrar_sesiones", p_summary: "Sesión cerrada en todos los dispositivos" });
   const { error } = await supabase.auth.signOut({ scope: "global" });

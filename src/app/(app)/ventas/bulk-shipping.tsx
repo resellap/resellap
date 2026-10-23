@@ -5,6 +5,7 @@
  * - Solo enviadas seleccionadas → «Marcar como pendientes».
  * - Mezcla → no se ofrece ninguna acción.
  */
+import { useT } from "@/i18n/client";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui";
 import { ActionMessages, useServerAction } from "@/components/ui-client";
@@ -57,15 +58,17 @@ const boxClass = "h-[18px] w-[18px] cursor-pointer accent-[var(--color-brand)] a
 
 /** Casilla de una venta. Las ventas en mano (sin envío) no tienen casilla. */
 export function SaleCheckbox({ saleId, status, label }: { saleId: string; status: Status | null; label: string }) {
+  const t = useT();
   const { selected, toggle } = useSelection();
   if (!status) return null;
   return (
-    <input type="checkbox" className={boxClass} aria-label={`Seleccionar ${label}`} checked={selected.has(saleId)} onChange={() => toggle(saleId, status)} />
+    <input type="checkbox" className={boxClass} aria-label={t("Seleccionar {label}", { label })} checked={selected.has(saleId)} onChange={() => toggle(saleId, status)} />
   );
 }
 
 /** Casilla de la cabecera: selecciona o quita todas las ventas con envío de esta página. */
 export function SelectAllCheckbox({ sales }: { sales: { id: string; status: Status | null }[] }) {
+  const t = useT();
   const { selected, setMany } = useSelection();
   const items = useMemo(() => {
     const seen = new Map<string, Status>();
@@ -78,7 +81,7 @@ export function SelectAllCheckbox({ sales }: { sales: { id: string; status: Stat
     <input
       type="checkbox"
       className={boxClass}
-      aria-label="Seleccionar todas las ventas con envío de esta página"
+      aria-label={t("Seleccionar todas las ventas con envío de esta página")}
       checked={all}
       onChange={() => setMany(items, !all)}
     />
@@ -87,6 +90,7 @@ export function SelectAllCheckbox({ sales }: { sales: { id: string; status: Stat
 
 /** Barra que aparece al seleccionar ventas. */
 export function BulkShippingBar() {
+  const t = useT();
   const { selected, clear } = useSelection();
   const { run, pending, error, message } = useServerAction(setShippingStatusBulk);
   const n = selected.size;
@@ -103,7 +107,7 @@ export function BulkShippingBar() {
   return (
     <div className="sticky top-14 z-10 mb-3 flex flex-wrap items-center gap-3 rounded-[var(--radius-md)] border border-brand/60 bg-surface px-4 py-2.5 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.5)] md:top-2">
       <span className="text-[14px] font-semibold">
-        {n} {n === 1 ? "venta seleccionada" : "ventas seleccionadas"}
+        {n} {n === 1 ? t("venta seleccionada") : t("ventas seleccionadas")}
       </span>
       {target && (
         <Button
@@ -115,11 +119,11 @@ export function BulkShippingBar() {
             if (res.ok) clear();
           }}
         >
-          {pending ? "Guardando…" : target === "enviado" ? "Marcar como enviado" : "Marcar como pendiente"}
+          {pending ? t("Guardando…") : target === "enviado" ? t("Marcar como enviado") : t("Marcar como pendiente")}
         </Button>
       )}
       <Button variant="ghost" size="sm" disabled={pending} onClick={clear}>
-        Quitar selección
+        {t("Quitar selección")}
       </Button>
       {error && <span className="text-[13px] font-medium text-danger">{error}</span>}
     </div>

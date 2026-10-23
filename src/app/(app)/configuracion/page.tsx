@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bell, ChevronRight, DatabaseBackup, History, LayoutDashboard, List, Palette, Receipt, ShieldCheck, Table2, type LucideIcon } from "lucide-react";
@@ -6,37 +8,38 @@ import { requireUser } from "@/lib/auth";
 import { can, type Perm } from "@/lib/permissions";
 import { ResetAllButton } from "./reset-all";
 
-export const metadata: Metadata = { title: "Ajustes" };
+export const metadata: Metadata = { title: msg("Ajustes") };
 
 type Item = { href: string; title: string; text: string; icon: LucideIcon; admin?: boolean; perm?: Perm };
 const GROUPS: { label: string; items: Item[] }[] = [
   {
-    label: "Personalización",
+    label: msg("Personalización"),
     items: [
-      { href: "/configuracion/panel", title: "Personalizar panel", text: "Widgets del inicio, tamaño, orden y periodo de análisis.", icon: LayoutDashboard, perm: "costes" },
-      { href: "/configuracion/aspecto", title: "Personalizar aspecto", text: "Claro u oscuro, tema de color y animaciones.", icon: Palette },
-      { href: "/configuracion/tablas", title: "Tablas", text: "Columnas, orden y filas por página de ventas y productos.", icon: Table2, perm: "costes" },
-      { href: "/configuracion/ventas", title: "Ventas e inventario", text: "Plataforma predeterminada al registrar una venta.", icon: Receipt },
-      { href: "/configuracion/avisos", title: "Avisos", text: "Qué tareas y contadores quieres ver.", icon: Bell },
+      { href: "/configuracion/panel", title: msg("Personalizar panel"), text: msg("Widgets del inicio, tamaño, orden y periodo de análisis."), icon: LayoutDashboard, perm: "costes" },
+      { href: "/configuracion/aspecto", title: msg("Personalizar aspecto"), text: msg("Claro u oscuro, tema de color y animaciones."), icon: Palette },
+      { href: "/configuracion/tablas", title: msg("Tablas"), text: msg("Columnas, orden y filas por página de ventas y productos."), icon: Table2, perm: "costes" },
+      { href: "/configuracion/ventas", title: msg("Ventas e inventario"), text: msg("Plataforma predeterminada al registrar una venta."), icon: Receipt },
+      { href: "/configuracion/avisos", title: msg("Avisos"), text: msg("Qué tareas y contadores quieres ver."), icon: Bell },
     ],
   },
   {
-    label: "Cuenta y datos",
+    label: msg("Cuenta y datos"),
     items: [
-      { href: "/configuracion/seguridad", title: "Seguridad y privacidad", text: "Contraseña, sesiones, tus datos y privacidad.", icon: ShieldCheck },
-      { href: "/configuracion/copias", title: "Copias de seguridad", text: "Descargar una copia completa de los datos y comprobarla.", icon: DatabaseBackup, admin: true },
-      { href: "/configuracion/actividad", title: "Historial de actividad", text: "Tus exportaciones, copias y cambios de ajustes.", icon: History },
-      { href: "/ajustes", title: "Listas", text: "Plataformas, transportistas, móviles, categorías y marcas.", icon: List, perm: "configuracion" },
+      { href: "/configuracion/seguridad", title: msg("Seguridad y privacidad"), text: msg("Contraseña, sesiones, tus datos y privacidad."), icon: ShieldCheck },
+      { href: "/configuracion/copias", title: msg("Copias de seguridad"), text: msg("Descargar una copia completa de los datos y comprobarla."), icon: DatabaseBackup, admin: true },
+      { href: "/configuracion/actividad", title: msg("Historial de actividad"), text: msg("Tus exportaciones, copias y cambios de ajustes."), icon: History },
+      { href: "/ajustes", title: msg("Listas"), text: msg("Plataformas, transportistas, móviles, categorías y marcas."), icon: List, perm: "configuracion" },
     ],
   },
 ];
 
 export default async function SettingsHub() {
+  const t = await getT();
   const user = await requireUser();
   const isAdmin = user.role === "admin";
   return (
     <>
-      <PageHeader title="Ajustes" description="Tus preferencias se guardan en tu usuario: las verás igual en el iPhone, el iPad y el ordenador, y no cambian las de nadie más." />
+      <PageHeader title={t("Ajustes")} description={t("Tus preferencias se guardan en tu usuario: las verás igual en el iPhone, el iPad y el ordenador, y no cambian las de nadie más.")} />
       <div className="flex flex-col gap-6">
         {GROUPS.map((g) => (
           <section key={g.label} aria-label={g.label}>
@@ -65,22 +68,22 @@ export default async function SettingsHub() {
           </section>
         ))}
         <div className="grid gap-5 lg:grid-cols-2">
-          <Panel title="Formato regional" description="La app trabaja con un único formato; por eso no se puede cambiar aquí.">
+          <Panel title={t("Formato regional")} description={t("La app trabaja con un único formato; por eso no se puede cambiar aquí.")}>
             <dl className={clsx("grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm")}>
-              <dt className="text-muted">Idioma</dt>
-              <dd>Español (es la única traducción disponible)</dd>
-              <dt className="text-muted">Moneda</dt>
-              <dd>Euro (€). Los importes no se convierten a otras monedas.</dd>
-              <dt className="text-muted">Fechas</dt>
-              <dd>dd/mm/aaaa</dd>
-              <dt className="text-muted">Números</dt>
+              <dt className="text-muted">{t("Idioma")}</dt>
+              <dd>{t("Español (es la única traducción disponible)")}</dd>
+              <dt className="text-muted">{t("Moneda")}</dt>
+              <dd>{t("Euro (€). Los importes no se convierten a otras monedas.")}</dd>
+              <dt className="text-muted">{t("Fechas")}</dt>
+              <dd>{t("dd/mm/aaaa")}</dd>
+              <dt className="text-muted">{t("Números")}</dt>
               <dd>1.234,56</dd>
-              <dt className="text-muted">Zona horaria</dt>
-              <dd>Hora de Madrid (Europa/Madrid)</dd>
+              <dt className="text-muted">{t("Zona horaria")}</dt>
+              <dd>{t("Hora de Madrid (Europa/Madrid)")}</dd>
             </dl>
           </Panel>
-          <Panel title="Restablecer ajustes" description="Vuelve a la configuración inicial: panel, aspecto, tablas, avisos y preferencias.">
-            <p className="mb-3 text-sm text-ink-soft">Solo afecta a tus ajustes. No borra ventas, productos, inventario ni ningún otro dato.</p>
+          <Panel title={t("Restablecer ajustes")} description={t("Vuelve a la configuración inicial: panel, aspecto, tablas, avisos y preferencias.")}>
+            <p className="mb-3 text-sm text-ink-soft">{t("Solo afecta a tus ajustes. No borra ventas, productos, inventario ni ningún otro dato.")}</p>
             <ResetAllButton />
           </Panel>
         </div>

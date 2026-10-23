@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { useState } from "react";
 import { Button, Field, Input, Notice, Select, Textarea } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
@@ -23,6 +24,7 @@ type Sale = {
 };
 
 export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carriers: Option[]; labelUrl: string | null }) {
+  const t = useT();
   const [status, setStatus] = useState(sale.shipping_status ?? "pendiente");
   const [carrier, setCarrier] = useState(sale.carrier_id ?? "");
   const [uploading, setUploading] = useState(false);
@@ -64,15 +66,15 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Estado del envío">
+        <Field label={t("Estado del envío")}>
           <Select value={status} onChange={(e) => setStatus(e.target.value as "pendiente" | "enviado")}>
-            <option value="pendiente">Pendiente</option>
-            <option value="enviado">Enviado</option>
+            <option value="pendiente">{t("Pendiente")}</option>
+            <option value="enviado">{t("Enviado")}</option>
           </Select>
         </Field>
-        <Field label="Empresa de transporte">
+        <Field label={t("Empresa de transporte")}>
           <Select value={carrier} onChange={(e) => setCarrier(e.target.value)}>
-            <option value="">Sin indicar</option>
+            <option value="">{t("Sin indicar")}</option>
             {carriers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -83,22 +85,22 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
       </div>
       <div>
         <Button variant="primary" onClick={save} disabled={pending}>
-          {pending ? "Guardando…" : "Guardar envío"}
+          {pending ? t("Guardando…") : t("Guardar envío")}
         </Button>
         <ActionMessages error={error} message={message} />
       </div>
 
       <div className="flex flex-col gap-2 border-t border-line pt-3">
-        <p className="text-[13px] font-semibold">Etiqueta de envío</p>
+        <p className="text-[13px] font-semibold">{t("Etiqueta de envío")}</p>
         {sale.shipping_label_path ? (
           <div className="flex flex-wrap items-center gap-2">
             <LabelButton url={labelUrl} path={sale.shipping_label_path} variant="primary" />
             <span className="min-w-0 truncate text-xs text-muted">{labelFileName(sale.shipping_label_path)}</span>
           </div>
         ) : (
-          <p className="text-xs text-muted">Aún no hay etiqueta.</p>
+          <p className="text-xs text-muted">{t("Aún no hay etiqueta.")}</p>
         )}
-        <Field label={sale.shipping_label_path ? "Cambiar por otra" : "Subir etiqueta"} hint="PDF o imagen, máximo 10 MB. Se guarda al elegirla.">
+        <Field label={sale.shipping_label_path ? t("Cambiar por otra") : t("Subir etiqueta")} hint={t("PDF o imagen, máximo 10 MB. Se guarda al elegirla.")}>
           <Input
             key={inputKey}
             type="file"
@@ -108,7 +110,7 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
             onChange={(e) => uploadLabel(e.target.files?.[0])}
           />
         </Field>
-        {busyLabel && <p className="text-[13px] font-medium text-muted">Subiendo etiqueta…</p>}
+        {busyLabel && <p className="text-[13px] font-medium text-muted">{t("Subiendo etiqueta…")}</p>}
         {uploadError && <Notice tone="bad">{uploadError}</Notice>}
         {!busyLabel && <ActionMessages error={label.error} message={label.message} />}
       </div>
@@ -127,6 +129,7 @@ export function SaleHeaderEditor({
   platforms: PlatformOption[];
   mobiles: MobileOption[];
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     sale_date: sale.sale_date,
@@ -140,14 +143,14 @@ export function SaleHeaderEditor({
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Editar datos</Button>
+      <Button onClick={() => setOpen(true)}>{t("Editar datos")}</Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Editar datos de la venta"
+        title={t("Editar datos de la venta")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending}
@@ -156,16 +159,16 @@ export function SaleHeaderEditor({
                 if (r.ok) setOpen(false);
               }}
             >
-              {pending ? "Guardando…" : "Guardar cambios"}
+              {pending ? t("Guardando…") : t("Guardar cambios")}
             </Button>
           </>
         }
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Fecha">
+          <Field label={t("Fecha")}>
             <Input type="date" value={form.sale_date} onChange={set("sale_date")} />
           </Field>
-          <Field label="Responsable">
+          <Field label={t("Responsable")}>
             <Select value={form.responsible_id} onChange={set("responsible_id")}>
               {responsibles.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -174,7 +177,7 @@ export function SaleHeaderEditor({
               ))}
             </Select>
           </Field>
-          <Field label="Plataforma">
+          <Field label={t("Plataforma")}>
             <Select value={form.platform_id} onChange={set("platform_id")}>
               {platforms.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -183,25 +186,25 @@ export function SaleHeaderEditor({
               ))}
             </Select>
           </Field>
-          <Field label="Móvil utilizado">
+          <Field label={t("Móvil utilizado")}>
             <Select value={form.mobile_device_id} onChange={set("mobile_device_id")}>
-              <option value="">Sin indicar</option>
+              <option value="">{t("Sin indicar")}</option>
               {mobiles.map((m) => (
                 <option key={m.id} value={m.id}>
-                  Móvil {m.number}
+                  {t("Móvil {number}", { number: m.number })}
                   {m.name !== `Móvil ${m.number}` ? ` (${m.name})` : ""}
                 </option>
               ))}
             </Select>
           </Field>
-          <Field label="Referencia de la venta" className="sm:col-span-2">
+          <Field label={t("Referencia de la venta")} className="sm:col-span-2">
             <Input value={form.external_reference} onChange={set("external_reference")} />
           </Field>
-          <Field label="Notas" className="sm:col-span-2">
+          <Field label={t("Notas")} className="sm:col-span-2">
             <Textarea value={form.notes} onChange={set("notes")} />
           </Field>
         </div>
-        <p className="mt-3 text-xs text-muted">Para cambiar productos, unidades o lote, anula la venta y regístrala de nuevo: así el stock queda bien.</p>
+        <p className="mt-3 text-xs text-muted">{t("Para cambiar productos, unidades o lote, anula la venta y regístrala de nuevo: así el stock queda bien.")}</p>
         <ActionMessages error={error} />
       </Modal>
     </>
@@ -209,6 +212,7 @@ export function SaleHeaderEditor({
 }
 
 export function LinePriceEditor({ itemId, price, notes }: { itemId: string; price: number; notes: string | null }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [p, setP] = useState(String(price));
   const [n, setN] = useState(notes ?? "");
@@ -216,15 +220,15 @@ export function LinePriceEditor({ itemId, price, notes }: { itemId: string; pric
   return (
     <>
       <button className="text-xs font-semibold text-brand-ink hover:underline" onClick={() => setOpen(true)}>
-        Editar
+        {t("Editar")}
       </button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Editar línea"
+        title={t("Editar línea")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending}
@@ -233,16 +237,16 @@ export function LinePriceEditor({ itemId, price, notes }: { itemId: string; pric
                 if (r.ok) setOpen(false);
               }}
             >
-              Guardar
+              {t("Guardar")}
             </Button>
           </>
         }
       >
         <div className="grid gap-3">
-          <Field label="Precio por unidad (€)">
+          <Field label={t("Precio por unidad (€)")}>
             <Input inputMode="decimal" value={p} onChange={(e) => setP(e.target.value)} />
           </Field>
-          <Field label="Detalle">
+          <Field label={t("Detalle")}>
             <Input value={n} onChange={(e) => setN(e.target.value)} />
           </Field>
         </div>
@@ -253,12 +257,13 @@ export function LinePriceEditor({ itemId, price, notes }: { itemId: string; pric
 }
 
 export function VoidSaleButton({ saleId, saleNumber }: { saleId: string; saleNumber: string }) {
+  const t = useT();
   return (
     <ConfirmAction
-      label="Anular venta"
-      title={`Anular la venta ${saleNumber}`}
-      description="Las unidades vuelven a su pedido/lote. La venta no se borra: queda anulada en el historial."
-      confirmLabel="Anular venta"
+      label={t("Anular venta")}
+      title={t("Anular la venta {saleNumber}", { saleNumber })}
+      description={t("Las unidades vuelven a su pedido/lote. La venta no se borra: queda anulada en el historial.")}
+      confirmLabel={t("Anular venta")}
       requireReason
       reasonLabel="Motivo de la anulación"
       action={(reason) => voidSale(saleId, reason)}

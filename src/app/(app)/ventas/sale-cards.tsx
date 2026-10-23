@@ -1,3 +1,4 @@
+import { tSync } from "@/i18n/server";
 import Link from "next/link";
 import { PlatformIcon, CarrierIcon } from "@/components/marks";
 import { ProductThumb } from "@/components/thumb";
@@ -24,7 +25,8 @@ export type CardSale = {
 };
 
 function ShipBadge({ s, tracking, delivered }: { s: CardSale["shipping"]; tracking?: string | null; delivered?: string | null }) {
-  if (!s) return <span className="text-xs text-muted">En mano</span>;
+  const t = tSync();
+  if (!s) return <span className="text-xs text-muted">{t("En mano")}</span>;
   return <EnvioBadge state={envioState(s, tracking, delivered)} />;
 }
 
@@ -34,13 +36,14 @@ function ShipBadge({ s, tracking, delivered }: { s: CardSale["shipping"]; tracki
  * para marcar varias como enviadas.
  */
 export function SaleCards({ sales }: { sales: CardSale[] }) {
+  const t = tSync();
   const selectable = sales.filter((s) => s.shipping).map((s) => ({ id: s.id, status: s.shipping }));
   return (
     <div className="lg:hidden">
       {selectable.length > 0 && (
         <label className="mb-2 flex items-center gap-2.5 px-1 text-[13px] text-muted">
           <SelectAllCheckbox sales={selectable} />
-          Seleccionar todas las que llevan envío
+          {t("Seleccionar todas las que llevan envío")}
         </label>
       )}
       <ul className="stagger flex flex-col gap-2.5">
@@ -52,7 +55,7 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
             <div className="flex items-start gap-3">
               {s.shipping && (
                 <span className="relative z-10 -m-2 p-2">
-                  <SaleCheckbox saleId={s.id} status={s.shipping} label={`la venta ${s.number}`} />
+                  <SaleCheckbox saleId={s.id} status={s.shipping} label={t("la venta {number}", { number: s.number })} />
                 </span>
               )}
               {s.photo !== undefined && <ProductThumb src={s.photo} alt="" size={56} rounded={14} />}
@@ -71,7 +74,7 @@ export function SaleCards({ sales }: { sales: CardSale[] }) {
                         <span className="num font-semibold">{l.quantity}</span> × {l.text}
                       </span>
                       {l.lot !== undefined && <LotTag label={l.lot} />}
-                      {!!l.returned && <span className="text-xs font-semibold text-danger">−{l.returned} dev.</span>}
+                      {!!l.returned && <span className="text-xs font-semibold text-danger">−{l.returned}{" "}{t("dev.")}</span>}
                     </li>
                   ))}
                 </ul>

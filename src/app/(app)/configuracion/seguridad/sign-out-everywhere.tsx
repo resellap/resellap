@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { MonitorSmartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { ConfirmAction } from "@/components/ui-client";
 import { signOutEverywhere } from "../actions";
 
 export function SignOutEverywhere() {
+  const t = useT();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   return (
@@ -14,12 +16,12 @@ export function SignOutEverywhere() {
       <ConfirmAction
         label={
           <>
-            <MonitorSmartphone size={17} /> Cerrar sesión en todos los dispositivos
+            <MonitorSmartphone size={17} />{" "}{t("Cerrar sesión en todos los dispositivos")}
           </>
         }
-        title="Cerrar todas las sesiones"
-        description="Se cerrará la sesión en todos tus dispositivos, también en este. Tendrás que volver a entrar con tu contraseña."
-        confirmLabel="Cerrar todas"
+        title={t("Cerrar todas las sesiones")}
+        description={t("Se cerrará la sesión en todos tus dispositivos, también en este. Tendrás que volver a entrar con tu contraseña.")}
+        confirmLabel={t("Cerrar todas")}
         variant="secondary"
         action={async () => {
           const r = await signOutEverywhere();

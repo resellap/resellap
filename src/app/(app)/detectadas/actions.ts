@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -36,12 +37,13 @@ const confirmSchema = z.object({
 
 /** «Sí, es una venta»: se registra y se descuenta el stock. */
 export async function confirmDetected(input: z.input<typeof confirmSchema>): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const v = confirmSchema.safeParse(input);
-  if (!v.success) return { ok: false, error: "Revisa el producto y el precio." };
+  if (!v.success) return { ok: false, error: t("Revisa el producto y el precio.") };
   const supabase = await createClient();
   const { data: e } = await supabase.from("email_messages").select("parsed, variant_id").eq("id", v.data.emailId).maybeSingle();
-  if (!e) return { ok: false, error: "Esa venta detectada ya no existe." };
+  if (!e) return { ok: false, error: t("Esa venta detectada ya no existe.") };
   const p = e.parsed as { product?: string; product_norm?: string; price?: number };
   // Solo se recuerda el nombre si el producto lo ha elegido el administrador
   const remember = v.data.remember && v.data.variantId !== e.variant_id;
@@ -57,17 +59,18 @@ export async function confirmDetected(input: z.input<typeof confirmSchema>): Pro
   });
   if (error) return { ok: false, error: friendlyError(error) };
   await afterChange();
-  return { ok: true, message: "Venta registrada." };
+  return { ok: true, message: t("Venta registrada.") };
 }
 
 /** Confirma de una vez las que tienen producto identificado, stock y ninguna duda. */
 export async function confirmMany(items: { emailId: string; variantId: string; carrierId?: string | null; responsibleId?: string | null }[]): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const list = z
     .array(z.object({ emailId: z.uuid(), variantId: z.uuid(), carrierId: z.uuid().nullable().optional(), responsibleId: z.uuid().nullable().optional() }))
     .max(100)
     .safeParse(items);
-  if (!list.success) return { ok: false, error: "Datos no válidos." };
+  if (!list.success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   let ok = 0;
   const failed: string[] = [];
@@ -82,27 +85,29 @@ export async function confirmMany(items: { emailId: string; variantId: string; c
     else ok++;
   }
   await afterChange();
-  if (failed.length) return { ok: false, error: `${ok} registradas. ${failed.length} no se han podido registrar: ${[...new Set(failed)].join(" ")}` };
+  if (failed.length) return { ok: false, error: t("{ok} registradas. {length} no se han podido registrar: {v}", { ok, length: failed.length, v: [...new Set(failed)].join(" ") }) };
   return { ok: true, message: `${ok} ${ok === 1 ? "venta registrada" : "ventas registradas"}.` };
 }
 
 /** «Ya estaba apuntada»: no se crea nada y el correo queda unido a esa venta. */
 export async function markDuplicate(emailId: string, saleId: string): Promise<ActionResult> {
+  const t = await getT();
   await admin();
-  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(saleId).success) return { ok: false, error: "Datos no válidos." };
+  if (!z.uuid().safeParse(emailId).success || !z.uuid().safeParse(saleId).success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const { error } = await supabase.rpc("email_mark_duplicate", { p_email_id: emailId, p_sale_id: saleId });
   if (error) return { ok: false, error: friendlyError(error) };
   await afterChange();
-  return { ok: true, message: "Marcada como duplicado. No se ha creado otra venta." };
+  return { ok: true, message: t("Marcada como duplicado. No se ha creado otra venta.") };
 }
 
 /** «No es una venta». */
 export async function discardDetected(emailId: string): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const supabase = await createClient();
   const { error } = await supabase.rpc("email_set_status", { p_email_id: emailId, p_status: "ignorado" });
   if (error) return { ok: false, error: friendlyError(error) };
   revalidatePath("/", "layout");
-  return { ok: true, message: "Descartada. No se ha registrado nada." };
+  return { ok: true, message: t("Descartada. No se ha registrado nada.") };
 }

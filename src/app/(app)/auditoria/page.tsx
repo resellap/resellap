@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/filter-bar";
 import { Badge, Empty, PageHeader, Pagination, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -7,7 +9,7 @@ import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Auditoría" };
+export const metadata: Metadata = { title: msg("Auditoría") };
 
 const ENTITIES: Record<string, string> = {
   sales: "Ventas",
@@ -51,6 +53,7 @@ const short = (v: unknown) => {
 };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requireAdmin();
   const sp = await searchParams;
   const entity = first(sp.entidad);
@@ -71,29 +74,29 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Auditoría" description="Quién hizo qué y cuándo: altas, cambios, anulaciones, recepciones, ajustes e importaciones." />
+      <PageHeader title={t("Auditoría")} description={t("Quién hizo qué y cuándo: altas, cambios, anulaciones, recepciones, ajustes e importaciones.")} />
       <FilterBar
         basePath="/auditoria"
         values={values}
         fields={[
-          { type: "select", name: "entidad", label: "Sección", empty: "Todas", options: Object.entries(ENTITIES).map(([value, label]) => ({ value, label })) },
-          { type: "text", name: "usuario", label: "Usuario", placeholder: "Email" },
-          { type: "date", name: "from", label: "Desde" },
-          { type: "date", name: "to", label: "Hasta" },
+          { type: "select", name: "entidad", label: t("Sección"), empty: t("Todas"), options: Object.entries(ENTITIES).map(([value, label]) => ({ value, label })) },
+          { type: "text", name: "usuario", label: t("Usuario"), placeholder: t("Email") },
+          { type: "date", name: "from", label: t("Desde") },
+          { type: "date", name: "to", label: t("Hasta") },
         ]}
       />
       <Panel padded={false}>
         {(data ?? []).length === 0 ? (
-          <Empty title="Sin registros" />
+          <Empty title={t("Sin registros")} />
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Fecha</Th>
-                <Th>Usuario</Th>
-                <Th>Acción</Th>
-                <Th>Sección</Th>
-                <Th>Detalle</Th>
+                <Th>{t("Fecha")}</Th>
+                <Th>{t("Usuario")}</Th>
+                <Th>{t("Acción")}</Th>
+                <Th>{t("Sección")}</Th>
+                <Th>{t("Detalle")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -102,7 +105,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 return (
                   <Tr key={r.id}>
                     <Td className="num whitespace-nowrap">{dateTime(r.occurred_at)}</Td>
-                    <Td>{r.user_email ?? <span className="text-muted">Sistema</span>}</Td>
+                    <Td>{r.user_email ?? <span className="text-muted">{t("Sistema")}</span>}</Td>
                     <Td>
                       <Badge tone={r.action === "eliminar" || r.action.startsWith("anular") ? "bad" : r.action === "crear" ? "good" : "neutral"}>{r.action.replace(/_/g, " ")}</Badge>
                     </Td>
@@ -115,7 +118,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                         </span>
                       ))}
                       {!r.summary && diff.length === 0 && r.new_data?.name && <span className="text-muted">{String(r.new_data.name)}</span>}
-                      {r.entity_id && <span className="block text-faint">id {String(r.entity_id).slice(0, 8)}</span>}
+                      {r.entity_id && <span className="block text-faint">{t("id")}{" "}{String(r.entity_id).slice(0, 8)}</span>}
                     </Td>
                   </Tr>
                 );

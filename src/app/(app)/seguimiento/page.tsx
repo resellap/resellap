@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BubbleGroup } from "@/components/liquid";
@@ -14,19 +16,20 @@ import { trackingConfigured } from "@/lib/tracking/seventeen";
 import { checkStaleShipments } from "@/lib/tracking/service";
 import { MarkAlertsReadButton, RefreshAllButton } from "./tracking-actions";
 
-export const metadata: Metadata = { title: "Seguimiento" };
+export const metadata: Metadata = { title: msg("Seguimiento") };
 
 const VIEWS: { key: ShipmentView | "alertas"; label: string }[] = [
-  { key: "curso", label: "En curso" },
-  { key: "incidencias", label: "Incidencias" },
-  { key: "entregados", label: "Entregados" },
-  { key: "todos", label: "Todos" },
-  { key: "alertas", label: "Alertas" },
+  { key: "curso", label: msg("En curso") },
+  { key: "incidencias", label: msg("Incidencias") },
+  { key: "entregados", label: msg("Entregados") },
+  { key: "todos", label: msg("Todos") },
+  { key: "alertas", label: msg("Alertas") },
 ];
 
 const days = (n: number | null | undefined) => (n === null || n === undefined ? "—" : `${n.toLocaleString("es-ES", { maximumFractionDigits: 1 })} ${n === 1 ? "día" : "días"}`);
 
 export default async function TrackingPage({ searchParams }: PageProps<"/seguimiento">) {
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const view = (VIEWS.some((v) => v.key === sp.vista) ? sp.vista : "curso") as ShipmentView | "alertas";
@@ -46,34 +49,33 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
   return (
     <>
       <PageHeader
-        title="Seguimiento"
-        description="Todos tus envíos desde que los marcas como enviados hasta que llegan. El tiempo de entrega se mide desde «Marcar como enviado» hasta «Entregado»."
+        title={t("Seguimiento")}
+        description={t("Todos tus envíos desde que los marcas como enviados hasta que llegan. El tiempo de entrega se mide desde «Marcar como enviado» hasta «Entregado».")}
         actions={automatic ? <RefreshAllButton /> : undefined}
       />
       {!automatic && (
-        <Notice tone="neutral" className="mb-4" title="Seguimiento manual">
-          El seguimiento automático con el transportista no está activado todavía. Mientras tanto, Resellap guarda cuándo envías cada paquete, te avisa si tarda demasiado y puedes marcar
-          «Entregado» o «Incidencia» a mano desde cada envío.
-          {user.role === "admin" && " Para activarlo hace falta una clave gratuita de 17TRACK (ver la guía de configuración)."}
+        <Notice tone="neutral" className="mb-4" title={t("Seguimiento manual")}>
+          {t("El seguimiento automático con el transportista no está activado todavía. Mientras tanto, Resellap guarda cuándo envías cada paquete, te avisa si tarda demasiado y puedes marcar «Entregado» o «Incidencia» a mano desde cada envío.")}
+          {user.role === "admin" && t(" Para activarlo hace falta una clave gratuita de 17TRACK (ver la guía de configuración).")}
         </Notice>
       )}
 
       {/* Cifras clave */}
       <dl className="rs-card mb-5 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] bg-line lg:grid-cols-4">
-        <Kpi icon={Truck} label="En tránsito" value={String(inTransit?.count ?? 0)} note={inTransit?.value !== null && inTransit?.value !== undefined ? `${money(inTransit.value)} en camino` : undefined} dark />
-        <Kpi icon={PackageCheck} label="Entregados" value={String(stats?.totals.delivered ?? 0)} note={`de ${stats?.totals.shipments ?? 0} con seguimiento`} />
-        <Kpi icon={Timer} label="Tiempo medio de entrega" value={days(stats?.overall.avg_days)} note={stats?.overall.median_days !== null && stats?.overall.median_days !== undefined ? `mediana ${days(stats.overall.median_days)}` : "aún sin entregas medidas"} />
+        <Kpi icon={Truck} label={t("En tránsito")} value={String(inTransit?.count ?? 0)} note={inTransit?.value !== null && inTransit?.value !== undefined ? t("{value} en camino", { value: money(inTransit.value) }) : undefined} dark />
+        <Kpi icon={PackageCheck} label={t("Entregados")} value={String(stats?.totals.delivered ?? 0)} note={t("de {v} con seguimiento", { v: stats?.totals.shipments ?? 0 })} />
+        <Kpi icon={Timer} label={t("Tiempo medio de entrega")} value={days(stats?.overall.avg_days)} note={stats?.overall.median_days !== null && stats?.overall.median_days !== undefined ? t("mediana {median_days}", { median_days: days(stats.overall.median_days) }) : t("aún sin entregas medidas")} />
         <Kpi
           icon={AlertTriangle}
-          label="Incidencias"
+          label={t("Incidencias")}
           value={String(stats?.totals.incidents ?? 0)}
-          note={fastest ? `Más rápido: ${fastest.carrier} (${days(fastest.avg_days)})` : `${stats?.totals.delayed ?? 0} con retraso`}
+          note={fastest ? t("Más rápido: {carrier} ({avg_days})", { carrier: fastest.carrier, avg_days: days(fastest.avg_days) }) : t("{v} con retraso", { v: stats?.totals.delayed ?? 0 })}
         />
       </dl>
 
       {/* Pestañas y búsqueda */}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <BubbleGroup label="Vistas" active={view} className="rs-card no-scrollbar flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1">
+        <BubbleGroup label={t("Vistas")} active={view} className="rs-card no-scrollbar flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-[12px] bg-surface p-1">
           {VIEWS.map((v) => {
             const on = v.key === view;
             const n = v.key === "alertas" ? alerts.length : null;
@@ -100,7 +102,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
             <input
               name="q"
               defaultValue={q}
-              placeholder="Código, comprador o nº de venta"
+              placeholder={t("Código, comprador o nº de venta")}
               className="h-11 w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface pl-9 pr-3 text-base placeholder:text-faint focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20 sm:h-10 sm:text-[14px]"
             />
           </form>
@@ -112,13 +114,13 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
       {view === "alertas" ? (
         alerts.length === 0 ? (
           <div className="rs-card rounded-[var(--radius-md)] bg-surface">
-            <Empty title="Sin alertas">Te avisaremos aquí cuando un envío se entregue, se retrase, tenga una incidencia o vuelva.</Empty>
+            <Empty title={t("Sin alertas")}>{t("Te avisaremos aquí cuando un envío se entregue, se retrase, tenga una incidencia o vuelva.")}</Empty>
           </div>
         ) : (
           <section className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-              <p className="text-[14px] font-semibold">{alerts.length === 1 ? "1 alerta sin ver" : `${alerts.length} alertas sin ver`}</p>
-              <MarkAlertsReadButton ids={null} label="Marcar todas como vistas" />
+              <p className="text-[14px] font-semibold">{alerts.length === 1 ? t("1 alerta sin ver") : t("{length} alertas sin ver", { length: alerts.length })}</p>
+              <MarkAlertsReadButton ids={null} label={t("Marcar todas como vistas")} />
             </div>
             <ul className="divide-y divide-line">
               {alerts.map((a) => (
@@ -130,7 +132,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                     </Link>
                     <p className="num text-[12.5px] text-faint">{dateTime(a.createdAt)}</p>
                   </div>
-                  <MarkAlertsReadButton ids={[a.id]} label="Vista" />
+                  <MarkAlertsReadButton ids={[a.id]} label={t("Vista")} />
                 </li>
               ))}
             </ul>
@@ -138,8 +140,8 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
         )
       ) : rows.length === 0 ? (
         <div className="rs-card rounded-[var(--radius-md)] bg-surface">
-          <Empty title={q ? "Nada coincide con la búsqueda" : view === "curso" ? "Ningún envío en camino" : "Nada por aquí"}>
-            {view === "curso" && !q ? "Cuando marques un paquete como enviado en «Pendientes de envío», aparecerá aquí y empezará su seguimiento." : undefined}
+          <Empty title={q ? t("Nada coincide con la búsqueda") : view === "curso" ? t("Ningún envío en camino") : t("Nada por aquí")}>
+            {view === "curso" && !q ? t("Cuando marques un paquete como enviado en «Pendientes de envío», aparecerá aquí y empezará su seguimiento.") : undefined}
           </Empty>
         </div>
       ) : (
@@ -164,23 +166,23 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 <TrackingProgress status={s.status} />
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[13px]">
                   <CarrierIcon name={s.carrier} size={18} className="font-medium" />
-                  <span className="mono text-[12px] text-faint">{s.tracking ?? "Sin código"}</span>
+                  <span className="mono text-[12px] text-faint">{s.tracking ?? t("Sin código")}</span>
                 </div>
                 <p className="line-clamp-2 min-h-[2.5em] text-[13px] text-ink-soft">
-                  {s.lastEvent ?? "Marcado como enviado"}
+                  {s.lastEvent ?? t("Marcado como enviado")}
                   {s.lastLocation ? ` · ${s.lastLocation}` : ""}
                 </p>
                 <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-line pt-3 text-[12px]">
                   <div>
-                    <dt className="text-faint">Enviado</dt>
+                    <dt className="text-faint">{t("Enviado")}</dt>
                     <dd className="num font-medium">{s.shippedAt ? date(s.shippedAt) : "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-faint">{s.deliveredAt ? "Entregado" : "Estimado"}</dt>
+                    <dt className="text-faint">{s.deliveredAt ? t("Entregado") : t("Estimado")}</dt>
                     <dd className="num font-medium">{s.deliveredAt ? date(s.deliveredAt) : s.eta ? date(s.eta) : "—"}</dd>
                   </div>
                   <div className="text-right">
-                    <dt className="text-faint">{s.deliveredAt ? "Tardó" : "Lleva"}</dt>
+                    <dt className="text-faint">{s.deliveredAt ? t("Tardó") : t("Lleva")}</dt>
                     <dd className="num font-medium">
                       {s.shippedAt ? days(Math.round(((s.deliveredAt ? Date.parse(s.deliveredAt) : Date.now()) - Date.parse(s.shippedAt)) / 8640_000) / 10) : "—"}
                     </dd>
@@ -193,7 +195,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
       )}
       {stats && stats.legacy_shipped > 0 && view === "todos" && (
         <p className="mt-4 text-[12.5px] text-faint">
-          {stats.legacy_shipped} ventas enviadas antes de activar el seguimiento no aparecen aquí: no se sabe la hora exacta en que se enviaron y no cuentan en los tiempos.
+          {stats.legacy_shipped}{" "}{t("ventas enviadas antes de activar el seguimiento no aparecen aquí: no se sabe la hora exacta en que se enviaron y no cuentan en los tiempos.")}
         </p>
       )}
     </>

@@ -1,11 +1,12 @@
 /** Opciones del generador (compartidas entre la pantalla y el servidor). */
 
+import { msg } from "@/i18n/translate";
 export const TONES = {
-  profesional: { label: "Profesional", hint: "Cuidada, clara y comercial" },
-  natural: { label: "Natural", hint: "Cercana, humana y directa" },
-  informal: { label: "Informal", hint: "Desenfadada, sin sonar artificial" },
-  premium: { label: "Premium", hint: "Calidad y diseño, sin exagerar" },
-  tecnico: { label: "Técnico", hint: "Materiales y datos verificables" },
+  profesional: { label: msg("Profesional"), hint: msg("Cuidada, clara y comercial") },
+  natural: { label: msg("Natural"), hint: msg("Cercana, humana y directa") },
+  informal: { label: msg("Informal"), hint: msg("Desenfadada, sin sonar artificial") },
+  premium: { label: msg("Premium"), hint: msg("Calidad y diseño, sin exagerar") },
+  tecnico: { label: msg("Técnico"), hint: msg("Materiales y datos verificables") },
 } as const;
 export type Tone = keyof typeof TONES;
 

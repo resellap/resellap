@@ -1,5 +1,6 @@
 "use client";
 /** Piezas comunes de las pantallas de Ajustes. */
+import { useT } from "@/i18n/client";
 import { Check, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button, Notice, clsx } from "@/components/ui";
@@ -24,6 +25,7 @@ export function SaveBar({
   message?: string | null;
   reset?: { label: string; description: string; action: () => Promise<ActionResult<unknown>>; onDone?: () => void };
 }) {
+  const t = useT();
   return (
     // Solo queda fija abajo cuando hay algo pendiente de guardar (o un error)
     <div className={clsx("z-20 mt-5", (dirty || error) && "sticky bottom-[calc(5.2rem+env(safe-area-inset-bottom))] md:bottom-4")}>
@@ -32,13 +34,13 @@ export function SaveBar({
           {error ? (
             <span className="font-semibold text-danger">{error}</span>
           ) : dirty ? (
-            "Tienes cambios sin guardar."
+            t("Tienes cambios sin guardar.")
           ) : message ? (
             <span className="inline-flex items-center gap-1 font-semibold text-good">
               <Check size={15} strokeWidth={3} /> {message}
             </span>
           ) : (
-            "Todo guardado."
+            t("Todo guardado.")
           )}
         </p>
         {reset && (
@@ -50,7 +52,7 @@ export function SaveBar({
             }
             title={reset.label}
             description={reset.description}
-            confirmLabel="Restablecer"
+            confirmLabel={t("Restablecer")}
             variant="secondary"
             size="sm"
             action={reset.action}
@@ -58,10 +60,10 @@ export function SaveBar({
           />
         )}
         <Button size="sm" onClick={onDiscard} disabled={!dirty || pending}>
-          Descartar
+          {t("Descartar")}
         </Button>
         <Button size="sm" variant="primary" onClick={onSave} disabled={!dirty || pending}>
-          {pending ? "Guardando…" : "Guardar cambios"}
+          {pending ? t("Guardando…") : t("Guardar cambios")}
         </Button>
       </div>
     </div>

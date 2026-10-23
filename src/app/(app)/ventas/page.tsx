@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExportLinks, FilterBar } from "@/components/filter-bar";
@@ -18,17 +20,19 @@ import { ProductThumb } from "@/components/thumb";
 import { ENVIO_OPTIONS, EnvioBadge, envioState } from "@/components/tracking";
 import { saleThumbs } from "@/lib/storage";
 
-export const metadata: Metadata = { title: "Ventas" };
+export const metadata: Metadata = { title: msg("Ventas") };
 
 type Ship = "pendiente" | "enviado" | null;
 const shipOf = (status: string | null, requires: boolean): Ship => (requires ? (status === "enviado" ? "enviado" : "pendiente") : null);
 
 function ShippingBadge({ status, requires, tracking, delivered }: { status: string | null; requires: boolean; tracking?: string | null; delivered?: string | null }) {
-  if (!requires) return <span className="text-xs text-muted">En mano</span>;
+  const t = tSync();
+  if (!requires) return <span className="text-xs text-muted">{t("En mano")}</span>;
   return <EnvioBadge state={envioState(status, tracking, delivered)} />;
 }
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const filters = filtersFrom(sp);
@@ -80,17 +84,17 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     const rows = (data ?? []) as unknown as Row[];
     return (
       <>
-        <PageHeader title="Mis ventas" />
+        <PageHeader title={t("Mis ventas")} />
         <FilterBar
           basePath="/ventas"
           values={filters}
           fields={[
-            { type: "date", name: "from", label: "Desde" },
-            { type: "date", name: "to", label: "Hasta" },
+            { type: "date", name: "from", label: t("Desde") },
+            { type: "date", name: "to", label: t("Hasta") },
             {
               type: "select",
               name: "shipping_status",
-              label: "Envío",
+              label: t("Envío"),
               options: ENVIO_OPTIONS,
             },
           ]}
@@ -116,7 +120,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           />
           <Panel padded={false} className={rows.length ? "max-lg:mt-3 max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none" : undefined}>
             {rows.length === 0 ? (
-              <Empty title="Aún no hay ventas con estos filtros" action={can(user, "ventas_crear") ? <LinkButton href="/ventas/nueva">Registrar una venta</LinkButton> : undefined} />
+              <Empty title={t("Aún no hay ventas con estos filtros")} action={can(user, "ventas_crear") ? <LinkButton href="/ventas/nueva">{t("Registrar una venta")}</LinkButton> : undefined} />
             ) : (
               <Table className="max-lg:hidden">
                 <thead>
@@ -129,19 +133,19 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                         }))}
                       />
                     </Th>
-                    <Th>Fecha</Th>
-                    <Th>Venta</Th>
-                    <Th>Productos</Th>
-                    <Th>Plataforma</Th>
-                    <Th>Envío</Th>
-                    <Th num>Importe</Th>
+                    <Th>{t("Fecha")}</Th>
+                    <Th>{t("Venta")}</Th>
+                    <Th>{t("Productos")}</Th>
+                    <Th>{t("Plataforma")}</Th>
+                    <Th>{t("Envío")}</Th>
+                    <Th num>{t("Importe")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((s) => (
                     <Tr key={s.id}>
                       <Td>
-                        <SaleCheckbox saleId={s.id} status={shipOf(s.shipping_status, !!s.platforms?.requires_shipping)} label={`la venta ${s.sale_number}`} />
+                        <SaleCheckbox saleId={s.id} status={shipOf(s.shipping_status, !!s.platforms?.requires_shipping)} label={t("la venta {sale_number}", { sale_number: s.sale_number })} />
                       </Td>
                       <Td className="num">{date(s.sale_date)}</Td>
                       <Td>
@@ -203,23 +207,23 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Ventas" description="Cada línea muestra de qué pedido/lote salió la unidad y el beneficio real con el coste de ese lote." />
+      <PageHeader title={t("Ventas")} description={t("Cada línea muestra de qué pedido/lote salió la unidad y el beneficio real con el coste de ese lote.")} />
       <FilterBar
         basePath="/ventas"
         values={filters}
         fields={[
-          { type: "date", name: "from", label: "Desde" },
-          { type: "date", name: "to", label: "Hasta" },
+          { type: "date", name: "from", label: t("Desde") },
+          { type: "date", name: "to", label: t("Hasta") },
           {
             type: "text",
             name: "search",
-            label: "Buscar",
-            placeholder: "Nº de venta, producto o referencia",
+            label: t("Buscar"),
+            placeholder: t("Nº de venta, producto o referencia"),
           },
           {
             type: "select",
             name: "responsible_id",
-            label: "Responsable",
+            label: t("Responsable"),
             options: opts.responsibles.map((r) => ({
               value: r.id,
               label: r.name,
@@ -228,8 +232,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           {
             type: "select",
             name: "platform_id",
-            label: "Plataforma",
-            empty: "Todas",
+            label: t("Plataforma"),
+            empty: t("Todas"),
             options: opts.platforms.map((p) => ({
               value: p.id,
               label: p.name,
@@ -238,13 +242,13 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           {
             type: "select",
             name: "shipping_status",
-            label: "Envío",
+            label: t("Envío"),
             options: ENVIO_OPTIONS,
           },
           {
             type: "number",
             name: "purchase_order_number",
-            label: "Pedido/lote nº",
+            label: t("Pedido/lote nº"),
           },
         ]}
         extra={<ExportLinks type="ventas" filters={filters} />}
@@ -254,16 +258,16 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         <Figures
           className="mb-4"
           items={[
-            { label: "Pedidos", value: units(sum.orders) },
-            { label: "Unidades", value: units(sum.units) },
+            { label: t("Pedidos"), value: units(sum.orders) },
+            { label: t("Unidades"), value: units(sum.units) },
             {
-              label: "Facturación",
+              label: t("Facturación"),
               value: money(sum.net_amount),
-              note: sum.refunded_amount > 0 ? `${money(sum.refunded_amount)} devueltos` : undefined,
+              note: sum.refunded_amount > 0 ? t("{refunded_amount} devueltos", { refunded_amount: money(sum.refunded_amount) }) : undefined,
             },
-            { label: "Ticket medio", value: money(sum.avg_ticket) },
+            { label: t("Ticket medio"), value: money(sum.avg_ticket) },
             {
-              label: "Beneficio",
+              label: t("Beneficio"),
               value: money(sum.profit),
               tone: sum.profit < 0 ? "bad" : "good",
             },
@@ -280,7 +284,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         />
         <Panel padded={false} className={rows.length ? "max-lg:mt-3 max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none" : undefined}>
           {rows.length === 0 ? (
-            <Empty title="No hay ventas con estos filtros" action={can(user, "ventas_crear") ? <LinkButton href="/ventas/nueva">Registrar una venta</LinkButton> : undefined} />
+            <Empty title={t("No hay ventas con estos filtros")} action={can(user, "ventas_crear") ? <LinkButton href="/ventas/nueva">{t("Registrar una venta")}</LinkButton> : undefined} />
           ) : (
             <Table className="max-lg:hidden">
               <thead>
@@ -304,7 +308,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                 {rows.map((l) => (
                   <Tr key={l.sale_item_id}>
                     <Td>
-                      <SaleCheckbox saleId={l.sale_id} status={shipOf(l.shipping_status, l.requires_shipping)} label={`la venta ${l.sale_number}`} />
+                      <SaleCheckbox saleId={l.sale_id} status={shipOf(l.shipping_status, l.requires_shipping)} label={t("la venta {sale_number}", { sale_number: l.sale_number })} />
                     </Td>
                     {cols.map((c) => {
                       switch (c) {
@@ -347,7 +351,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                           return (
                             <Td key={c} num>
                               {l.quantity}
-                              {l.returned_qty > 0 && <span className="block text-xs text-danger">−{l.returned_qty} dev.</span>}
+                              {l.returned_qty > 0 && <span className="block text-xs text-danger">−{l.returned_qty}{" "}{t("dev.")}</span>}
                             </Td>
                           );
                         case "precio":

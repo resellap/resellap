@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui";
@@ -9,9 +11,10 @@ import { variantDisplay } from "@/lib/types";
 import { PurchaseOrderForm } from "../../po-form";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Editar pedido" };
+export const metadata: Metadata = { title: msg("Editar pedido") };
 
 export default async function EditPO({ params }: PageProps<"/compras/[id]/editar">) {
+  const t = await getT();
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
@@ -27,7 +30,7 @@ export default async function EditPO({ params }: PageProps<"/compras/[id]/editar
   for (const c of costs ?? []) costMap[c.cost_type] = String(Number(costMap[c.cost_type] ?? 0) + Number(c.amount));
   return (
     <>
-      <PageHeader title={`Editar pedido #${po.order_number}`} back={{ href: `/compras/${id}`, label: `Pedido #${po.order_number}` }} />
+      <PageHeader title={t("Editar pedido #{order_number}", { order_number: po.order_number })} back={{ href: `/compras/${id}`, label: t("Pedido #{order_number}", { order_number: po.order_number }) }} />
       <PurchaseOrderForm
         suppliers={suppliers}
         today={todayIso()}

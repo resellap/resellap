@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,9 +13,10 @@ import { variantDisplay } from "@/lib/types";
 import { CancelPOButton, CostsButton, HeaderEditButton, ReceiveButton } from "./po-actions";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: "Pedido de compra" };
+export const metadata: Metadata = { title: msg("Pedido de compra") };
 
 export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
+  const t = await getT();
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
@@ -38,10 +41,10 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
   return (
     <>
       <PageHeader
-        back={{ href: "/compras", label: "Compras" }}
+        back={{ href: "/compras", label: t("Compras") }}
         title={
           <span className="flex flex-wrap items-center gap-3">
-            Pedido de compra #{po.order_number} <POStatus status={po.status} />
+            {t("Pedido de compra #{order_number}", { order_number: po.order_number })}{" "}<POStatus status={po.status} />
           </span>
         }
         description={`${date(po.order_date)}${received ? `, recibido el ${date(po.received_at)}` : ""}${raw?.source_ref ? `. Importado del Excel.` : ""}`}
@@ -49,7 +52,7 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
           <>
             {po.status !== "cancelado" && <HeaderEditButton po={po} suppliers={suppliers} />}
             {po.status !== "cancelado" && <CostsButton poId={po.id} costs={costMap} received={received} />}
-            {pending && <LinkButton href={`/compras/${po.id}/editar`}>Editar líneas</LinkButton>}
+            {pending && <LinkButton href={`/compras/${po.id}/editar`}>{t("Editar líneas")}</LinkButton>}
             {pending && <CancelPOButton poId={po.id} orderNumber={po.order_number} />}
             {pending && (
               <ReceiveButton
@@ -64,38 +67,38 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
         }
       />
       {po.supplier_is_placeholder && (
-        <Notice tone="warn" className="mb-4" title="Proveedor pendiente de identificar">
-          El Excel no indicaba el proveedor. Créalo en <Link href="/proveedores">Proveedores</Link> y asígnalo con «Proveedor y datos».
+        <Notice tone="warn" className="mb-4" title={t("Proveedor pendiente de identificar")}>
+          {t("El Excel no indicaba el proveedor. Créalo en")}{" "}<Link href="/proveedores">{t("Proveedores")}</Link>{" "}{t("y asígnalo con «Proveedor y datos».")}
         </Notice>
       )}
       {po.status === "cancelado" && raw?.cancel_reason && (
         <Notice tone="neutral" className="mb-4">
-          Cancelado: {raw.cancel_reason}
+          {t("Cancelado: {cancel_reason}", { cancel_reason: raw.cancel_reason })}
         </Notice>
       )}
       <Figures
         className="mb-5"
         items={[
-          { label: "Proveedor", value: <span className="text-[17px]">{po.supplier_is_placeholder ? "Pendiente" : po.supplier_name}</span> },
-          { label: "Unidades", value: received ? `${units(po.units_received)} / ${units(po.units_ordered)}` : units(po.units_ordered), note: received ? "recibidas / pedidas" : "pedidas" },
-          { label: "Mercancía", value: money(po.merchandise_cost) },
-          { label: "Costes adicionales", value: money(po.extra_costs) },
-          { label: "Coste total", value: money(po.total_cost) },
+          { label: t("Proveedor"), value: <span className="text-[17px]">{po.supplier_is_placeholder ? t("Pendiente") : po.supplier_name}</span> },
+          { label: t("Unidades"), value: received ? `${units(po.units_received)} / ${units(po.units_ordered)}` : units(po.units_ordered), note: received ? t("recibidas / pedidas") : "pedidas" },
+          { label: t("Mercancía"), value: money(po.merchandise_cost) },
+          { label: t("Costes adicionales"), value: money(po.extra_costs) },
+          { label: t("Coste total"), value: money(po.total_cost) },
         ]}
       />
       <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
-        <Panel title="Líneas" description={received ? "Cada línea recibida es un lote con su coste real por unidad." : "Coste real estimado con las cantidades pedidas."} padded={false}>
+        <Panel title={t("Líneas")} description={received ? t("Cada línea recibida es un lote con su coste real por unidad.") : t("Coste real estimado con las cantidades pedidas.")} padded={false}>
           <Table>
             <thead>
               <tr>
-                <Th>Producto</Th>
-                <Th num>Pedidas</Th>
-                <Th num>Recibidas</Th>
-                <Th num>Coste ud.</Th>
-                <Th num>Mercancía</Th>
-                <Th num>Costes extra</Th>
-                <Th num>Coste real ud.</Th>
-                <Th>Lote</Th>
+                <Th>{t("Producto")}</Th>
+                <Th num>{t("Pedidas")}</Th>
+                <Th num>{t("Recibidas")}</Th>
+                <Th num>{t("Coste ud.")}</Th>
+                <Th num>{t("Mercancía")}</Th>
+                <Th num>{t("Costes extra")}</Th>
+                <Th num>{t("Coste real ud.")}</Th>
+                <Th>{t("Lote")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -107,11 +110,11 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
                       <Link href={`/productos/${l.product_id}`} className="font-semibold hover:underline">
                         {variantDisplay(l.product_name, l.variant_name)}
                       </Link>
-                      {l.substitutes_item_id && <span className="block text-xs text-info">Llegó en sustitución de otra línea</span>}
+                      {l.substitutes_item_id && <span className="block text-xs text-info">{t("Llegó en sustitución de otra línea")}</span>}
                       {l.item_status === "cancelado" && (
                         <span className="block text-xs">
-                          <Badge tone="neutral">No llegó</Badge>
-                          {subsOf.get(l.item_id) && <span className="ml-1">Sustituido por {subsOf.get(l.item_id)}</span>}
+                          <Badge tone="neutral">{t("No llegó")}</Badge>
+                          {subsOf.get(l.item_id) && <span className="ml-1">{t("Sustituido por")}{" "}{subsOf.get(l.item_id)}</span>}
                         </span>
                       )}
                       {l.notes && <span className="block text-xs text-muted">{l.notes}</span>}
@@ -124,16 +127,16 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
                     <Td num className="font-semibold">
                       {money(l.real_unit_cost, { precise: true })}
                     </Td>
-                    <Td>{l.lot_id ? <LotTag label={`Pedido #${po.order_number}`} /> : <span className="text-xs text-muted">—</span>}</Td>
+                    <Td>{l.lot_id ? <LotTag label={t("Pedido #{order_number}", { order_number: po.order_number })} /> : <span className="text-xs text-muted">—</span>}</Td>
                   </Tr>
                 );
               })}
             </tbody>
           </Table>
         </Panel>
-        <Panel title="Costes del pedido">
+        <Panel title={t("Costes del pedido")}>
           {(costs ?? []).length === 0 ? (
-            <p className="text-sm text-muted">Sin costes adicionales.</p>
+            <p className="text-sm text-muted">{t("Sin costes adicionales.")}</p>
           ) : (
             <dl className="flex flex-col gap-2 text-sm">
               {Object.entries(costMap).map(([k, v]) => (
@@ -143,12 +146,12 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
                 </div>
               ))}
               <div className="flex justify-between gap-3 border-t border-line pt-2 font-semibold">
-                <dt>Total</dt>
+                <dt>{t("Total")}</dt>
                 <dd className="num">{money(extra)}</dd>
               </div>
             </dl>
           )}
-          <p className="mt-3 text-xs text-muted">Se reparten en proporción al valor de la mercancía de cada línea.</p>
+          <p className="mt-3 text-xs text-muted">{t("Se reparten en proporción al valor de la mercancía de cada línea.")}</p>
           {po.notes && <p className="mt-4 border-t border-line pt-3 text-sm">{po.notes}</p>}
         </Panel>
       </div>

@@ -1,9 +1,10 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, Notice, Select, Table, Td, Textarea, Th } from "@/components/ui";
-import { COST_TYPES, money } from "@/lib/format";
+import { COST_TYPES } from "@/lib/format";
 import type { Option } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
 import { savePurchaseOrder } from "./actions";
@@ -45,6 +46,8 @@ export function PurchaseOrderForm({
   today: string;
   initial?: { id: string; order_number: number; supplier_id: string; order_date: string; notes: string | null; lines: POLine[]; costs: POCosts };
 }) {
+  const t = useT();
+  const f = useFormat();
   const router = useRouter();
   const [supplier, setSupplier] = useState(initial?.supplier_id ?? "");
   const [orderDate, setOrderDate] = useState(initial?.order_date ?? today);
@@ -84,9 +87,9 @@ export function PurchaseOrderForm({
     <div className="flex flex-col gap-5">
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-4">
-          <Field label="Proveedor" required className="sm:col-span-2" hint={suppliers.length === 0 ? "Crea primero un proveedor en Proveedores." : "Un pedido pertenece a un solo proveedor."}>
+          <Field label={t("Proveedor")} required className="sm:col-span-2" hint={suppliers.length === 0 ? t("Crea primero un proveedor en Proveedores.") : t("Un pedido pertenece a un solo proveedor.")}>
             <Select value={supplier} onChange={(e) => setSupplier(e.target.value)}>
-              <option value="">Elige…</option>
+              <option value="">{t("Elige…")}</option>
               {suppliers.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -94,23 +97,23 @@ export function PurchaseOrderForm({
               ))}
             </Select>
           </Field>
-          <Field label="Fecha del pedido" required>
+          <Field label={t("Fecha del pedido")} required>
             <Input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
           </Field>
-          <Field label="Nº de pedido" hint="Vacío: el siguiente número.">
+          <Field label={t("Nº de pedido")} hint={t("Vacío: el siguiente número.")}>
             <Input type="number" min={1} value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
           </Field>
-          <Field label="Notas" className="sm:col-span-4">
+          <Field label={t("Notas")} className="sm:col-span-4">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-12" />
           </Field>
         </div>
       </section>
 
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
-        <h2 className="mb-3 text-[15px] font-bold">Líneas del pedido</h2>
+        <h2 className="mb-3 text-[15px] font-bold">{t("Líneas del pedido")}</h2>
         <ProductPicker
           allowCreate
-          placeholder="Añade un producto: busca por nombre o SKU"
+          placeholder={t("Añade un producto: busca por nombre o SKU")}
           onSelect={(v) =>
             setLines((ls) => [...ls, { key: `${v.variant_id}-${Date.now()}`, variant_id: v.variant_id, label: variantDisplay(v.product_name, v.variant_name, v.variant_count), quantity: "1", unit_cost: "", notes: "" }])
           }
@@ -119,11 +122,11 @@ export function PurchaseOrderForm({
           <Table className="mt-3">
             <thead>
               <tr>
-                <Th>Producto</Th>
-                <Th num>Unidades</Th>
-                <Th num>Coste unitario (€)</Th>
-                <Th num>Mercancía</Th>
-                <Th num>Coste real / ud.</Th>
+                <Th>{t("Producto")}</Th>
+                <Th num>{t("Unidades")}</Th>
+                <Th num>{t("Coste unitario (€)")}</Th>
+                <Th num>{t("Mercancía")}</Th>
+                <Th num>{t("Coste real / ud.")}</Th>
                 <Th />
               </tr>
             </thead>
@@ -137,11 +140,11 @@ export function PurchaseOrderForm({
                   <Td num>
                     <Input inputMode="decimal" className="ml-auto h-9 w-28 text-right" value={l.unit_cost} onChange={(e) => setLines((ls) => ls.map((x) => (x.key === l.key ? { ...x, unit_cost: e.target.value } : x)))} placeholder="0,00" />
                   </Td>
-                  <Td num>{money(parsed[i].quantity * parsed[i].unit_cost)}</Td>
-                  <Td num className="font-semibold">{money(real[i], { precise: true })}</Td>
+                  <Td num>{f.money(parsed[i].quantity * parsed[i].unit_cost)}</Td>
+                  <Td num className="font-semibold">{f.money(real[i], { precise: true })}</Td>
                   <Td>
                     <Button size="sm" variant="ghost" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))}>
-                      Quitar
+                      {t("Quitar")}
                     </Button>
                   </Td>
                 </tr>
@@ -152,21 +155,21 @@ export function PurchaseOrderForm({
       </section>
 
       <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
-        <h2 className="text-[15px] font-bold">Costes del pedido</h2>
-        <p className="mb-3 mt-0.5 text-[13px] text-muted">Se reparten entre las líneas en proporción al valor de la mercancía. El resultado es el coste real por unidad de cada lote.</p>
+        <h2 className="text-[15px] font-bold">{t("Costes del pedido")}</h2>
+        <p className="mb-3 mt-0.5 text-[13px] text-muted">{t("Se reparten entre las líneas en proporción al valor de la mercancía. El resultado es el coste real por unidad de cada lote.")}</p>
         <CostsEditor costs={costs} setCosts={setCosts} />
         <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-1 text-sm">
           <div>
-            <dt className="text-muted">Mercancía</dt>
-            <dd className="num font-semibold">{money(merch)}</dd>
+            <dt className="text-muted">{t("Mercancía")}</dt>
+            <dd className="num font-semibold">{f.money(merch)}</dd>
           </div>
           <div>
-            <dt className="text-muted">Costes adicionales</dt>
-            <dd className="num font-semibold">{money(extra)}</dd>
+            <dt className="text-muted">{t("Costes adicionales")}</dt>
+            <dd className="num font-semibold">{f.money(extra)}</dd>
           </div>
           <div>
-            <dt className="text-muted">Total del pedido</dt>
-            <dd className="num text-base font-bold">{money(merch + extra)}</dd>
+            <dt className="text-muted">{t("Total del pedido")}</dt>
+            <dd className="num text-base font-bold">{f.money(merch + extra)}</dd>
           </div>
         </dl>
       </section>
@@ -174,9 +177,9 @@ export function PurchaseOrderForm({
       {error && <Notice tone="bad">{error}</Notice>}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" onClick={save} disabled={pending || !supplier || !orderDate || lines.length === 0 || invalid}>
-          {pending ? "Guardando…" : initial ? "Guardar cambios" : "Guardar como pendiente"}
+          {pending ? t("Guardando…") : initial ? t("Guardar cambios") : t("Guardar como pendiente")}
         </Button>
-        <p className="text-[13px] text-muted">El stock no entra hasta que registres la recepción del pedido.</p>
+        <p className="text-[13px] text-muted">{t("El stock no entra hasta que registres la recepción del pedido.")}</p>
       </div>
     </div>
   );

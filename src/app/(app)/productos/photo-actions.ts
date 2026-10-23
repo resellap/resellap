@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -41,11 +42,12 @@ const addSchema = z.object({
 });
 
 export async function addProductPhotos(input: z.input<typeof addSchema>): Promise<ActionResult> {
+  const t = await getT();
   const user = await admin();
   const v = addSchema.safeParse(input);
-  if (!v.success) return { ok: false, error: "Datos de las fotos no válidos." };
+  if (!v.success) return { ok: false, error: t("Datos de las fotos no válidos.") };
   const { productId, photos } = v.data;
-  if (photos.some((p) => !p.path.startsWith(`${productId}/`))) return { ok: false, error: "Las fotos no corresponden a este producto." };
+  if (photos.some((p) => !p.path.startsWith(`${productId}/`))) return { ok: false, error: t("Las fotos no corresponden a este producto.") };
   const supabase = await createClient();
   const { data: last } = await supabase.from("product_photos").select("position").eq("product_id", productId).order("position", { ascending: false }).limit(1);
   const start = (last?.[0]?.position ?? -1) + 1;
@@ -58,12 +60,13 @@ export async function addProductPhotos(input: z.input<typeof addSchema>): Promis
   if (error) return { ok: false, error: friendlyError(error) };
   await syncCover(productId);
   refresh(productId);
-  return { ok: true, message: photos.length === 1 ? "Foto guardada." : `${photos.length} fotos guardadas.` };
+  return { ok: true, message: photos.length === 1 ? t("Foto guardada.") : t("{length} fotos guardadas.", { length: photos.length }) };
 }
 
 export async function deleteProductPhoto(photoId: string): Promise<ActionResult> {
+  const t = await getT();
   await admin();
-  if (!z.uuid().safeParse(photoId).success) return { ok: false, error: "Foto no válida." };
+  if (!z.uuid().safeParse(photoId).success) return { ok: false, error: t("Foto no válida.") };
   const supabase = await createClient();
   const { data: ph } = await supabase.from("product_photos").select("product_id, path").eq("id", photoId).maybeSingle();
   if (!ph) return { ok: true };
@@ -72,14 +75,15 @@ export async function deleteProductPhoto(photoId: string): Promise<ActionResult>
   await supabase.storage.from("product-photos").remove([ph.path, thumbPath(ph.path)]);
   await syncCover(ph.product_id);
   refresh(ph.product_id);
-  return { ok: true, message: "Foto borrada." };
+  return { ok: true, message: t("Foto borrada.") };
 }
 
 /** Nuevo orden (la primera pasa a ser la portada). */
 export async function reorderProductPhotos(productId: string, ids: string[]): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const v = z.object({ productId: z.uuid(), ids: z.array(z.uuid()).min(1).max(60) }).safeParse({ productId, ids });
-  if (!v.success) return { ok: false, error: "Orden no válido." };
+  if (!v.success) return { ok: false, error: t("Orden no válido.") };
   const supabase = await createClient();
   // Todo el orden de una vez (y la portada) en la base de datos
   const { error } = await supabase.rpc("reorder_product_photos", { p_product_id: productId, p_ids: ids });
@@ -90,14 +94,15 @@ export async function reorderProductPhotos(productId: string, ids: string[]): Pr
 
 /** Marca (o desmarca) fotos como ya usadas en una plataforma. */
 export async function setPhotosUsed(ids: string[], platform: "vinted" | "wallapop", used: boolean): Promise<ActionResult> {
+  const t = await getT();
   await admin();
   const v = z.object({ ids: z.array(z.uuid()).min(1).max(60), platform: z.enum(["vinted", "wallapop"]) }).safeParse({ ids, platform });
-  if (!v.success) return { ok: false, error: "Datos no válidos." };
+  if (!v.success) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const { error } = used
     ? await supabase.from("photo_uses").upsert(ids.map((photo_id) => ({ photo_id, platform })), { onConflict: "photo_id,platform", ignoreDuplicates: true })
     : await supabase.from("photo_uses").delete().in("photo_id", ids).eq("platform", platform);
   if (error) return { ok: false, error: friendlyError(error) };
   revalidatePath("/productos", "layout");
-  return { ok: true, message: used ? `Marcadas como usadas en ${platform === "vinted" ? "Vinted" : "Wallapop"}.` : "Desmarcadas." };
+  return { ok: true, message: used ? t("Marcadas como usadas en {v}.", { v: platform === "vinted" ? "Vinted" : "Wallapop" }) : t("Desmarcadas.") };
 }

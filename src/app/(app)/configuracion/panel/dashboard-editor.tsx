@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { ArrowDown, ArrowUp, Check, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, Field, Panel, Select, clsx } from "@/components/ui";
@@ -13,6 +14,7 @@ const PREVIEW: Record<WidgetSize, string> = { "1x1": "col-span-1 h-14", "2x1": "
 const GROUPS: WidgetGroup[] = ["Indicadores", "Análisis comercial", "Inventario y actividad"];
 
 export function DashboardEditor({ initial, platforms }: { initial: D; platforms: { id: string; name: string }[] }) {
+  const t = useT();
   const [saved, setSaved] = useState<D>(initial);
   const [d, setD] = useState<D>(initial);
   const { run, pending, error, message } = useServerAction(savePreferences<"dashboard">);
@@ -37,11 +39,11 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
     <div className="flex flex-col gap-5">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* Vista previa */}
-        <Panel title="Vista previa" description="Así se ordenan los widgets en el inicio (en el móvil, 2 columnas; en el ordenador, 4).">
+        <Panel title={t("Vista previa")} description={t("Así se ordenan los widgets en el inicio (en el móvil, 2 columnas; en el ordenador, 4).")}>
           {d.widgets.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted">El panel está vacío. Añade widgets desde el catálogo.</p>
+            <p className="py-6 text-center text-sm text-muted">{t("El panel está vacío. Añade widgets desde el catálogo.")}</p>
           ) : (
-            <ol className="grid grid-flow-row-dense grid-cols-4 gap-2" aria-label="Vista previa del panel">
+            <ol className="grid grid-flow-row-dense grid-cols-4 gap-2" aria-label={t("Vista previa del panel")}>
               {d.widgets.map((w) => (
                 <li
                   key={w.id}
@@ -58,9 +60,9 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
         </Panel>
 
         {/* Widgets añadidos */}
-        <Panel title={`En tu panel (${d.widgets.length})`} description="Cambia el tamaño, el orden o quítalos." padded={false}>
+        <Panel title={t("En tu panel ({length})", { length: d.widgets.length })} description={t("Cambia el tamaño, el orden o quítalos.")} padded={false}>
           {d.widgets.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-muted">Ninguno.</p>
+            <p className="px-4 py-6 text-sm text-muted">{t("Ninguno.")}</p>
           ) : (
             <ul className="divide-y divide-line">
               {d.widgets.map((w, i) => {
@@ -68,7 +70,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                 return (
                   <li key={w.id} className="flex flex-wrap items-center gap-2 px-4 py-2.5">
                     <span className="min-w-0 flex-1 text-sm font-semibold">{def.title}</span>
-                    <div role="radiogroup" aria-label={`Tamaño de ${def.title}`} className="flex rounded-full border border-line-strong p-0.5">
+                    <div role="radiogroup" aria-label={t("Tamaño de {title}", { title: def.title })} className="flex rounded-full border border-line-strong p-0.5">
                       {def.sizes.map((s) => (
                         <button
                           key={s}
@@ -83,13 +85,13 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                       ))}
                     </div>
                     <div className="flex gap-1">
-                      <IconBtn label={`Subir ${def.title}`} onClick={() => move(i, i - 1)} disabled={i === 0}>
+                      <IconBtn label={t("Subir {title}", { title: def.title })} onClick={() => move(i, i - 1)} disabled={i === 0}>
                         <ArrowUp size={17} />
                       </IconBtn>
-                      <IconBtn label={`Bajar ${def.title}`} onClick={() => move(i, i + 1)} disabled={i === d.widgets.length - 1}>
+                      <IconBtn label={t("Bajar {title}", { title: def.title })} onClick={() => move(i, i + 1)} disabled={i === d.widgets.length - 1}>
                         <ArrowDown size={17} />
                       </IconBtn>
-                      <IconBtn label={`Quitar ${def.title}`} onClick={() => setWidgets(d.widgets.filter((x) => x.id !== w.id))} danger>
+                      <IconBtn label={t("Quitar {title}", { title: def.title })} onClick={() => setWidgets(d.widgets.filter((x) => x.id !== w.id))} danger>
                         <Trash2 size={17} />
                       </IconBtn>
                     </div>
@@ -102,7 +104,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
       </div>
 
       {/* Catálogo */}
-      <Panel title="Catálogo de widgets" description="Cada widget muestra datos reales de la app. Los que no se pueden calcular explican por qué.">
+      <Panel title={t("Catálogo de widgets")} description={t("Cada widget muestra datos reales de la app. Los que no se pueden calcular explican por qué.")}>
         <div className="flex flex-col gap-5">
           {GROUPS.map((g) => (
             <section key={g} aria-label={g}>
@@ -116,22 +118,22 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                         <span className="text-[15px] font-semibold">{w.title}</span>
                         {added && (
                           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-[11.5px] font-bold text-on-brand">
-                            <Check size={12} strokeWidth={3} /> Añadido
+                            <Check size={12} strokeWidth={3} />{" "}{t("Añadido")}
                           </span>
                         )}
                       </div>
                       <p className="text-[13px] text-muted">{w.unavailable ?? w.description}</p>
-                      <p className="text-[12px] text-faint">Tamaños: {w.sizes.map((s) => SIZE_LABEL[s].toLowerCase()).join(", ")}</p>
+                      <p className="text-[12px] text-faint">{t("Tamaños:")}{" "}{w.sizes.map((s) => SIZE_LABEL[s].toLowerCase()).join(", ")}</p>
                       <div className="mt-auto">
                         {w.unavailable ? (
-                          <span className="text-[12.5px] font-semibold text-muted">No disponible</span>
+                          <span className="text-[12.5px] font-semibold text-muted">{t("No disponible")}</span>
                         ) : added ? (
                           <Button size="sm" onClick={() => setWidgets(d.widgets.filter((x) => x.id !== w.id))}>
-                            <Trash2 size={15} /> Quitar
+                            <Trash2 size={15} />{" "}{t("Quitar")}
                           </Button>
                         ) : (
                           <Button size="sm" variant="primary" onClick={() => setWidgets([...d.widgets, { id: w.id, size: w.sizes[0] }])}>
-                            <Plus size={15} strokeWidth={2.75} /> Añadir
+                            <Plus size={15} strokeWidth={2.75} />{" "}{t("Añadir")}
                           </Button>
                         )}
                       </div>
@@ -145,9 +147,9 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
       </Panel>
 
       {/* Análisis */}
-      <Panel title="Análisis" description="Valores con los que se abre el panel. Desde el inicio puedes cambiar el periodo y la plataforma en cualquier momento.">
+      <Panel title={t("Análisis")} description={t("Valores con los que se abre el panel. Desde el inicio puedes cambiar el periodo y la plataforma en cualquier momento.")}>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Periodo predeterminado">
+          <Field label={t("Periodo predeterminado")}>
             <Select value={d.period} onChange={(e) => setD({ ...d, period: e.target.value as D["period"] })}>
               {Object.entries(PERIODS).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -156,7 +158,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
               ))}
             </Select>
           </Field>
-          <Field label="Evolución de las ventas">
+          <Field label={t("Evolución de las ventas")}>
             <Select value={d.granularity} onChange={(e) => setD({ ...d, granularity: e.target.value as D["granularity"] })}>
               {Object.entries(GRANULARITIES).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -165,9 +167,9 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
               ))}
             </Select>
           </Field>
-          <Field label="Plataforma">
+          <Field label={t("Plataforma")}>
             <Select value={d.platformId ?? ""} onChange={(e) => setD({ ...d, platformId: e.target.value || null })}>
-              <option value="">Todas</option>
+              <option value="">{t("Todas")}</option>
               {platforms.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -180,8 +182,8 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
           <Toggle
             checked={d.compare}
             onChange={(v) => setD({ ...d, compare: v })}
-            label="Comparar con el periodo anterior"
-            description="Muestra la variación en % frente al mismo tramo del periodo anterior (por ejemplo, del 1 al 10 de este mes frente al 1 al 10 del mes pasado)."
+            label={t("Comparar con el periodo anterior")}
+            description={t("Muestra la variación en % frente al mismo tramo del periodo anterior (por ejemplo, del 1 al 10 de este mes frente al 1 al 10 del mes pasado).")}
           />
         </div>
       </Panel>
@@ -194,8 +196,8 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
         error={error}
         message={message}
         reset={{
-          label: "Distribución inicial",
-          description: "El panel vuelve a los widgets, tamaños y orden iniciales. No se borra ningún dato.",
+          label: t("Distribución inicial"),
+          description: t("El panel vuelve a los widgets, tamaños y orden iniciales. No se borra ningún dato."),
           action: () => resetPreferences("dashboard"),
           onDone: () => {
             setD(DEFAULT_PREFS.dashboard);

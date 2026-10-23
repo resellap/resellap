@@ -1,6 +1,6 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
-import { money, monthLabel, units } from "@/lib/format";
 
 type Point = { month: string; revenue: number; profit: number; orders: number; units: number };
 
@@ -10,8 +10,10 @@ type Point = { month: string; revenue: number; profit: number; orders: number; u
  * detalle de cada mes al pasar el ratón o tocar.
  */
 export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[]; unit?: "mes" | "semana" | "dia"; height?: number }) {
-  const axisLabel = (k: string) => (unit === "mes" ? monthLabel(k) : unit === "semana" ? dayMonth(k) : String(Number(k.slice(8, 10))));
-  const longLabel = (k: string) => (unit === "mes" ? monthLabel(k) : unit === "semana" ? `Semana del ${dayMonth(k)}` : dayMonth(k));
+  const t = useT();
+  const f = useFormat();
+  const axisLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? dayMonth(k) : String(Number(k.slice(8, 10))));
+  const longLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? `Semana del ${dayMonth(k)}` : dayMonth(k));
   const every = data.length > 16 ? 5 : 1;
   const [hover, setHover] = useState<number | null>(null);
   const [asTable, setAsTable] = useState(false);
@@ -35,25 +37,25 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
       <div>
         <div className="mb-2 flex justify-end">
           <button className="text-[13px] font-semibold text-brand-ink underline-offset-2 hover:underline" onClick={() => setAsTable(false)}>
-            Ver gráfico
+            {t("Ver gráfico")}
           </button>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[12.5px] text-muted">
-              <th className="py-1.5 font-semibold">{unit === "mes" ? "Mes" : unit === "semana" ? "Semana" : "Día"}</th>
-              <th className="py-1.5 text-right font-semibold">Vendido</th>
-              <th className="py-1.5 text-right font-semibold">Beneficio</th>
-              <th className="py-1.5 text-right font-semibold">Pedidos</th>
+              <th className="py-1.5 font-semibold">{unit === "mes" ? t("Mes") : unit === "semana" ? t("Semana") : t("Día")}</th>
+              <th className="py-1.5 text-right font-semibold">{t("Vendido")}</th>
+              <th className="py-1.5 text-right font-semibold">{t("Beneficio")}</th>
+              <th className="py-1.5 text-right font-semibold">{t("Pedidos")}</th>
             </tr>
           </thead>
           <tbody>
             {data.map((d) => (
               <tr key={d.month} className="border-t border-line/70">
                 <td className="py-1.5">{longLabel(d.month)}</td>
-                <td className="num py-1.5 text-right">{money(d.revenue)}</td>
-                <td className="num py-1.5 text-right">{money(d.profit)}</td>
-                <td className="num py-1.5 text-right">{units(d.orders)}</td>
+                <td className="num py-1.5 text-right">{f.money(d.revenue)}</td>
+                <td className="num py-1.5 text-right">{f.money(d.profit)}</td>
+                <td className="num py-1.5 text-right">{f.units(d.orders)}</td>
               </tr>
             ))}
           </tbody>
@@ -74,21 +76,21 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[12.5px]">
         <span className="flex items-center gap-4 text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-brand" aria-hidden /> Ventas
+            <span className="h-3 w-3 rounded-[3px] bg-brand" aria-hidden />{" "}{t("Ventas")}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-ink" aria-hidden /> Beneficio bruto
+            <span className="h-3 w-3 rounded-[3px] bg-ink" aria-hidden />{" "}{t("Beneficio bruto")}
           </span>
         </span>
         <button className="font-semibold text-brand-ink underline-offset-2 hover:underline" onClick={() => setAsTable(true)}>
-          Ver como tabla
+          {t("Ver como tabla")}
         </button>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-auto w-full"
         role="img"
-        aria-label={`Ingresos y beneficio bruto ${unit === "mes" ? "por mes" : unit === "semana" ? "por semana" : "por día"}`}
+        aria-label={t("Ingresos y beneficio bruto {v}", { v: unit === "mes" ? "por mes" : unit === "semana" ? "por semana" : "por día" })}
         onMouseLeave={() => setHover(null)}
       >
         {ticks.map((t) => (
@@ -146,10 +148,10 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
           style={{ left: `clamp(0px, calc(${((pad.l + band * hover! + band / 2) / W) * 100}% - 80px), calc(100% - 170px))` }}
         >
           <p className="font-semibold">{longLabel(h.month)}</p>
-          <p className="num">Ventas: {money(h.revenue)}</p>
-          <p className="num">Beneficio bruto: {money(h.profit)}</p>
+          <p className="num">{t("Ventas:")}{" "}{f.money(h.revenue)}</p>
+          <p className="num">{t("Beneficio bruto:")}{" "}{f.money(h.profit)}</p>
           <p className="num text-muted">
-            {units(h.orders)} pedidos, {units(h.units)} uds.
+            {f.units(h.orders)}{" "}{t("pedidos, {units} uds.", { units: f.units(h.units) })}
           </p>
         </div>
       )}

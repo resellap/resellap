@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { redirect } from "next/navigation";
 import { safeNext } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
@@ -6,10 +7,11 @@ import { createClient } from "@/lib/supabase/server";
 export type LoginState = { error: string | null; email: string };
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const t = await getT();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/");
-  if (!email || !password) return { error: "Escribe tu email y tu contraseña.", email };
+  if (!email || !password) return { error: t("Escribe tu email y tu contraseña."), email };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -30,13 +32,13 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   if (profileError) {
     await supabase.auth.signOut();
     return {
-      error: "Has entrado, pero no se puede leer tu perfil en la base de datos. Revisa la conexión con Supabase y que las migraciones estén aplicadas.",
+      error: t("Has entrado, pero no se puede leer tu perfil en la base de datos. Revisa la conexión con Supabase y que las migraciones estén aplicadas."),
       email,
     };
   }
   if (!profile?.active) {
     await supabase.auth.signOut();
-    return { error: "Tu usuario está desactivado. Habla con el administrador.", email };
+    return { error: t("Tu usuario está desactivado. Habla con el administrador."), email };
   }
   redirect(safeNext(next));
 }

@@ -4,6 +4,7 @@
  * ventana encima de la página, sin salir de Resellap. El enlace ya
  * viene preparado del servidor, así que se abre al instante.
  */
+import { useT } from "@/i18n/client";
 import { useState } from "react";
 import { Button, buttonClass } from "./ui";
 import { Modal } from "./ui-client";
@@ -25,37 +26,38 @@ export function LabelButton({
   size?: "sm" | "md";
   variant?: "secondary" | "primary";
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const isPdf = /\.pdf$/i.test(path);
   if (!url) {
-    return <span className="text-xs text-danger">No se puede abrir la etiqueta. Recarga la página.</span>;
+    return <span className="text-xs text-danger">{t("No se puede abrir la etiqueta. Recarga la página.")}</span>;
   }
   return (
     <>
       <Button size={size} variant={variant} onClick={() => setOpen(true)}>
-        Ver etiqueta
+        {t("Ver etiqueta")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         wide
-        title={title ?? "Etiqueta de envío"}
+        title={title ?? t("Etiqueta de envío")}
         footer={
           <>
             <a className={buttonClass("secondary")} href={url} target="_blank" rel="noopener noreferrer">
-              Abrir aparte
+              {t("Abrir aparte")}
             </a>
             <Button variant="primary" onClick={() => setOpen(false)}>
-              Cerrar
+              {t("Cerrar")}
             </Button>
           </>
         }
       >
         {isPdf ? (
-          <iframe src={url} title="Etiqueta de envío" className="h-[70vh] w-full rounded border border-line bg-white" />
+          <iframe src={url} title={t("Etiqueta de envío")} className="h-[70vh] w-full rounded border border-line bg-white" />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- enlace temporal de Supabase, no se optimiza
-          <img src={url} alt="Etiqueta de envío" className="mx-auto max-h-[70vh] w-auto rounded border border-line bg-white object-contain" />
+          <img src={url} alt={t("Etiqueta de envío")} className="mx-auto max-h-[70vh] w-auto rounded border border-line bg-white object-contain" />
         )}
         <p className="mt-2 text-xs text-muted">{labelFileName(path)}</p>
       </Modal>

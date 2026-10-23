@@ -28,6 +28,7 @@ function walk(dir, out = []) {
 const LIT = String.raw`("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|\x60(?:[^\x60\\$]|\\.)*\x60)`;
 const CALL = new RegExp(String.raw`(?<![\w.])(?:t|msg)\(\s*` + LIT, "g");
 
+const TX = new RegExp(String.raw`<Tx(?:\s[^>]*)?>\s*(?:\{\s*` + LIT + String.raw`\s*\}|([^<{}]+?))\s*</Tx>`, "g");
 const keys = new Map(); // clave → archivo (para localizarla)
 for (const file of walk(SRC)) {
   const src = readFileSync(file, "utf8");
@@ -37,6 +38,17 @@ for (const file of walk(SRC)) {
       text = Function(`"use strict"; return (${m[1]});`)();
     } catch {
       continue;
+    }
+    if (text && !keys.has(text)) keys.set(text, relative(ROOT, file));
+  }
+  for (const m of src.matchAll(TX)) {
+    let text = m[2]?.trim();
+    if (m[1]) {
+      try {
+        text = Function(`"use strict"; return (${m[1]});`)();
+      } catch {
+        continue;
+      }
     }
     if (text && !keys.has(text)) keys.set(text, relative(ROOT, file));
   }

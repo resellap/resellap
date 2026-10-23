@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Empty, PageHeader, Panel } from "@/components/ui";
@@ -6,7 +8,7 @@ import { must } from "@/lib/db";
 import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Historial de actividad" };
+export const metadata: Metadata = { title: msg("Historial de actividad") };
 
 const LABEL: Record<string, string> = {
   exportar: "Exportación",
@@ -20,28 +22,29 @@ const LABEL: Record<string, string> = {
 };
 
 export default async function ActivityPage() {
+  const t = await getT();
   const user = await requireUser();
   const supabase = await createClient();
   const rows = (must(await supabase.rpc("my_activity", { p_limit: 100 }), "tu historial") ?? []) as { occurred_at: string; action: string; entity: string; summary: string }[];
   return (
     <>
       <PageHeader
-        title="Historial de actividad"
-        back={{ href: "/configuracion", label: "Ajustes" }}
-        description="Tus últimas operaciones registradas: exportaciones, copias, cambios de ajustes y acciones sobre ventas e inventario. Solo aparece lo que se registró en su momento."
+        title={t("Historial de actividad")}
+        back={{ href: "/configuracion", label: t("Ajustes") }}
+        description={t("Tus últimas operaciones registradas: exportaciones, copias, cambios de ajustes y acciones sobre ventas e inventario. Solo aparece lo que se registró en su momento.")}
       />
       {user.role === "admin" && (
         <p className="mb-4 text-sm text-ink-soft">
-          Para ver todos los cambios de todos los usuarios, usa{" "}
+          {t("Para ver todos los cambios de todos los usuarios, usa")}{" "}
           <Link href="/auditoria" className="font-semibold text-brand-ink underline">
-            Auditoría
+            {t("Auditoría")}
           </Link>
           .
         </p>
       )}
       <Panel padded={false}>
         {rows.length === 0 ? (
-          <Empty title="Aún no hay operaciones registradas" />
+          <Empty title={t("Aún no hay operaciones registradas")} />
         ) : (
           <ul className="divide-y divide-line">
             {rows.map((r, i) => (

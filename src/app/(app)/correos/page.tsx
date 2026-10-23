@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail } from "lucide-react";
@@ -10,7 +12,7 @@ import { dateTime, money } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { AccountRow, ConnectionButtons, DefaultResponsible, IncidentActions, UndoButton } from "./email-actions";
 
-export const metadata: Metadata = { title: "Ventas por correo" };
+export const metadata: Metadata = { title: msg("Ventas por correo") };
 export const maxDuration = 60;
 
 type Status = {
@@ -50,17 +52,18 @@ const KIND: Record<string, string> = {
 };
 
 const STATUS: Record<string, { label: string; tone: "good" | "warn" | "bad" | "info" | "neutral" }> = {
-  procesado: { label: "Hecho", tone: "good" },
-  detectada: { label: "Por confirmar", tone: "info" },
-  duplicado: { label: "Duplicado (ya estaba apuntada)", tone: "neutral" },
-  pendiente: { label: "En cola", tone: "info" },
-  esperando: { label: "Esperando la venta", tone: "info" },
-  revision: { label: "Revisar", tone: "warn" },
-  error: { label: "Error (se reintenta)", tone: "bad" },
-  ignorado: { label: "Ignorado", tone: "neutral" },
+  procesado: { label: msg("Hecho"), tone: "good" },
+  detectada: { label: msg("Por confirmar"), tone: "info" },
+  duplicado: { label: msg("Duplicado (ya estaba apuntada)"), tone: "neutral" },
+  pendiente: { label: msg("En cola"), tone: "info" },
+  esperando: { label: msg("Esperando la venta"), tone: "info" },
+  revision: { label: msg("Revisar"), tone: "warn" },
+  error: { label: msg("Error (se reintenta)"), tone: "bad" },
+  ignorado: { label: msg("Ignorado"), tone: "neutral" },
 };
 
 export default async function EmailSalesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const t = await getT();
   await requirePerm("correo");
   const sp = await searchParams;
   const view = first(sp.ver) === "historial" ? "historial" : first(sp.ver) === "cuentas" ? "cuentas" : "incidencias";
@@ -103,16 +106,16 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
   return (
     <>
       <PageHeader
-        title="Ventas por correo"
-        description={`Lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace que llegan a ${CENTRAL_ACCOUNT ?? "tu Gmail"} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.`}
+        title={t("Ventas por correo")}
+        description={t("Lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace que llegan a {v} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.", { v: CENTRAL_ACCOUNT ?? "tu Gmail" })}
       />
       {okMsg === "conectado" && (
-        <Notice tone="good" className="mb-4" title="Gmail conectado">
-          Desde ahora se revisa el correo cada 5 minutos. Solo se leen los correos que lleguen a partir de este momento.
+        <Notice tone="good" className="mb-4" title={t("Gmail conectado")}>
+          {t("Desde ahora se revisa el correo cada 5 minutos. Solo se leen los correos que lleguen a partir de este momento.")}
         </Notice>
       )}
       {errMsg && (
-        <Notice tone="bad" className="mb-4" title="No se ha podido conectar">
+        <Notice tone="bad" className="mb-4" title={t("No se ha podido conectar")}>
           {errMsg}
         </Notice>
       )}
@@ -123,9 +126,9 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
         <Tabs
           current={view}
           items={[
-            { key: "incidencias", label: needsPerson ? `Revisar (${needsPerson})` : "Revisar", href: "/correos" },
-            { key: "historial", label: "Historial", href: "/correos?ver=historial" },
-            { key: "cuentas", label: unassigned ? `Cuentas (${unassigned})` : "Cuentas", href: "/correos?ver=cuentas" },
+            { key: "incidencias", label: needsPerson ? t("Revisar ({needsPerson})", { needsPerson }) : t("Revisar"), href: "/correos" },
+            { key: "historial", label: t("Historial"), href: "/correos?ver=historial" },
+            { key: "cuentas", label: unassigned ? t("Cuentas ({unassigned})", { unassigned }) : t("Cuentas"), href: "/correos?ver=cuentas" },
           ]}
         />
       </div>
@@ -133,7 +136,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
       {view === "incidencias" && (
         <Panel padded={false}>
           {incidents.length === 0 ? (
-            <Empty title="Nada que revisar">Todo lo que ha llegado se ha registrado bien.</Empty>
+            <Empty title={t("Nada que revisar")}>{t("Todo lo que ha llegado se ha registrado bien.")}</Empty>
           ) : (
             <ul className="divide-y divide-line">
               {incidents.map((e) => (
@@ -152,7 +155,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
       {view === "historial" && (
         <Panel padded={false}>
           {hist.length === 0 ? (
-            <Empty title="Todavía no ha llegado ningún correo de venta" />
+            <Empty title={t("Todavía no ha llegado ningún correo de venta")} />
           ) : (
             <ul className="divide-y divide-line">
               {hist.map((e) => (
@@ -162,7 +165,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
                     {isSaleKind(e.kind) && (e.status === "duplicado" || e.status === "ignorado") && <UndoButton id={e.id} />}
                     {e.status === "detectada" && (
                       <Link href="/detectadas" className="shrink-0 text-[13px] font-semibold text-brand-ink hover:underline">
-                        Ir a confirmarla
+                        {t("Ir a confirmarla")}
                       </Link>
                     )}
                   </div>
@@ -171,19 +174,19 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
             </ul>
           )}
           <p className="border-t border-line px-4 py-2.5 text-xs text-faint">
-            Se muestran los 100 últimos. Del correo solo se guardan los datos de la venta; los correos que no son de venta no se guardan.
+            {t("Se muestran los 100 últimos. Del correo solo se guardan los datos de la venta; los correos que no son de venta no se guardan.")}
           </p>
         </Panel>
       )}
 
       {view === "cuentas" && (
         <Panel
-          title="Cuentas de las plataformas"
-          description="Cada correo empieza con «Hola, usuario». Asigna a cada usuario su responsable y su móvil; si no, la venta se apunta al responsable por defecto."
+          title={t("Cuentas de las plataformas")}
+          description={t("Cada correo empieza con «Hola, usuario». Asigna a cada usuario su responsable y su móvil; si no, la venta se apunta al responsable por defecto.")}
           padded={false}
         >
           {(accounts ?? []).length === 0 ? (
-            <Empty title="Aún no ha llegado ningún correo">Las cuentas aparecerán aquí solas con el primer correo de cada una.</Empty>
+            <Empty title={t("Aún no ha llegado ningún correo")}>{t("Las cuentas aparecerán aquí solas con el primer correo de cada una.")}</Empty>
           ) : (
             <ul className="divide-y divide-line">
               {(accounts ?? []).map((a) => (
@@ -208,9 +211,10 @@ function ConnectionPanel({
   defaultResponsible: string | null;
   responsibles: { id: string; name: string }[];
 }) {
+  const t = tSync();
   const status = s?.status ?? "desconectado";
   const tone = status === "conectado" ? "good" : status === "desconectado" ? "neutral" : "bad";
-  const label = { conectado: "Conectado", desconectado: "Sin conectar", error_autorizacion: "Permiso caducado", error: "Error en la última revisión" }[status];
+  const label = { conectado: "Conectado", desconectado: "Sin conectar", error_autorizacion: "Permiso caducado", error: t("Error en la última revisión") }[status];
   const sum = s?.last_summary;
   return (
     <Panel padded={false}>
@@ -227,51 +231,50 @@ function ConnectionPanel({
             </span>
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2">
-                <span className="display text-[22px] leading-none">Gmail</span>
+                <span className="display text-[22px] leading-none">{t("Gmail")}</span>
                 <Badge tone={tone}>{label}</Badge>
               </p>
-              <p className="mt-1 truncate text-sm text-muted">{s?.email ?? CENTRAL_ACCOUNT ?? "Gmail de tu negocio"}</p>
+              <p className="mt-1 truncate text-sm text-muted">{s?.email ?? CENTRAL_ACCOUNT ?? t("Gmail de tu negocio")}</p>
             </div>
           </div>
           {!credentials && (
-            <Notice tone="warn" title="Falta un paso en Vercel">
-              Añade GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (los da Google Cloud) y vuelve a desplegar. Está explicado paso a paso en la guía «Ventas por correo» del
-              repositorio.
+            <Notice tone="warn" title={t("Falta un paso en Vercel")}>
+              {t("Añade GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (los da Google Cloud) y vuelve a desplegar. Está explicado paso a paso en la guía «Ventas por correo» del repositorio.")}
             </Notice>
           )}
           {status === "error_autorizacion" && (
-            <Notice tone="bad" title="Google ha retirado el permiso">
-              {s?.last_error} Pulsa «Volver a conectar». No se pierde nada: los correos que hayan llegado mientras tanto se leerán al reconectar.
+            <Notice tone="bad" title={t("Google ha retirado el permiso")}>
+              {s?.last_error}{" "}{t("Pulsa «Volver a conectar». No se pierde nada: los correos que hayan llegado mientras tanto se leerán al reconectar.")}
             </Notice>
           )}
           {status === "error" && s?.last_error && (
-            <Notice tone="bad" title="La última revisión falló">
-              {s.last_error} Se volverá a intentar sola en unos minutos.
+            <Notice tone="bad" title={t("La última revisión falló")}>
+              {s.last_error}{" "}{t("Se volverá a intentar sola en unos minutos.")}
             </Notice>
           )}
           {s?.connected && !s.cron_active && (
-            <Notice tone="warn">La revisión automática no está activa en Supabase. Mientras tanto, usa «Revisar ahora».</Notice>
+            <Notice tone="warn">{t("La revisión automática no está activa en Supabase. Mientras tanto, usa «Revisar ahora».")}</Notice>
           )}
           <ConnectionButtons connected={!!s?.connected} credentials={credentials} status={status} />
         </div>
 
         <div className="flex flex-col gap-3">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm [&>dd]:min-w-0 [&>dd]:break-words">
-            <dt className="text-muted">Revisión automática</dt>
-            <dd>{s?.connected ? (s.cron_active ? "Cada 5 minutos" : "Desactivada") : "—"}</dd>
-            <dt className="text-muted">Última revisión</dt>
-            <dd className="num">{s?.last_sync_at ? dateTime(s.last_sync_at) : "Nunca"}</dd>
-            <dt className="text-muted">Última correcta</dt>
+            <dt className="text-muted">{t("Revisión automática")}</dt>
+            <dd>{s?.connected ? (s.cron_active ? t("Cada 5 minutos") : t("Desactivada")) : "—"}</dd>
+            <dt className="text-muted">{t("Última revisión")}</dt>
+            <dd className="num">{s?.last_sync_at ? dateTime(s.last_sync_at) : t("Nunca")}</dd>
+            <dt className="text-muted">{t("Última correcta")}</dt>
             <dd className="num">{s?.last_success_at ? dateTime(s.last_success_at) : "—"}</dd>
-            <dt className="text-muted">Lee correos desde</dt>
+            <dt className="text-muted">{t("Lee correos desde")}</dt>
             <dd className="num">{s?.connected_at ? dateTime(s.connected_at) : "—"}</dd>
             {sum && (
               <>
-                <dt className="text-muted">Último resultado</dt>
+                <dt className="text-muted">{t("Último resultado")}</dt>
                 <dd className="num">
-                  {sum.new_emails ?? 0} nuevos · {sum.detected ?? 0} ventas detectadas · {sum.labels ?? 0} etiquetas
-                  {sum.review ? ` · ${sum.review} a revisar` : ""}
-                  {sum.errors ? ` · ${sum.errors} errores` : ""}
+                  {sum.new_emails ?? 0}{" "}{t("nuevos ·")}{" "}{sum.detected ?? 0}{" "}{t("ventas detectadas ·")}{" "}{sum.labels ?? 0}{" "}{t("etiquetas")}
+                  {sum.review ? t(" · {review} a revisar", { review: sum.review }) : ""}
+                  {sum.errors ? t(" · {errors} errores", { errors: sum.errors }) : ""}
                 </dd>
               </>
             )}
@@ -284,6 +287,7 @@ function ConnectionPanel({
 }
 
 function EmailSummary({ e, saleNumber, compact }: { e: EmailRowView; saleNumber?: string; compact?: boolean }) {
+  const t = tSync();
   const st = STATUS[e.status] ?? { label: e.status, tone: "neutral" as const };
   const p = e.parsed as {
     product?: string;
@@ -304,20 +308,20 @@ function EmailSummary({ e, saleNumber, compact }: { e: EmailRowView; saleNumber?
       </p>
       {(p.product || p.price) && (
         <p className="mt-1 font-semibold text-ink">
-          {p.product ?? "Artículo sin nombre"}
+          {p.product ?? t("Artículo sin nombre")}
           {typeof p.price === "number" && <span className="num ml-2 text-brand-ink">{money(p.price)}</span>}
         </p>
       )}
       <p className="mt-0.5 flex flex-wrap gap-x-3 text-[13px] text-muted">
-        {p.buyer && <span>Comprador: {p.buyer}</span>}
-        {p.account && <span>Cuenta: {p.account}</span>}
-        {typeof p.shipping === "number" && <span className="num">Envío {money(p.shipping)}</span>}
-        {typeof p.total === "number" && <span className="num">Total {money(p.total)}</span>}
-        {p.tracking_number && <span className="num">Seguimiento {p.tracking_number}</span>}
-        {p.transaction_id && <span className="num">Transacción {p.transaction_id}</span>}
+        {p.buyer && <span>{t("Comprador:")}{" "}{p.buyer}</span>}
+        {p.account && <span>{t("Cuenta:")}{" "}{p.account}</span>}
+        {typeof p.shipping === "number" && <span className="num">{t("Envío")}{" "}{money(p.shipping)}</span>}
+        {typeof p.total === "number" && <span className="num">{t("Total")}{" "}{money(p.total)}</span>}
+        {p.tracking_number && <span className="num">{t("Seguimiento")}{" "}{p.tracking_number}</span>}
+        {p.transaction_id && <span className="num">{t("Transacción")}{" "}{p.transaction_id}</span>}
         {e.sale_id && (
           <Link href={`/ventas/${e.sale_id}`} className="font-semibold text-brand-ink hover:underline">
-            Ver venta {saleNumber ?? ""}
+            {t("Ver venta")}{" "}{saleNumber ?? ""}
           </Link>
         )}
       </p>
@@ -325,7 +329,7 @@ function EmailSummary({ e, saleNumber, compact }: { e: EmailRowView; saleNumber?
       {compact && e.status !== "procesado" && e.review_reason && <p className="mt-1 text-[13px] text-muted">{e.review_reason}</p>}
       {e.status === "error" && e.last_error && (
         <p className="mt-1 text-[13px] text-danger">
-          Intento {e.attempts}: {e.last_error}
+          {t("Intento {attempts}:", { attempts: e.attempts })}{" "}{e.last_error}
         </p>
       )}
     </div>

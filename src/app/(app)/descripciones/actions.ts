@@ -10,6 +10,7 @@
  *   ver, no se genera nada.
  * - Solo LEE productos. No modifica stock, precios ni fichas.
  */
+import { getT } from "@/i18n/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -250,21 +251,22 @@ async function callGemini(apiKey: string, model: string, system: string, prompt:
 
 /** Genera una descripción por producto. No guarda nada en la base de datos. */
 export async function generateDescriptions(input: GenerateRequest): Promise<ActionResult<GeneratedItem[]>> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user || !user.active) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
-  if (!user.orgId || !can(user, "generador")) return { ok: false, error: "No tienes permiso para usar el generador." };
-  if (!user.hasAccess) return { ok: false, error: "Tu espacio está en solo lectura: activa la suscripción para usar el generador." };
+  if (!user || !user.active) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
+  if (!user.orgId || !can(user, "generador")) return { ok: false, error: t("No tienes permiso para usar el generador.") };
+  if (!user.hasAccess) return { ok: false, error: t("Tu espacio está en solo lectura: activa la suscripción para usar el generador.") };
 
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     return {
       ok: false,
-      error: "Falta la variable GEMINI_API_KEY en Vercel. Añádela en Vercel → tu proyecto → Settings → Environment Variables y vuelve a desplegar (Redeploy).",
+      error: t("Falta la variable GEMINI_API_KEY en Vercel. Añádela en Vercel → tu proyecto → Settings → Environment Variables y vuelve a desplegar (Redeploy)."),
     };
   }
 
   const parsed = requestSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t("Datos no válidos.") };
   const req = parsed.data;
 
   // Leer los productos con la sesión del usuario (la base de datos decide qué puede ver)
@@ -275,9 +277,9 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
     .select("id, name, sku, description, normal_sale_price, brands(name), categories(name)")
     .in("id", ids)
     .is("deleted_at", null);
-  if (error) return { ok: false, error: "No se han podido leer los productos." };
+  if (error) return { ok: false, error: t("No se han podido leer los productos.") };
   const byId = new Map(((products ?? []) as unknown as DbProduct[]).map((p) => [p.id, p]));
-  if (ids.some((id) => !byId.has(id))) return { ok: false, error: "Alguno de los productos no existe o no tienes acceso a él." };
+  if (ids.some((id) => !byId.has(id))) return { ok: false, error: t("Alguno de los productos no existe o no tienes acceso a él.") };
 
 
   const variantIds = req.items.map((i) => i.variantId).filter((v): v is string => !!v);
@@ -287,7 +289,7 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
     for (const v of vs ?? []) variants.set(v.id as string, v as { name: string; sku: string | null; product_id: string });
   }
   for (const it of req.items) {
-    if (it.variantId && variants.get(it.variantId)?.product_id !== it.productId) return { ok: false, error: "La variante no corresponde al producto." };
+    if (it.variantId && variants.get(it.variantId)?.product_id !== it.productId) return { ok: false, error: t("La variante no corresponde al producto.") };
   }
 
   const custom = process.env.GEMINI_MODEL?.trim();
@@ -297,8 +299,8 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
 
   // Límite diario por usuario (lo cuenta la base de datos, día de Madrid)
   const { data: allowed, error: limitError } = await supabase.rpc("ai_usage_take", { p_units: req.items.length, p_limit: DAILY_LIMIT });
-  if (limitError) return { ok: false, error: "No se ha podido comprobar el límite diario. Inténtalo de nuevo." };
-  if (!allowed) return { ok: false, error: `Has llegado al límite de ${DAILY_LIMIT} descripciones de hoy. Mañana podrás generar más.` };
+  if (limitError) return { ok: false, error: t("No se ha podido comprobar el límite diario. Inténtalo de nuevo.") };
+  if (!allowed) return { ok: false, error: t("Has llegado al límite de {DAILY_LIMIT} descripciones de hoy. Mañana podrás generar más.", { DAILY_LIMIT }) };
 
   const results = await Promise.all(
     req.items.map(async (it): Promise<GeneratedItem> => {
@@ -332,7 +334,7 @@ export async function generateDescriptions(input: GenerateRequest): Promise<Acti
         productId: it.productId,
         variantId: it.variantId,
         title,
-        error: `${friendlyAiError(lastError)} Detalle: ${tried.join(" · ")}${technical}`,
+        error: t("{lastError} Detalle: {v}{technical}", { lastError: friendlyAiError(lastError), v: tried.join(" · "), technical }),
       };
     }),
   );

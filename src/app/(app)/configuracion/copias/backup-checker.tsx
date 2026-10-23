@@ -1,7 +1,7 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
 import { Notice, Table, Td, Th, Tr } from "@/components/ui";
-import { dateTime } from "@/lib/format";
 import { currentCounts } from "./actions";
 
 /** Formato actual y el anterior al cambio de marca: las dos copias son válidas. */
@@ -11,6 +11,8 @@ type Check = { generated: string; by: string; counts: Record<string, number>; no
 
 /** Lee el archivo en el dispositivo, comprueba que es una copia válida y lo compara con los datos actuales. */
 export function BackupChecker() {
+  const t = useT();
+  const f = useFormat();
   const [check, setCheck] = useState<Check | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,24 +54,24 @@ export function BackupChecker() {
         accept="application/json,.json"
         onChange={(e) => onFile(e.target.files?.[0])}
         className="block w-full text-sm file:mr-3 file:min-h-11 file:rounded-[var(--radius-sm)] file:border file:border-line-strong file:bg-surface file:px-3 file:font-semibold"
-        aria-label="Archivo de copia de seguridad"
+        aria-label={t("Archivo de copia de seguridad")}
       />
-      {busy && <p className="text-sm text-muted">Comprobando…</p>}
+      {busy && <p className="text-sm text-muted">{t("Comprobando…")}</p>}
       {error && <Notice tone="bad">{error}</Notice>}
       {check && (
         <>
-          <Notice tone={diffs.length ? "warn" : "good"} title="Copia válida y completa">
-            Creada el {dateTime(check.generated)}
-            {check.by ? ` por ${check.by}` : ""}.{" "}
-            {diffs.length ? `${diffs.length} tablas tienen hoy un número de registros distinto (es normal si has trabajado después).` : "Coincide con los datos actuales."}
+          <Notice tone={diffs.length ? "warn" : "good"} title={t("Copia válida y completa")}>
+            {t("Creada el {generated}", { generated: f.dateTime(check.generated) })}
+            {check.by ? t(" por {by}", { by: check.by }) : ""}.{" "}
+            {diffs.length ? t("{length} tablas tienen hoy un número de registros distinto (es normal si has trabajado después).", { length: diffs.length }) : t("Coincide con los datos actuales.")}
           </Notice>
           <div className="max-h-80 overflow-auto rounded-[var(--radius-sm)] border border-line">
             <Table>
               <thead>
                 <tr>
-                  <Th>Tabla</Th>
-                  <Th num>En la copia</Th>
-                  <Th num>Ahora</Th>
+                  <Th>{t("Tabla")}</Th>
+                  <Th num>{t("En la copia")}</Th>
+                  <Th num>{t("Ahora")}</Th>
                 </tr>
               </thead>
               <tbody>

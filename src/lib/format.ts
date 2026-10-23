@@ -20,19 +20,9 @@ export function units(v: number | string | null | undefined): string {
   return fmt().units(v);
 }
 
-const UDS: Record<Locale, [string, string]> = {
-  es: ["ud.", "uds."],
-  en: ["unit", "units"],
-  fr: ["unité", "unités"],
-  de: ["Stk.", "Stk."],
-  it: ["pz.", "pz."],
-  pt: ["un.", "un."],
-};
 /** "1 ud." / "3 uds." */
 export function udsLabel(v: number | string | null | undefined): string {
-  const n = Number(v ?? 0);
-  const [one, many] = UDS[currentLocale()];
-  return `${units(n)} ${n === 1 ? one : many}`;
+  return fmt().udsLabel(v);
 }
 
 export function percent(v: number | string | null | undefined): string {

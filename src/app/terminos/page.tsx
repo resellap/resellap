@@ -1,8 +1,10 @@
+import { msg } from "@/i18n/translate";
+import { tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Fragment, type ReactNode } from "react";
 import { LegalPage } from "@/components/public-layout";
 
-export const metadata: Metadata = { title: "Términos y condiciones" };
+export const metadata: Metadata = { title: msg("Términos y condiciones") };
 
 const SUPPORT_EMAIL = "soporte@resellap.com";
 
@@ -562,8 +564,9 @@ function rich(text: string): ReactNode {
 }
 
 export default function TermsPage() {
+  const t = tSync();
   return (
-    <LegalPage title="Términos y condiciones de uso" updated="20 de octubre de 2026">
+    <LegalPage title={t("Términos y condiciones de uso")} updated="20 de octubre de 2026">
       {BLOCKS.map((b, i) =>
         "h" in b ? (
           <h2 key={i}>{b.h}</h2>

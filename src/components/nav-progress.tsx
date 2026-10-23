@@ -46,8 +46,8 @@ export function NavProgress() {
     timer.current = null;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reacciona al cambio de dirección
     setState((s) => (s === "loading" ? "done" : "idle"));
-    const t = setTimeout(() => setState("idle"), 350);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setState("idle"), 350);
+    return () => clearTimeout(tm);
   }, [pathname, search]);
 
   return (

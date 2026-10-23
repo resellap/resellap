@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import Link from "next/link";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
 import { ProductThumb } from "@/components/thumb";
@@ -20,6 +21,7 @@ const days = (ms: number) => {
  * «Seguimiento» y dentro de la ficha de la venta (sin salir de ella).
  */
 export async function TrackingPanel({ shipment: s, showSaleLink }: { shipment: Shipment; showSaleLink?: boolean }) {
+  const t = await getT();
   const supabase = await createClient();
   const [events, { data: carriers }] = await Promise.all([loadEvents(s.id), supabase.from("carriers").select("id, name").eq("active", true).order("name")]);
   const shipped = !!s.shippedAt;
@@ -48,49 +50,49 @@ export async function TrackingPanel({ shipment: s, showSaleLink }: { shipment: S
           </div>
           <dl className="grid grid-cols-2 gap-px border-t border-line bg-line text-[13px]">
             <div className="bg-surface px-4 py-3">
-              <dt className="text-faint">Transportista</dt>
+              <dt className="text-faint">{t("Transportista")}</dt>
               <dd className="mt-1 font-medium">
                 <CarrierIcon name={s.carrier} size={18} />
               </dd>
             </div>
             <div className="min-w-0 bg-surface px-4 py-3">
-              <dt className="text-faint">Código</dt>
-              <dd className="mt-0.5">{s.tracking ? <TrackingCode code={s.tracking} link={link} /> : <span className="text-faint">Sin código</span>}</dd>
+              <dt className="text-faint">{t("Código")}</dt>
+              <dd className="mt-0.5">{s.tracking ? <TrackingCode code={s.tracking} link={link} /> : <span className="text-faint">{t("Sin código")}</span>}</dd>
             </div>
             <div className="bg-surface px-4 py-3">
-              <dt className="text-faint">Enviado</dt>
-              <dd className="num mt-1 font-medium">{s.shippedAt ? dateTime(s.shippedAt) : "Pendiente de envío"}</dd>
+              <dt className="text-faint">{t("Enviado")}</dt>
+              <dd className="num mt-1 font-medium">{s.shippedAt ? dateTime(s.shippedAt) : t("Pendiente de envío")}</dd>
             </div>
             <div className="bg-surface px-4 py-3">
-              <dt className="text-faint">{s.deliveredAt ? "Entregado" : "Fecha estimada"}</dt>
+              <dt className="text-faint">{s.deliveredAt ? t("Entregado") : t("Fecha estimada")}</dt>
               <dd className="num mt-1 font-medium">{s.deliveredAt ? dateTime(s.deliveredAt) : s.eta ? date(s.eta) : "—"}</dd>
             </div>
             {s.shippedAt && (
               <div className="col-span-2 bg-surface px-4 py-3">
-                <dt className="text-faint">{s.deliveredAt ? "Tiempo de entrega" : "Tiempo desde el envío"}</dt>
+                <dt className="text-faint">{s.deliveredAt ? t("Tiempo de entrega") : t("Tiempo desde el envío")}</dt>
                 <dd className="num mt-1 font-medium">{days((s.deliveredAt ? Date.parse(s.deliveredAt) : Date.now()) - Date.parse(s.shippedAt))}</dd>
               </div>
             )}
           </dl>
         </section>
 
-        <Panel title={s.tracking ? "Código y estado" : "Añadir código de seguimiento"}>
+        <Panel title={s.tracking ? t("Código y estado") : t("Añadir código de seguimiento")}>
           {s.error && (
             <Notice tone="warn" className="mb-4">
               {s.error}
             </Notice>
           )}
-          {automatic && s.checkedAt && <p className="mb-3 text-[12.5px] text-faint">Última consulta al transportista: {dateTime(s.checkedAt)}</p>}
+          {automatic && s.checkedAt && <p className="mb-3 text-[12.5px] text-faint">{t("Última consulta al transportista:")}{" "}{dateTime(s.checkedAt)}</p>}
           <TrackingEditor saleId={s.id} code={s.tracking} carrierId={s.carrierId} carriers={carriers ?? []} shipped={shipped} status={s.status} automatic={automatic} />
         </Panel>
         {showSaleLink && (
           <Link href={`/ventas/${s.id}`} className="text-[13.5px] font-semibold text-brand-ink hover:underline">
-            Ver la venta {s.number} ›
+            {t("Ver la venta {number} ›", { number: s.number })}
           </Link>
         )}
       </div>
 
-      <Panel title="Historial del envío" description={events.length ? `${events.length} ${events.length === 1 ? "movimiento" : "movimientos"}` : undefined}>
+      <Panel title={t("Historial del envío")} description={events.length ? `${events.length} ${events.length === 1 ? "movimiento" : "movimientos"}` : undefined}>
         <TrackingTimeline events={events} />
       </Panel>
     </div>

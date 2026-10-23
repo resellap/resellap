@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Badge, LinkButton, LotTag, Notice, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -14,9 +16,10 @@ import { RemovedButton } from "../../anuncios/listing-buttons";
 import { TrackingPanel } from "../../seguimiento/tracking-panel";
 import { loadShipment } from "@/lib/tracking/data";
 
-export const metadata: Metadata = { title: "Venta" };
+export const metadata: Metadata = { title: msg("Venta") };
 
 export default async function SaleDetail({ params, searchParams }: PageProps<"/ventas/[id]">) {
+  const t = await getT();
   const user = await requireUser();
   const isAdmin = can(user, "costes"); // ver costes y beneficio
   const canEdit = can(user, "ventas_editar");
@@ -123,11 +126,11 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
   return (
     <>
       <PageHeader
-        back={fromShipments ? { href: `/envios/${fromShipments}`, label: "Pendientes de envío" } : { href: "/ventas", label: "Ventas" }}
+        back={fromShipments ? { href: `/envios/${fromShipments}`, label: t("Pendientes de envío") } : { href: "/ventas", label: t("Ventas") }}
         title={
           <span className="flex flex-wrap items-center gap-3">
-            Venta {s.sale_number}
-            {!active && <Badge tone="bad">Anulada</Badge>}
+            {t("Venta {sale_number}", { sale_number: s.sale_number })}
+            {!active && <Badge tone="bad">{t("Anulada")}</Badge>}
           </span>
         }
         description={`${date(s.sale_date)}, ${s.responsibles?.name ?? ""}, ${s.platforms?.name ?? ""}`}
@@ -141,17 +144,17 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
                 platforms={opts.platforms}
                 mobiles={opts.mobiles}
               />
-              <LinkButton href={`/devoluciones/nueva?venta=${s.id}`}>Registrar devolución</LinkButton>
+              <LinkButton href={`/devoluciones/nueva?venta=${s.id}`}>{t("Registrar devolución")}</LinkButton>
               {returns.length === 0 && <VoidSaleButton saleId={s.id} saleNumber={s.sale_number} />}
             </>
           )
         }
       />
       {toRemove.length > 0 && (
-        <Notice tone="warn" className="mb-4" title="Quita el anuncio">
+        <Notice tone="warn" className="mb-4" title={t("Quita el anuncio")}>
           <p>
-            {[...new Set(toRemove.map((t) => t.product_name))].join(", ")} se ha quedado sin stock y sigue anunciado en{" "}
-            {[...new Set(toRemove.map((t) => (t.platform === "vinted" ? "Vinted" : "Wallapop")))].join(" y ")}. Quítalo para no venderlo otra vez.
+            {[...new Set(toRemove.map((t) => t.product_name))].join(", ")}{" "}{t("se ha quedado sin stock y sigue anunciado en")}{" "}
+            {[...new Set(toRemove.map((t) => (t.platform === "vinted" ? "Vinted" : "Wallapop")))].join(" y ")}{t(". Quítalo para no venderlo otra vez.")}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {toRemove.map((t) => (
@@ -162,33 +165,33 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
       )}
       {sp.aviso === "creada" && (
         <Notice tone="good" className="mb-4">
-          Venta registrada. El stock de cada lote ya se ha descontado.
+          {t("Venta registrada. El stock de cada lote ya se ha descontado.")}
         </Notice>
       )}
       {sp.aviso === "etiqueta" && (
         <Notice tone="warn" className="mb-4">
-          La venta se ha guardado, pero la etiqueta no se ha podido subir. Súbela de nuevo abajo.
+          {t("La venta se ha guardado, pero la etiqueta no se ha podido subir. Súbela de nuevo abajo.")}
         </Notice>
       )}
       {!active && (
-        <Notice tone="bad" className="mb-4" title="Venta anulada">
-          {s.void_reason} ({dateTime(s.voided_at)}). Sus unidades volvieron a su lote.
+        <Notice tone="bad" className="mb-4" title={t("Venta anulada")}>
+          {s.void_reason} ({dateTime(s.voided_at)}{t("). Sus unidades volvieron a su lote.")}
         </Notice>
       )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <div className="flex flex-col gap-5">
-          <Panel title="Productos" padded={false}>
+          <Panel title={t("Productos")} padded={false}>
             <Table>
               <thead>
                 <tr>
-                  <Th>Producto</Th>
-                  <Th>Lote</Th>
-                  <Th num>Uds.</Th>
-                  <Th num>Precio</Th>
-                  <Th num>Importe</Th>
-                  {isAdmin && <Th num>Coste lote</Th>}
-                  {isAdmin && <Th num>Beneficio</Th>}
+                  <Th>{t("Producto")}</Th>
+                  <Th>{t("Lote")}</Th>
+                  <Th num>{t("Uds.")}</Th>
+                  <Th num>{t("Precio")}</Th>
+                  <Th num>{t("Importe")}</Th>
+                  {isAdmin && <Th num>{t("Coste lote")}</Th>}
+                  {isAdmin && <Th num>{t("Beneficio")}</Th>}
                   {canEdit && active && <Th />}
                 </tr>
               </thead>
@@ -203,7 +206,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
                         {variantDisplay(l.product_variants?.products?.name ?? "", l.product_variants?.name)}
                         {l.notes && <span className="block text-xs text-muted">{l.notes}</span>}
                       </Td>
-                      <Td>{isAdmin ? <LotTag label={lot?.lot_label} /> : <span className="text-xs text-muted">Registrado</span>}</Td>
+                      <Td>{isAdmin ? <LotTag label={lot?.lot_label} /> : <span className="text-xs text-muted">{t("Registrado")}</span>}</Td>
                       <Td num>{l.quantity}</Td>
                       <Td num>{money(l.unit_price)}</Td>
                       <Td num>{money(amount)}</Td>
@@ -220,7 +223,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
               </tbody>
               <tfoot>
                 <tr className="font-semibold">
-                  <Td colSpan={4}>Total</Td>
+                  <Td colSpan={4}>{t("Total")}</Td>
                   <Td num>{money(gross)}</Td>
                   {isAdmin && <Td num>{money(cost)}</Td>}
                   {isAdmin && <Td num>{money(gross - cost)}</Td>}
@@ -230,24 +233,23 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
             </Table>
             {isAdmin && canEdit && returns.length > 0 && (
               <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">
-                Reembolsado: <span className="num font-semibold text-ink">{money(refundTotal)}</span>. Beneficio después de devoluciones:{" "}
-                <span className={`num font-semibold ${Number(netProfit) < 0 ? "text-danger" : "text-ink"}`}>{money(netProfit)}</span>. Los informes ya usan esta
-                cifra.
+                {t("Reembolsado:")}{" "}<span className="num font-semibold text-ink">{money(refundTotal)}</span>{t(". Beneficio después de devoluciones:")}{" "}
+                <span className={`num font-semibold ${Number(netProfit) < 0 ? "text-danger" : "text-ink"}`}>{money(netProfit)}</span>{t(". Los informes ya usan esta cifra.")}
               </p>
             )}
           </Panel>
 
           {canEdit && returns.length > 0 && (
-            <Panel title="Devoluciones" padded={false}>
+            <Panel title={t("Devoluciones")} padded={false}>
               <Table>
                 <thead>
                   <tr>
-                    <Th>Fecha</Th>
-                    <Th>Producto</Th>
-                    <Th>Tipo</Th>
-                    <Th num>Uds.</Th>
-                    <Th num>Reembolso</Th>
-                    {isAdmin && <Th num>Pérdida</Th>}
+                    <Th>{t("Fecha")}</Th>
+                    <Th>{t("Producto")}</Th>
+                    <Th>{t("Tipo")}</Th>
+                    <Th num>{t("Uds.")}</Th>
+                    <Th num>{t("Reembolso")}</Th>
+                    {isAdmin && <Th num>{t("Pérdida")}</Th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -272,92 +274,92 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
 
         <div className="flex flex-col gap-5">
           {imageUrl && (
-            <Panel title="Foto del anuncio">
+            <Panel title={t("Foto del anuncio")}>
               <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block">
                 {/* eslint-disable-next-line @next/next/no-img-element -- URL firmada y temporal del almacén privado */}
-                <img src={imageUrl} alt={`Foto del anuncio de la venta ${s.sale_number}`} className="mx-auto max-h-72 w-auto rounded-[var(--radius-md)] border border-line object-contain" />
+                <img src={imageUrl} alt={t("Foto del anuncio de la venta {sale_number}", { sale_number: s.sale_number })} className="mx-auto max-h-72 w-auto rounded-[var(--radius-md)] border border-line object-contain" />
               </a>
-              <p className="mt-2 text-xs text-muted">Copiada del correo de {s.platforms?.name ?? "la plataforma"}.</p>
+              <p className="mt-2 text-xs text-muted">{t("Copiada del correo de")}{" "}{s.platforms?.name ?? t("la plataforma")}.</p>
             </Panel>
           )}
           {s.platforms?.requires_shipping && active && (
-            <Panel title="Envío">
+            <Panel title={t("Envío")}>
               {can(user, "envios") || canEdit ? (
                 <ShippingEditor sale={{ ...s, requires_shipping: true }} carriers={opts.carriers} labelUrl={labelUrl} />
               ) : (
-                <p className="text-sm">{s.shipping_status === "enviado" ? "Enviado" : "Pendiente de envío"}</p>
+                <p className="text-sm">{s.shipping_status === "enviado" ? t("Enviado") : t("Pendiente de envío")}</p>
               )}
             </Panel>
           )}
-          <Panel title="Datos">
+          <Panel title={t("Datos")}>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-              <dt className="text-muted">Fecha</dt>
+              <dt className="text-muted">{t("Fecha")}</dt>
               <dd className="num">{date(s.sale_date)}</dd>
-              <dt className="text-muted">Responsable</dt>
+              <dt className="text-muted">{t("Responsable")}</dt>
               <dd>{s.responsibles?.name}</dd>
-              <dt className="text-muted">Plataforma</dt>
+              <dt className="text-muted">{t("Plataforma")}</dt>
               <dd>{s.platforms?.name}</dd>
               {s.platforms?.requires_shipping && (
                 <>
-                  <dt className="text-muted">Transporte</dt>
-                  <dd>{s.carriers?.name ?? "Sin indicar"}</dd>
-                  <dt className="text-muted">Envío</dt>
-                  <dd>{s.shipping_status === "enviado" ? <Badge tone="good">Enviado</Badge> : <Badge tone="warn">Pendiente</Badge>}</dd>
+                  <dt className="text-muted">{t("Transporte")}</dt>
+                  <dd>{s.carriers?.name ?? t("Sin indicar")}</dd>
+                  <dt className="text-muted">{t("Envío")}</dt>
+                  <dd>{s.shipping_status === "enviado" ? <Badge tone="good">{t("Enviado")}</Badge> : <Badge tone="warn">{t("Pendiente")}</Badge>}</dd>
                 </>
               )}
               {s.buyer_name && (
                 <>
-                  <dt className="text-muted">Comprador</dt>
+                  <dt className="text-muted">{t("Comprador")}</dt>
                   <dd>{s.buyer_name}</dd>
                 </>
               )}
               {s.tracking_number && (
                 <>
-                  <dt className="text-muted">Seguimiento</dt>
+                  <dt className="text-muted">{t("Seguimiento")}</dt>
                   <dd className="num break-all">{s.tracking_number}</dd>
                 </>
               )}
               {s.shipping_deadline && (
                 <>
-                  <dt className="text-muted">Enviar antes de</dt>
+                  <dt className="text-muted">{t("Enviar antes de")}</dt>
                   <dd className="num">{dateTime(s.shipping_deadline)}</dd>
                 </>
               )}
               {s.platform_transaction_id && (
                 <>
-                  <dt className="text-muted">Nº de transacción</dt>
+                  <dt className="text-muted">{t("Nº de transacción")}</dt>
                   <dd className="num break-all">{s.platform_transaction_id}</dd>
                 </>
               )}
-              <dt className="text-muted">Móvil</dt>
+              <dt className="text-muted">{t("Móvil")}</dt>
               <dd>
                 {s.mobile_devices
-                  ? `Móvil ${s.mobile_devices.number}${s.mobile_devices.name !== `Móvil ${s.mobile_devices.number}` ? ` (${s.mobile_devices.name})` : ""}`
-                  : "Sin indicar"}
+                  ? t("Móvil {number}{v}", { number: s.mobile_devices.number, v: s.mobile_devices.name !== `Móvil ${s.mobile_devices.number}` ? ` (${s.mobile_devices.name})` : "" })
+                  : t("Sin indicar")}
               </dd>
               {s.external_reference && (
                 <>
-                  <dt className="text-muted">Referencia</dt>
+                  <dt className="text-muted">{t("Referencia")}</dt>
                   <dd>{s.external_reference}</dd>
                 </>
               )}
               {s.notes && (
                 <>
-                  <dt className="text-muted">Notas</dt>
+                  <dt className="text-muted">{t("Notas")}</dt>
                   <dd>{s.notes}</dd>
                 </>
               )}
-              <dt className="text-muted">Origen</dt>
+              <dt className="text-muted">{t("Origen")}</dt>
               <dd>
                 {s.source === "correo"
-                  ? `Automática, desde el correo de ${s.platforms?.name ?? "la plataforma"}`
+                  ? t("Automática, desde el correo de {v}", { v: s.platforms?.name ?? "la plataforma" })
                   : s.source_ref
-                    ? `Importado del Excel (${s.source_ref})`
+                    ? t("Importado del Excel ({source_ref})", { source_ref: s.source_ref })
                     : s.source === "excel"
-                      ? "Importado del Excel"
-                      : "Registrada a mano"}
+                      ? t("Importado del Excel")
+                      : t("Registrada a mano")}
               </dd>
-              <dt className="text-muted">Registrada</dt>
+              <dt className="text-muted">{t("Registrada")}</dt>
               <dd>{dateTime(s.created_at)}</dd>
             </dl>
           </Panel>
@@ -366,7 +368,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
 
       {s.platforms?.requires_shipping && shipment && (
         <section id="seguimiento" className="mt-6 scroll-mt-20">
-          <h2 className="display mb-3 text-[22px]">Seguimiento</h2>
+          <h2 className="display mb-3 text-[22px]">{t("Seguimiento")}</h2>
           <TrackingPanel shipment={shipment} />
         </section>
       )}

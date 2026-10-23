@@ -1,4 +1,5 @@
 "use server";
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { friendlyError, type ActionResult } from "@/lib/errors";
@@ -17,6 +18,7 @@ function done(message: string): ActionResult {
 
 /** Invita por email. Devuelve el enlace para copiarlo (y lo envía si hay correo configurado). */
 export async function inviteMemberAction(email: string, role: Role): Promise<ActionResult<{ link: string; emailed: boolean }>> {
+  const t = await getT();
   const me = await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("invite_member", { p_email: email, p_role: role });
@@ -26,13 +28,13 @@ export async function inviteMemberAction(email: string, role: Role): Promise<Act
     email.trim().toLowerCase(),
     `Invitación a ${me.orgName} en Resellap`,
     `${me.fullName ?? me.email} te invita a unirte a ${me.orgName} en Resellap como ${ROLE_TEXT[role]}.\nEl enlace caduca en 7 días.`,
-    { href: link, label: "Aceptar invitación" },
+    { href: link, label: t("Aceptar invitación") },
   );
   revalidatePath("/equipo");
   return {
     ok: true,
     data: { link, emailed },
-    message: emailed ? "Invitación enviada por email." : "Invitación creada. Copia el enlace y envíaselo.",
+    message: emailed ? t("Invitación enviada por email.") : t("Invitación creada. Copia el enlace y envíaselo."),
   };
 }
 
@@ -62,12 +64,13 @@ export async function removeMemberAction(userId: string): Promise<ActionResult> 
 
 /** Salir uno mismo del espacio (cualquier rol). */
 export async function leaveOrganizationAction(): Promise<ActionResult> {
+  const t = await getT();
   const me = await requireUser();
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_member", { p_user: me.id });
   if (error) return { ok: false, error: friendlyError(error) };
   revalidatePath("/", "layout");
-  return { ok: true, message: "Has salido del espacio." };
+  return { ok: true, message: t("Has salido del espacio.") };
 }
 
 /** Cambia lo que ve y puede hacer un miembro (null = lo de su rol). */

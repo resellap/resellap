@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,11 +14,12 @@ import { BulkShippingBar, SaleCheckbox, SelectAllCheckbox, ShippingSelection } f
 import { NO_CARRIER, loadPendingShipments } from "../data";
 import { MarkOneShipped } from "./mark-one";
 
-export const metadata: Metadata = { title: "Pendientes de envío" };
+export const metadata: Metadata = { title: msg("Pendientes de envío") };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function CarrierShipments({ params }: PageProps<"/envios/[carrier]">) {
+  const t = await getT();
   const { carrier } = await params;
   if (carrier !== NO_CARRIER && !UUID.test(carrier)) notFound();
 
@@ -36,7 +39,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
   return (
     <>
       <PageHeader
-        back={{ href: "/envios", label: "Pendientes de envío" }}
+        back={{ href: "/envios", label: t("Pendientes de envío") }}
         title={
           <span className="flex items-center gap-3">
             {carrier !== NO_CARRIER && <CarrierIcon name={carrierName} size={36} showName={false} />}
@@ -45,7 +48,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
         }
         description={
           rows.length > 0
-            ? `${rows.length} ${rows.length === 1 ? "paquete" : "paquetes"} por enviar, del más antiguo al más reciente.${withoutLabel ? ` ${withoutLabel} sin etiqueta.` : ""}`
+            ? t("{length} {v} por enviar, del más antiguo al más reciente.{v2}", { length: rows.length, v: rows.length === 1 ? "paquete" : "paquetes", v2: withoutLabel ? ` ${withoutLabel} sin etiqueta.` : "" })
             : undefined
         }
       />
@@ -53,7 +56,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
 
       {!error && rows.length === 0 && (
         <div className="rs-card rounded-[var(--radius-md)] bg-surface">
-          <Empty title={`Todo enviado con ${carrierName}`} action={<LinkButton href="/envios">Ver otros transportistas</LinkButton>} />
+          <Empty title={t("Todo enviado con {carrierName}", { carrierName })} action={<LinkButton href="/envios">{t("Ver otros transportistas")}</LinkButton>} />
         </div>
       )}
 
@@ -62,13 +65,13 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
           <BulkShippingBar />
           <div className="mb-2 flex items-center gap-2 px-1 text-[13px] text-muted">
             <SelectAllCheckbox sales={rows.map((r) => ({ id: r.id, status: "pendiente" as const }))} />
-            <span>Seleccionar todos</span>
+            <span>{t("Seleccionar todos")}</span>
           </div>
           <ul className="flex flex-col gap-2.5">
             {rows.map((r) => (
               <li key={r.id} className="flex gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-3 sm:p-4">
                 <div className="flex items-center self-stretch sm:items-start sm:pt-1">
-                  <SaleCheckbox saleId={r.id} status="pendiente" label={`la venta ${r.sale_number}`} />
+                  <SaleCheckbox saleId={r.id} status="pendiente" label={t("la venta {sale_number}", { sale_number: r.sale_number })} />
                 </div>
                 <Link href={`/ventas/${r.id}?desde=${carrier}`} className="shrink-0" aria-hidden tabIndex={-1}>
                   <ProductThumb src={r.photo} alt="" size={72} rounded={14} className="max-sm:h-16 max-sm:w-16" />
@@ -88,26 +91,26 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
                       <span className="num">· {date(r.sale_date)}</span>
                       {r.responsible_name && <span>· {r.responsible_name}</span>}
                       {r.mobile && <span>· {r.mobile}</span>}
-                      {r.external_reference && <span>· Ref. {r.external_reference}</span>}
+                      {r.external_reference && <span>{t("· Ref.")}{" "}{r.external_reference}</span>}
                     </p>
                     <p className="mt-1.5 flex flex-wrap gap-1.5">
                       <Badge tone="neutral" dot>
-                        Pendiente de envío
+                        {t("Pendiente de envío")}
                       </Badge>
-                      {!r.label_path && <Badge tone="warn">Sin etiqueta</Badge>}
+                      {!r.label_path && <Badge tone="warn">{t("Sin etiqueta")}</Badge>}
                       {r.deadline && (
-                        <Badge tone={Date.parse(r.deadline) - Date.now() < 36 * 3600_000 ? "warn" : "neutral"}>Enviar antes del {dateTime(r.deadline)}</Badge>
+                        <Badge tone={Date.parse(r.deadline) - Date.now() < 36 * 3600_000 ? "warn" : "neutral"}>{t("Enviar antes del")}{" "}{dateTime(r.deadline)}</Badge>
                       )}
-                      {r.tracking_number && <Badge tone="neutral">Código {r.tracking_number}</Badge>}
+                      {r.tracking_number && <Badge tone="neutral">{t("Código")}{" "}{r.tracking_number}</Badge>}
                     </p>
                     {r.notes && <p className="mt-1 text-[13px] text-ink-soft">{r.notes}</p>}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2 [&>*]:max-sm:flex-1">
                     {r.label_path ? (
-                      <LabelButton url={urls.get(r.label_path)} path={r.label_path} title={`Etiqueta · ${r.sale_number}`} size="sm" />
+                      <LabelButton url={urls.get(r.label_path)} path={r.label_path} title={t("Etiqueta · {sale_number}", { sale_number: r.sale_number })} size="sm" />
                     ) : (
                       <LinkButton href={`/ventas/${r.id}?desde=${carrier}`} size="sm">
-                        Subir etiqueta
+                        {t("Subir etiqueta")}
                       </LinkButton>
                     )}
                     <MarkOneShipped saleId={r.id} />

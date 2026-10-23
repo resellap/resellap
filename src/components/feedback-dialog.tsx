@@ -3,6 +3,8 @@
  * Ventana de feedback: idea, fallo u otra cosa, con captura opcional.
  * Se carga solo cuando alguien la abre (no pesa en el resto de la app).
  */
+import { msg } from "@/i18n/translate";
+import { useT } from "@/i18n/client";
 import { Bug, ImagePlus, Lightbulb, LoaderCircle, MessageCircle, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -12,12 +14,13 @@ import { Button, clsx, Notice } from "./ui";
 import { Modal } from "./ui-client";
 
 const KINDS = [
-  { key: "idea", label: "Idea", icon: Lightbulb, hint: "¿Qué te gustaría que hiciera Resellap?" },
-  { key: "fallo", label: "Algo falla", icon: Bug, hint: "¿Qué ha pasado y qué esperabas que pasara?" },
-  { key: "otro", label: "Otra cosa", icon: MessageCircle, hint: "Cuéntanos lo que quieras." },
+  { key: "idea", label: msg("Idea"), icon: Lightbulb, hint: msg("¿Qué te gustaría que hiciera Resellap?") },
+  { key: "fallo", label: msg("Algo falla"), icon: Bug, hint: msg("¿Qué ha pasado y qué esperabas que pasara?") },
+  { key: "otro", label: msg("Otra cosa"), icon: MessageCircle, hint: msg("Cuéntanos lo que quieras.") },
 ] as const;
 
 export default function FeedbackDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const page = usePathname();
   const [kind, setKind] = useState<(typeof KINDS)[number]["key"]>("idea");
   const [message, setMessage] = useState("");
@@ -70,28 +73,28 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
     <Modal
       open={open}
       onClose={close}
-      title={done ? "¡Gracias!" : "Enviar feedback"}
+      title={done ? t("¡Gracias!") : t("Enviar feedback")}
       footer={
         done ? (
           <Button variant="primary" onClick={close}>
-            Cerrar
+            {t("Cerrar")}
           </Button>
         ) : (
           <>
-            <Button onClick={close}>Cancelar</Button>
+            <Button onClick={close}>{t("Cancelar")}</Button>
             <Button variant="primary" onClick={submit} disabled={pending || message.trim().length < 3}>
               {pending && <LoaderCircle size={16} className="animate-spin" />}
-              {pending ? "Enviando…" : "Enviar"}
+              {pending ? t("Enviando…") : t("Enviar")}
             </Button>
           </>
         )
       }
     >
       {done ? (
-        <p className="text-[15px] leading-relaxed text-ink-soft">Lo hemos recibido. Cada mensaje lo lee una persona y nos ayuda a mejorar Resellap.</p>
+        <p className="text-[15px] leading-relaxed text-ink-soft">{t("Lo hemos recibido. Cada mensaje lo lee una persona y nos ayuda a mejorar Resellap.")}</p>
       ) : (
         <div className="flex flex-col gap-4">
-          <div role="radiogroup" aria-label="Tipo de mensaje" className="grid grid-cols-3 gap-2">
+          <div role="radiogroup" aria-label={t("Tipo de mensaje")} className="grid grid-cols-3 gap-2">
             {KINDS.map((k) => (
               <button
                 key={k.key}
@@ -137,7 +140,7 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
             {shot ? (
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local */}
-                <img src={shot.url} alt="Captura adjunta" className="h-16 w-24 rounded-[var(--radius-xs)] border border-line object-cover" />
+                <img src={shot.url} alt={t("Captura adjunta")} className="h-16 w-24 rounded-[var(--radius-xs)] border border-line object-cover" />
                 <button
                   type="button"
                   onClick={() => {
@@ -147,7 +150,7 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
                   className="press flex min-h-10 items-center gap-1.5 rounded-[var(--radius-sm)] px-2 text-[13px] font-medium text-muted hover:text-ink"
                 >
                   <X size={15} strokeWidth={2} />
-                  Quitar captura
+                  {t("Quitar captura")}
                 </button>
               </div>
             ) : (
@@ -157,12 +160,12 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
                 className="press flex min-h-10 items-center gap-2 rounded-[var(--radius-sm)] px-1 text-[13.5px] font-medium text-brand-ink hover:underline"
               >
                 <ImagePlus size={16} strokeWidth={1.75} />
-                Adjuntar una captura (opcional)
+                {t("Adjuntar una captura (opcional)")}
               </button>
             )}
           </div>
           <p className="text-xs text-faint">
-            Se enviará también la pantalla en la que estás (<span className="mono">{page}</span>) para entenderlo mejor.
+            {t("Se enviará también la pantalla en la que estás (")}<span className="mono">{page}</span>{t(") para entenderlo mejor.")}
           </p>
           {error && <Notice tone="bad">{error}</Notice>}
         </div>

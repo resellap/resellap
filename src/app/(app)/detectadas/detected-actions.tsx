@@ -1,4 +1,5 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
@@ -6,7 +7,6 @@ import { ProductPicker } from "@/components/product-picker";
 import { ProductThumb } from "@/components/thumb";
 import { Badge, Button, Field, Input, Notice, Select, clsx } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
-import { money } from "@/lib/format";
 import { variantDisplay, type SellableVariant } from "@/lib/types";
 import { PLATFORM_LABEL } from "@/lib/email/parse";
 import { confirmDetected, confirmMany, discardDetected, markDuplicate } from "./actions";
@@ -16,46 +16,52 @@ const PLATFORM_NAME = PLATFORM_LABEL;
 
 /** Grado de confianza de la identificación del producto. */
 export function ConfidenceBadge({ score }: { score: number | null }) {
+  const t = useT();
+  const f = useFormat();
   if (score === null) return null;
   const pct = Math.round(score * 100);
-  if (score >= 0.9) return <Badge tone="good">Seguro · {pct} %</Badge>;
-  if (score >= 0.75) return <Badge tone="good">Muy probable · {pct} %</Badge>;
-  return <Badge tone="warn">Revisa · {pct} %</Badge>;
+  if (score >= 0.9) return <Badge tone="good">{t("Seguro · {pct} %", { pct })}</Badge>;
+  if (score >= 0.75) return <Badge tone="good">{t("Muy probable · {pct} %", { pct })}</Badge>;
+  return <Badge tone="warn">{t("Revisa · {pct} %", { pct })}</Badge>;
 }
 
 export function ConfirmAllButton({ items }: { items: { emailId: string; variantId: string; carrierId: string | null; responsibleId: string | null }[] }) {
+  const t = useT();
+  const f = useFormat();
   return (
     <ConfirmAction
       variant="primary"
       label={
         <>
           <Check size={17} strokeWidth={2.5} />
-          Confirmar las {items.length} sin dudas
+          {t("Confirmar las {length} sin dudas", { length: items.length })}
         </>
       }
-      title="Confirmar varias ventas"
-      description={`Se registrarán ${items.length} ventas con el producto, el precio y el transportista detectados, y se descontará 1 unidad de cada una. Solo se incluyen las que tienen el producto identificado con seguridad, stock y ninguna duda ni posible duplicado.`}
-      confirmLabel="Confirmar todas"
+      title={t("Confirmar varias ventas")}
+      description={t("Se registrarán {length} ventas con el producto, el precio y el transportista detectados, y se descontará 1 unidad de cada una. Solo se incluyen las que tienen el producto identificado con seguridad, stock y ninguna duda ni posible duplicado.", { length: items.length })}
+      confirmLabel={t("Confirmar todas")}
       action={() => confirmMany(items)}
     />
   );
 }
 
 export function DetectedActions({ sale, carriers, responsibles }: { sale: DetectedSale; carriers: Option[]; responsibles: Option[] }) {
+  const t = useT();
+  const f = useFormat();
   const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <div className="flex flex-wrap gap-2 [&>*]:max-sm:flex-1">
       <Button variant={sale.likelyDuplicate ? "secondary" : "primary"} onClick={() => setConfirmOpen(true)}>
         <Check size={17} strokeWidth={2.5} />
-        Confirmar venta
+        {t("Confirmar venta")}
       </Button>
       <DuplicateDialog sale={sale} onNotDuplicate={() => setConfirmOpen(true)} />
       <ConfirmAction
         variant="secondary"
-        label="No es una venta"
-        title="Descartar"
-        description="No se registrará nada con este correo. Desaparecerá de esta lista."
-        confirmLabel="Descartar"
+        label={t("No es una venta")}
+        title={t("Descartar")}
+        description={t("No se registrará nada con este correo. Desaparecerá de esta lista.")}
+        confirmLabel={t("Descartar")}
         action={() => discardDetected(sale.id)}
       />
       <ConfirmDialog sale={sale} carriers={carriers} responsibles={responsibles} open={confirmOpen} onClose={() => setConfirmOpen(false)} />
@@ -77,6 +83,8 @@ function ConfirmDialog({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
+  const f = useFormat();
   const [picked, setPicked] = useState<ProductGuess | null>(sale.suggestion);
   const [changing, setChanging] = useState(!sale.suggestion);
   const [price, setPrice] = useState(sale.price !== null ? String(sale.price).replace(".", ",") : "");
@@ -94,12 +102,12 @@ function ConfirmDialog({
     <Modal
       open={open}
       onClose={onClose}
-      title="Confirmar venta"
+      title={t("Confirmar venta")}
       wide
       footer={
         <>
           <Button onClick={onClose} disabled={pending}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button
             variant="primary"
@@ -111,7 +119,7 @@ function ConfirmDialog({
             }}
           >
             <Check size={17} strokeWidth={2.5} />
-            {pending ? "Registrando…" : "Confirmar venta"}
+            {pending ? t("Registrando…") : t("Confirmar venta")}
           </Button>
         </>
       }
@@ -122,16 +130,16 @@ function ConfirmDialog({
           <PlatformIcon name={PLATFORM_NAME[sale.platform]} size={18} className="text-[13px] font-medium" />
           <p className="mt-1.5 line-clamp-2 text-[17px] font-semibold leading-snug">{sale.product}</p>
           <p className="mt-1 text-[13px] text-muted">
-            {sale.buyer ? `Comprador: ${sale.buyer} · ` : ""}
+            {sale.buyer ? t("Comprador: {buyer} · ", { buyer: sale.buyer }) : ""}
             <span className="num">{sale.saleDate.split("-").reverse().join("/")}</span>
-            {sale.reference ? <span className="num"> · Ref. {sale.reference}</span> : null}
+            {sale.reference ? <span className="num">{" "}{t("· Ref.")}{" "}{sale.reference}</span> : null}
           </p>
         </div>
       </div>
 
       <p className="mt-4 flex items-start gap-2 rounded-[var(--radius-sm)] bg-brand-soft px-3 py-2 text-[13px] text-brand-ink">
         <Sparkles size={15} strokeWidth={2} className="mt-0.5 shrink-0" />
-        Resellap lo ha rellenado con lo que dice el correo. Revisa y cambia lo que haga falta.
+        {t("Resellap lo ha rellenado con lo que dice el correo. Revisa y cambia lo que haga falta.")}
       </p>
 
       {sale.doubt && sale.note && (
@@ -143,10 +151,10 @@ function ConfirmDialog({
       {/* Producto */}
       <div className="mt-5">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p className="text-[13px] font-medium text-muted">Producto de tu inventario</p>
+          <p className="text-[13px] font-medium text-muted">{t("Producto de tu inventario")}</p>
           {picked && !changing && (
             <button type="button" className="min-h-10 text-[13px] font-semibold text-brand-ink hover:underline" onClick={() => setChanging(true)}>
-              Cambiar
+              {t("Cambiar")}
             </button>
           )}
         </div>
@@ -156,7 +164,7 @@ function ConfirmDialog({
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14.5px] font-semibold">{picked.label}</p>
               <p className={clsx("text-[12.5px]", picked.stock > 0 ? "text-faint" : "font-semibold text-danger")}>
-                {picked.stock > 0 ? `${picked.stock} en stock · se descuenta 1 del lote más antiguo` : "Sin stock: no se puede registrar"}
+                {picked.stock > 0 ? t("{stock} en stock · se descuenta 1 del lote más antiguo", { stock: picked.stock }) : t("Sin stock: no se puede registrar")}
               </p>
               {picked.reasons.length > 0 && picked.id === sale.suggestion?.id && (
                 <p className="mt-0.5 truncate text-[12px] text-faint">{picked.reasons.filter((x) => !/stock/i.test(x)).join(" · ")}</p>
@@ -187,7 +195,7 @@ function ConfirmDialog({
                         <span className="block truncate text-[13.5px] font-semibold">{o.label}</span>
                         <span className="block truncate text-[12px] text-faint">
                           {o.score !== null ? `${Math.round(o.score * 100)} % · ` : ""}
-                          {o.stock > 0 ? `${o.stock} en stock` : "sin stock"}
+                          {o.stock > 0 ? t("{stock} en stock", { stock: o.stock }) : t("sin stock")}
                         </span>
                       </span>
                     </button>
@@ -198,7 +206,7 @@ function ConfirmDialog({
             <ProductPicker
               onlyInStock
               allowCreate
-              placeholder={options.length ? "O busca otro producto" : "Busca el producto"}
+              placeholder={options.length ? t("O busca otro producto") : t("Busca el producto")}
               onSelect={(v: SellableVariant) => {
                 setPicked({ id: v.variant_id, label: variantDisplay(v.product_name, v.variant_name, v.variant_count), stock: v.stock, photo: v.photo_url ?? null, score: null, reasons: [] });
                 setChanging(false);
@@ -209,19 +217,19 @@ function ConfirmDialog({
         {changedProduct && (
           <label className="mt-2 flex items-start gap-2 text-[13.5px]">
             <input type="checkbox" className="mt-0.5 h-5 w-5 accent-[var(--color-brand)]" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-            <span>Recordar que «{sale.product}» es este producto (la próxima vez se elegirá solo)</span>
+            <span>{t("Recordar que «{product}» es este producto (la próxima vez se elegirá solo)", { product: sale.product })}</span>
           </label>
         )}
       </div>
 
       {/* Datos editables */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Field label="Precio de venta (€)" hint="El del artículo, sin el envío.">
+        <Field label={t("Precio de venta (€)")} hint={t("El del artículo, sin el envío.")}>
           <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className="num" />
         </Field>
-        <Field label="Transportista" hint={sale.carrier ? `Detectado en ${sale.carrier.source === "etiqueta" ? "la etiqueta" : "el correo"}` : "No se ha podido detectar"}>
+        <Field label={t("Transportista")} hint={sale.carrier ? t("Detectado en {v}", { v: sale.carrier.source === "etiqueta" ? "la etiqueta" : "el correo" }) : t("No se ha podido detectar")}>
           <Select value={carrierId} onChange={(e) => setCarrierId(e.target.value)}>
-            <option value="">Sin transportista</option>
+            <option value="">{t("Sin transportista")}</option>
             {carriers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -229,9 +237,9 @@ function ConfirmDialog({
             ))}
           </Select>
         </Field>
-        <Field label="Responsable" required error={!respId ? "Elige quién la ha vendido." : undefined}>
+        <Field label={t("Responsable")} required error={!respId ? t("Elige quién la ha vendido.") : undefined}>
           <Select value={respId} onChange={(e) => setRespId(e.target.value)}>
-            <option value="">Elige…</option>
+            <option value="">{t("Elige…")}</option>
             {responsibles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
@@ -240,7 +248,7 @@ function ConfirmDialog({
           </Select>
         </Field>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium text-muted">Envío</span>
+          <span className="text-[13px] font-medium text-muted">{t("Envío")}</span>
           <div className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3 text-[14px]">
             <CarrierIcon name={carrierName} size={20} />
             {sale.tracking && <span className="num ml-auto text-[12.5px] text-faint">{sale.tracking}</span>}
@@ -249,19 +257,19 @@ function ConfirmDialog({
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-[var(--radius-sm)] bg-surface-2 px-3.5 py-3 text-[13px] sm:grid-cols-4">
         <div>
-          <dt className="text-faint">Plataforma</dt>
+          <dt className="text-faint">{t("Plataforma")}</dt>
           <dd className="font-medium">{PLATFORM_NAME[sale.platform]}</dd>
         </div>
         <div>
-          <dt className="text-faint">Comprador</dt>
+          <dt className="text-faint">{t("Comprador")}</dt>
           <dd className="truncate font-medium">{sale.buyer ?? "—"}</dd>
         </div>
         <div>
-          <dt className="text-faint">Fecha</dt>
+          <dt className="text-faint">{t("Fecha")}</dt>
           <dd className="num font-medium">{sale.saleDate.split("-").reverse().join("/")}</dd>
         </div>
         <div>
-          <dt className="text-faint">Referencia</dt>
+          <dt className="text-faint">{t("Referencia")}</dt>
           <dd className="num truncate font-medium">{sale.reference ?? "—"}</dd>
         </div>
       </dl>
@@ -276,6 +284,8 @@ function ConfirmDialog({
 
 /** «Ya estaba apuntada»: tarjetas visuales de las ventas parecidas, la más probable primero. */
 function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDuplicate: () => void }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const best = sale.existing[0];
   const [picked, setPicked] = useState<string | null>(best && best.score >= 0.55 ? best.id : null);
@@ -283,12 +293,12 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
   return (
     <>
       <Button variant={sale.likelyDuplicate ? "primary" : "secondary"} onClick={() => setOpen(true)}>
-        Ya estaba apuntada
+        {t("Ya estaba apuntada")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="¿Esta venta ya estaba registrada?"
+        title={t("¿Esta venta ya estaba registrada?")}
         wide
         footer={
           <>
@@ -299,7 +309,7 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
               }}
               disabled={pending}
             >
-              No, es otra venta
+              {t("No, es otra venta")}
             </Button>
             <Button
               variant="primary"
@@ -311,7 +321,7 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
               }}
             >
               <Check size={17} strokeWidth={2.5} />
-              {pending ? "Guardando…" : "Sí, es esta venta"}
+              {pending ? t("Guardando…") : t("Sí, es esta venta")}
             </Button>
           </>
         }
@@ -321,18 +331,18 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
           <div className="min-w-0 text-[13px]">
             <p className="truncate font-semibold">{sale.product}</p>
             <p className="text-muted">
-              {PLATFORM_NAME[sale.platform]} · {sale.buyer ?? "comprador sin nombre"} · <span className="num">{sale.price !== null ? money(sale.price) : "—"}</span> ·{" "}
+              {PLATFORM_NAME[sale.platform]} · {sale.buyer ?? t("comprador sin nombre")} · <span className="num">{sale.price !== null ? f.money(sale.price) : "—"}</span> ·{" "}
               <span className="num">{sale.saleDate.split("-").reverse().join("/")}</span>
             </p>
           </div>
         </div>
         <p className="mt-3 text-[13.5px] text-ink-soft">
-          Elige la venta que ya apuntaste. No se creará otra ni se tocará el stock; se le añadirán la foto, el comprador y la referencia si le faltan.
-          {sale.platform === "vinted" && " Cuando llegue la etiqueta de Vinted, se pondrá en esa venta."}
+          {t("Elige la venta que ya apuntaste. No se creará otra ni se tocará el stock; se le añadirán la foto, el comprador y la referencia si le faltan.")}
+          {sale.platform === "vinted" && t(" Cuando llegue la etiqueta de Vinted, se pondrá en esa venta.")}
         </p>
         {sale.existing.length === 0 ? (
           <Notice tone="info" className="mt-3">
-            No hay ventas de {PLATFORM_NAME[sale.platform]} apuntadas a mano en fechas cercanas. Si no la tienes apuntada, pulsa «No, es otra venta» y confírmala.
+            {t("No hay ventas de {PLATFORM_NAME} apuntadas a mano en fechas cercanas. Si no la tienes apuntada, pulsa «No, es otra venta» y confírmala.", { PLATFORM_NAME: PLATFORM_NAME[sale.platform] })}
           </Notice>
         ) : (
           <ul className="mt-3 grid gap-2">
@@ -350,6 +360,8 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
 }
 
 function ExistingCard({ d, best, checked, onPick, name }: { d: ExistingOption; best: boolean; checked: boolean; onPick: () => void; name: string }) {
+  const t = useT();
+  const f = useFormat();
   return (
     <label className={clsx("press flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] border p-2.5", checked ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong")}>
       <input type="radio" name={name} checked={checked} onChange={onPick} className="h-5 w-5 shrink-0 accent-[var(--color-brand)]" />
@@ -357,7 +369,7 @@ function ExistingCard({ d, best, checked, onPick, name }: { d: ExistingOption; b
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2">
           <span className="truncate text-[14px] font-semibold">{d.product}</span>
-          {best && <Badge tone="good">Más probable</Badge>}
+          {best && <Badge tone="good">{t("Más probable")}</Badge>}
         </span>
         <span className="mt-0.5 block text-[12.5px] text-muted">
           <span className="num">{d.number}</span> · <span className="num">{d.date.split("-").reverse().join("/")}</span>
@@ -366,7 +378,7 @@ function ExistingCard({ d, best, checked, onPick, name }: { d: ExistingOption; b
         </span>
         {d.reasons.length > 0 && <span className="mt-0.5 block truncate text-[12px] text-faint">{d.reasons.join(" · ")}</span>}
       </span>
-      <span className="num shrink-0 text-[15px] font-semibold">{money(d.price)}</span>
+      <span className="num shrink-0 text-[15px] font-semibold">{f.money(d.price)}</span>
     </label>
   );
 }

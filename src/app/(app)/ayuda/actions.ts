@@ -9,6 +9,7 @@
  * - Si existe SUPPORT_EMAIL, se avisa por correo de cada feedback y de cada
  *   duda que la IA no ha resuelto.
  */
+import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
@@ -25,10 +26,11 @@ const MODELS = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-l
 const page = z.string().trim().max(300).optional();
 
 async function notifySupport(subject: string, text: string) {
+  const t = await getT();
   const to = process.env.SUPPORT_EMAIL?.trim();
   if (!to) return;
   const host = (await headers()).get("host");
-  await sendMail(to, subject, text, host ? { href: `https://${host}/admin/soporte`, label: "Abrir el panel de soporte" } : undefined);
+  await sendMail(to, subject, text, host ? { href: `https://${host}/admin/soporte`, label: t("Abrir el panel de soporte") } : undefined);
 }
 
 // ---------------------------------------------------------------------
@@ -42,10 +44,11 @@ const feedbackSchema = z.object({
 });
 
 export async function sendFeedback(input: z.infer<typeof feedbackSchema>): Promise<ActionResult> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.orgId) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
+  if (!user?.orgId) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
   const parsed = feedbackSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t("Datos no válidos.") };
   const f = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_feedback", { p_kind: f.kind, p_message: f.message, p_page: f.page ?? null, p_screenshot: f.screenshot ?? null });
@@ -107,10 +110,11 @@ async function askGemini(question: string): Promise<string | null> {
 const askSchema = z.object({ question: z.string().trim().min(3, "Escribe tu pregunta.").max(2000, "La pregunta admite como máximo 2.000 caracteres."), page });
 
 export async function askSupport(input: z.infer<typeof askSchema>): Promise<ActionResult<{ id: number; answer: string | null }>> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.orgId) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
+  if (!user?.orgId) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
   const parsed = askSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t("Datos no válidos.") };
   const supabase = await createClient();
   const { data: id, error } = await supabase.rpc("support_ask", { p_question: parsed.data.question, p_page: parsed.data.page ?? null, p_direct: false });
   if (error) return { ok: false, error: friendlyError(error) };
@@ -121,9 +125,10 @@ export async function askSupport(input: z.infer<typeof askSchema>): Promise<Acti
 
 /** Respuesta a «¿Te ha servido?». Si no, la duda pasa a soporte. */
 export async function resolveSupport(id: number, resolved: boolean, question: string): Promise<ActionResult> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.orgId) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
-  if (!Number.isSafeInteger(id)) return { ok: false, error: "Datos no válidos." };
+  if (!user?.orgId) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
+  if (!Number.isSafeInteger(id)) return { ok: false, error: t("Datos no válidos.") };
   const supabase = await createClient();
   const { data: changed, error } = await supabase.rpc("support_resolve", { p_id: id, p_resolved: resolved });
   if (error) return { ok: false, error: friendlyError(error) };
@@ -134,10 +139,11 @@ export async function resolveSupport(id: number, resolved: boolean, question: st
 
 /** Enviar la duda directamente a soporte (sin IA). */
 export async function sendToSupport(input: z.infer<typeof askSchema>): Promise<ActionResult> {
+  const t = await getT();
   const user = await getCurrentUser();
-  if (!user?.orgId) return { ok: false, error: "Tu sesión ha caducado. Vuelve a entrar." };
+  if (!user?.orgId) return { ok: false, error: t("Tu sesión ha caducado. Vuelve a entrar.") };
   const parsed = askSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t("Datos no válidos.") };
   const supabase = await createClient();
   const { error } = await supabase.rpc("support_ask", { p_question: parsed.data.question, p_page: parsed.data.page ?? null, p_direct: true });
   if (error) return { ok: false, error: friendlyError(error) };

@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/i18n/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { uploadProductPhotos } from "@/components/photo-upload";
@@ -18,6 +19,7 @@ export type ProductFormValues = {
 };
 
 export function ProductForm({ initial, brands, categories, onDone }: { initial?: ProductFormValues; brands: Option[]; categories: Option[]; onDone?: () => void }) {
+  const t = useT();
   const router = useRouter();
   const editing = !!initial?.id;
   const [v, setV] = useState<ProductFormValues>(
@@ -75,10 +77,10 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Nombre" required className="sm:col-span-2">
+        <Field label={t("Nombre")} required className="sm:col-span-2">
           <Input value={v.name} onChange={set("name")} autoFocus={!editing} />
         </Field>
-        <Field label="Marca" hint="Escribe una nueva o elige una existente.">
+        <Field label={t("Marca")} hint={t("Escribe una nueva o elige una existente.")}>
           <Input value={v.brand_name} onChange={set("brand_name")} list="marcas" />
           <datalist id="marcas">
             {brands.map((b) => (
@@ -86,7 +88,7 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
             ))}
           </datalist>
         </Field>
-        <Field label="Categoría">
+        <Field label={t("Categoría")}>
           <Input value={v.category_name} onChange={set("category_name")} list="categorias" />
           <datalist id="categorias">
             {categories.map((b) => (
@@ -94,54 +96,54 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
             ))}
           </datalist>
         </Field>
-        <Field label="SKU / referencia" hint="Único: no puede repetirse.">
+        <Field label={t("SKU / referencia")} hint={t("Único: no puede repetirse.")}>
           <Input value={v.sku} onChange={set("sku")} />
         </Field>
-        <Field label="Precio normal de venta (€)">
+        <Field label={t("Precio normal de venta (€)")}>
           <Input inputMode="decimal" value={v.normal_sale_price} onChange={set("normal_sale_price")} placeholder="0,00" />
         </Field>
-        <Field label="Descripción" className="sm:col-span-2">
+        <Field label={t("Descripción")} className="sm:col-span-2">
           <Textarea value={v.description} onChange={set("description")} />
         </Field>
         {!editing && (
           <Field
-            label="Fotos"
-            hint={photos.length ? `${photos.length} ${photos.length === 1 ? "foto elegida" : "fotos elegidas"}. Las del iPhone se convierten solas.` : "Puedes elegir varias. Luego podrás ordenarlas y añadir más."}
+            label={t("Fotos")}
+            hint={photos.length ? t("{length} {v}. Las del iPhone se convierten solas.", { length: photos.length, v: photos.length === 1 ? "foto elegida" : "fotos elegidas" }) : t("Puedes elegir varias. Luego podrás ordenarlas y añadir más.")}
             className="sm:col-span-2"
           >
             <Input type="file" accept="image/*,.heic,.heif" multiple className="py-1.5" onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} />
           </Field>
         )}
-        <Field label="Notas internas" className="sm:col-span-2">
+        <Field label={t("Notas internas")} className="sm:col-span-2">
           <Textarea value={v.notes} onChange={set("notes")} className="min-h-12" />
         </Field>
       </div>
 
       {!editing && (
         <div>
-          <p className="text-[13px] font-semibold text-ink-soft">Variantes</p>
-          <p className="mb-2 text-xs text-muted">Por ejemplo colores o tallas. Si no tiene, se crea una variante «Única».</p>
+          <p className="text-[13px] font-semibold text-ink-soft">{t("Variantes")}</p>
+          <p className="mb-2 text-xs text-muted">{t("Por ejemplo colores o tallas. Si no tiene, se crea una variante «Única».")}</p>
           <div className="flex flex-col gap-2">
             {variants.map((name, i) => (
               <div key={i} className="flex gap-2">
-                <Input value={name} onChange={(e) => setVariants((vs) => vs.map((x, j) => (j === i ? e.target.value : x)))} placeholder={`Variante ${i + 1}`} />
+                <Input value={name} onChange={(e) => setVariants((vs) => vs.map((x, j) => (j === i ? e.target.value : x)))} placeholder={t("Variante {v}", { v: i + 1 })} />
                 <Button variant="ghost" onClick={() => setVariants((vs) => vs.filter((_, j) => j !== i))}>
-                  Quitar
+                  {t("Quitar")}
                 </Button>
               </div>
             ))}
             <Button size="sm" className="self-start" onClick={() => setVariants((vs) => [...vs, ""])}>
-              Añadir variante
+              {t("Añadir variante")}
             </Button>
           </div>
         </div>
       )}
 
-      <Notice tone="info">El stock no se escribe aquí: entra al recibir una compra o con un ajuste autorizado en Salidas y ajustes.</Notice>
+      <Notice tone="info">{t("El stock no se escribe aquí: entra al recibir una compra o con un ajuste autorizado en Salidas y ajustes.")}</Notice>
       {error && <Notice tone="bad">{error}</Notice>}
       <div className="flex gap-2">
         <Button variant="primary" onClick={save} disabled={pending || !v.name.trim()}>
-          {pending ? (progress ?? "Guardando…") : editing ? "Guardar cambios" : "Crear producto"}
+          {pending ? (progress ?? t("Guardando…")) : editing ? t("Guardar cambios") : t("Crear producto")}
         </Button>
       </div>
     </div>

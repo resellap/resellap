@@ -1,4 +1,6 @@
 "use server";
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import { z } from "zod";
 import { safeNext } from "@/lib/safe-redirect";
 import { siteUrl } from "@/lib/site";
@@ -11,11 +13,12 @@ const schema = z.object({
   email: z.email("Escribe un email válido.").max(200),
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(200),
   business: z.string().trim().max(80).optional(),
-  terms: z.literal("on", { error: "Tienes que aceptar las condiciones y la política de privacidad." }),
+  terms: z.literal("on", { error: msg("Tienes que aceptar las condiciones y la política de privacidad.") }),
 });
 
 /** Alta de un cliente: Supabase envía el correo de confirmación. El espacio se crea después de confirmar. */
 export async function signup(_prev: SignupState, formData: FormData): Promise<SignupState> {
+  const t = await getT();
   const next = safeNext(String(formData.get("next") ?? "/bienvenida"));
   const v = schema.safeParse({
     name: formData.get("name"),
@@ -24,7 +27,7 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
     business: formData.get("business") || undefined,
     terms: formData.get("terms"),
   });
-  if (!v.success) return { error: v.error.issues[0]?.message ?? "Revisa los datos.", email: String(formData.get("email") ?? ""), next };
+  if (!v.success) return { error: v.error.issues[0]?.message ?? t("Revisa los datos."), email: String(formData.get("email") ?? ""), next };
   const supabase = await createClient();
   const base = await siteUrl();
   const { data, error } = await supabase.auth.signUp({

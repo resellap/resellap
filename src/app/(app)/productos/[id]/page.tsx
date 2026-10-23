@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/translate";
+import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Megaphone } from "lucide-react";
@@ -14,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SellableVariant } from "@/lib/types";
 import { DeleteProductButton, EditProductButton, VariantEditor } from "./product-editors";
 
-export const metadata: Metadata = { title: "Producto" };
+export const metadata: Metadata = { title: msg("Producto") };
 
 type VariantInv = {
   variant_id: string;
@@ -33,6 +35,7 @@ type VariantInv = {
 };
 
 export default async function ProductDetail({ params, searchParams }: PageProps<"/productos/[id]">) {
+  const t = await getT();
   const user = await requireUser();
   // Vista completa (lotes, costes, movimientos) con «costes»; editar con «productos»
   const isAdmin = can(user, "costes");
@@ -96,23 +99,23 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   const listingButton = canListing && (
     <LinkButton href={`/productos/${p.id}/anuncio`} variant="primary">
       <Megaphone size={17} strokeWidth={2.5} />
-      Preparar anuncio
+      {t("Preparar anuncio")}
     </LinkButton>
   );
 
   const info = (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-      <dt className="text-muted">Marca</dt>
-      <dd>{p.brands?.name ?? <Badge tone="warn">Pendiente</Badge>}</dd>
-      <dt className="text-muted">Categoría</dt>
-      <dd>{p.categories?.name ?? <Badge tone="warn">Pendiente</Badge>}</dd>
-      <dt className="text-muted">SKU</dt>
-      <dd>{p.sku ?? <span className="text-muted">Sin SKU</span>}</dd>
-      <dt className="text-muted">Precio normal</dt>
-      <dd className="num">{p.normal_sale_price !== null ? money(p.normal_sale_price) : <span className="text-muted">Sin definir</span>}</dd>
+      <dt className="text-muted">{t("Marca")}</dt>
+      <dd>{p.brands?.name ?? <Badge tone="warn">{t("Pendiente")}</Badge>}</dd>
+      <dt className="text-muted">{t("Categoría")}</dt>
+      <dd>{p.categories?.name ?? <Badge tone="warn">{t("Pendiente")}</Badge>}</dd>
+      <dt className="text-muted">{t("SKU")}</dt>
+      <dd>{p.sku ?? <span className="text-muted">{t("Sin SKU")}</span>}</dd>
+      <dt className="text-muted">{t("Precio normal")}</dt>
+      <dd className="num">{p.normal_sale_price !== null ? money(p.normal_sale_price) : <span className="text-muted">{t("Sin definir")}</span>}</dd>
       {isAdmin && p.legacy_code && (
         <>
-          <dt className="text-muted">ID en el Excel</dt>
+          <dt className="text-muted">{t("ID en el Excel")}</dt>
           <dd>{p.legacy_code}</dd>
         </>
       )}
@@ -122,7 +125,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   const photoBlock = (
     <>
       {sp.fotos === "error" && (
-        <Notice tone="warn">El producto se ha creado, pero alguna foto no se ha podido subir. Vuelve a intentarlo aquí abajo.</Notice>
+        <Notice tone="warn">{t("El producto se ha creado, pero alguna foto no se ha podido subir. Vuelve a intentarlo aquí abajo.")}</Notice>
       )}
       <PhotoGallery productId={p.id} name={p.name} photos={photos} editable={canEdit} />
     </>
@@ -134,7 +137,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
       <>
         <PageHeader
           title={p.name}
-          back={{ href: "/productos", label: "Productos" }}
+          back={{ href: "/productos", label: t("Productos") }}
           actions={
             (listingButton || (canEdit && sellerOpts)) && (
               <>
@@ -150,15 +153,15 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
             <Panel>{info}</Panel>
           </div>
           <div className="flex flex-col gap-5">
-            {p.description && <Panel title="Descripción"><p className="whitespace-pre-line text-sm">{p.description}</p></Panel>}
-            <Panel title="Variantes y stock" padded={false}>
+            {p.description && <Panel title={t("Descripción")}><p className="whitespace-pre-line text-sm">{p.description}</p></Panel>}
+            <Panel title={t("Variantes y stock")} padded={false}>
               <Table>
                 <thead>
                   <tr>
-                    <Th>Variante</Th>
-                    <Th>SKU</Th>
-                    <Th num>Stock</Th>
-                    <Th num>Precio</Th>
+                    <Th>{t("Variante")}</Th>
+                    <Th>{t("SKU")}</Th>
+                    <Th num>{t("Stock")}</Th>
+                    <Th num>{t("Precio")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -203,8 +206,8 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
     <>
       <PageHeader
         title={p.name}
-        back={{ href: "/productos", label: "Productos" }}
-        description={p.source_ref ? `Importado del Excel (${p.source_ref}).` : undefined}
+        back={{ href: "/productos", label: t("Productos") }}
+        description={p.source_ref ? t("Importado del Excel ({source_ref}).", { source_ref: p.source_ref }) : undefined}
         actions={
           <>
             {listingButton}
@@ -216,13 +219,13 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
       <Figures
         className="mb-5"
         items={[
-          { label: "Stock", value: totals.stock > 0 ? units(totals.stock) : "Sin stock" },
-          { label: "Coste medio ponderado", value: money(inv?.weighted_avg_cost, { precise: true }) },
-          { label: "Precio medio de venta", value: money(inv?.avg_sale_price) },
-          { label: "Unidades vendidas", value: units(totals.sold) },
-          { label: "Valor del almacén", value: money(totals.value) },
-          { label: "Valor potencial", value: money(totals.potential), note: inv?.potential_is_estimated ? "con el precio medio de venta" : undefined },
-          { label: "Beneficio potencial", value: money(totals.profit), tone: "good" },
+          { label: t("Stock"), value: totals.stock > 0 ? units(totals.stock) : "Sin stock" },
+          { label: t("Coste medio ponderado"), value: money(inv?.weighted_avg_cost, { precise: true }) },
+          { label: t("Precio medio de venta"), value: money(inv?.avg_sale_price) },
+          { label: t("Unidades vendidas"), value: units(totals.sold) },
+          { label: t("Valor del almacén"), value: money(totals.value) },
+          { label: t("Valor potencial"), value: money(totals.potential), note: inv?.potential_is_estimated ? t("con el precio medio de venta") : undefined },
+          { label: t("Beneficio potencial"), value: money(totals.profit), tone: "good" },
         ]}
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(300px,380px)_1fr]">
@@ -230,28 +233,28 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
           {photoBlock}
           <Panel>{info}</Panel>
           {p.description && (
-            <Panel title="Descripción">
+            <Panel title={t("Descripción")}>
               <p className="whitespace-pre-line text-sm">{p.description}</p>
             </Panel>
           )}
           {p.notes && (
-            <Panel title="Notas internas">
+            <Panel title={t("Notas internas")}>
               <p className="whitespace-pre-line text-sm">{p.notes}</p>
             </Panel>
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
-          <Panel title="Variantes" padded={false} actions={canEdit ? <VariantEditor productId={p.id} /> : undefined}>
+          <Panel title={t("Variantes")} padded={false} actions={canEdit ? <VariantEditor productId={p.id} /> : undefined}>
             <Table>
               <thead>
                 <tr>
-                  <Th>Variante</Th>
-                  <Th>SKU</Th>
-                  <Th num>Stock</Th>
-                  <Th num>Coste medio</Th>
-                  <Th num>Precio normal</Th>
-                  <Th num>Vendidas</Th>
-                  <Th num>Valor</Th>
+                  <Th>{t("Variante")}</Th>
+                  <Th>{t("SKU")}</Th>
+                  <Th num>{t("Stock")}</Th>
+                  <Th num>{t("Coste medio")}</Th>
+                  <Th num>{t("Precio normal")}</Th>
+                  <Th num>{t("Vendidas")}</Th>
+                  <Th num>{t("Valor")}</Th>
                   <Th />
                 </tr>
               </thead>
@@ -281,25 +284,25 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
             </Table>
             {vs.some((v) => v.variant_name === "Sin especificar") && (
               <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">
-                «Sin especificar» agrupa las unidades importadas del Excel, donde el color no se registraba en las compras. Las compras nuevas pueden ir ya a cada variante.
+                {t("«Sin especificar» agrupa las unidades importadas del Excel, donde el color no se registraba en las compras. Las compras nuevas pueden ir ya a cada variante.")}
               </p>
             )}
           </Panel>
 
-          <Panel title="Pedidos / lotes de procedencia" description="Cada entrada de mercancía con su coste real." padded={false}>
+          <Panel title={t("Pedidos / lotes de procedencia")} description={t("Cada entrada de mercancía con su coste real.")} padded={false}>
             {(lots ?? []).length === 0 ? (
-              <Empty title="Aún no ha entrado ninguna unidad">Las unidades entran al recibir un pedido de compra.</Empty>
+              <Empty title={t("Aún no ha entrado ninguna unidad")}>{t("Las unidades entran al recibir un pedido de compra.")}</Empty>
             ) : (
               <Table>
                 <thead>
                   <tr>
-                    <Th>Lote</Th>
-                    {!single && <Th>Variante</Th>}
-                    <Th>Entrada</Th>
-                    <Th num>Entraron</Th>
-                    <Th num>Quedan</Th>
-                    <Th num>Coste real</Th>
-                    <Th num>Valor</Th>
+                    <Th>{t("Lote")}</Th>
+                    {!single && <Th>{t("Variante")}</Th>}
+                    <Th>{t("Entrada")}</Th>
+                    <Th num>{t("Entraron")}</Th>
+                    <Th num>{t("Quedan")}</Th>
+                    <Th num>{t("Coste real")}</Th>
+                    <Th num>{t("Valor")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -327,18 +330,18 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
             )}
           </Panel>
 
-          <Panel title="Historial de stock" description="Entradas, ventas, devoluciones, salidas y ajustes, del más reciente al más antiguo." padded={false}>
+          <Panel title={t("Historial de stock")} description={t("Entradas, ventas, devoluciones, salidas y ajustes, del más reciente al más antiguo.")} padded={false}>
             {(movements ?? []).length === 0 ? (
-              <Empty title="Sin movimientos" />
+              <Empty title={t("Sin movimientos")} />
             ) : (
               <Table>
                 <thead>
                   <tr>
-                    <Th>Fecha</Th>
-                    <Th>Movimiento</Th>
-                    <Th>Lote</Th>
-                    <Th num>Unidades</Th>
-                    <Th>Detalle</Th>
+                    <Th>{t("Fecha")}</Th>
+                    <Th>{t("Movimiento")}</Th>
+                    <Th>{t("Lote")}</Th>
+                    <Th num>{t("Unidades")}</Th>
+                    <Th>{t("Detalle")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -361,7 +364,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
                         {m.sale_id && m.responsible_name && <span className="text-muted">, {m.responsible_name}</span>}
                         {m.purchase_order_id && (
                           <Link href={`/compras/${m.purchase_order_id}`} className="font-semibold text-brand-ink hover:underline">
-                            Pedido #{m.purchase_order_number}
+                            {t("Pedido #{purchase_order_number}", { purchase_order_number: m.purchase_order_number })}
                           </Link>
                         )}
                         {m.exit_reason && <span>{EXIT_REASONS[m.exit_reason]}</span>}
@@ -373,7 +376,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
               </Table>
             )}
           </Panel>
-          {(movements ?? []).length === 200 && <Notice tone="neutral">Se muestran los 200 movimientos más recientes.</Notice>}
+          {(movements ?? []).length === 200 && <Notice tone="neutral">{t("Se muestran los 200 movimientos más recientes.")}</Notice>}
         </div>
       </div>
     </>

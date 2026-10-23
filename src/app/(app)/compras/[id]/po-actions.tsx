@@ -1,9 +1,9 @@
 "use client";
+import { useFormat, useT } from "@/i18n/client";
 import { useState } from "react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, Notice, Select, Table, Td, Textarea, Th } from "@/components/ui";
 import { ActionMessages, ConfirmAction, Modal, useServerAction } from "@/components/ui-client";
-import { money } from "@/lib/format";
 import type { Option, SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
 import { cancelPurchaseOrder, receivePurchaseOrder, savePurchaseOrder, setPurchaseCosts } from "../actions";
@@ -12,6 +12,8 @@ import { CostsEditor, distribute, type POCosts } from "../po-form";
 type Item = { id: string; label: string; quantity_ordered: number; unit_cost: number };
 
 export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId: string; orderNumber: number; items: Item[]; extra: number; today: string }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(today);
   const [rows, setRows] = useState(items.map((i) => ({ ...i, received: String(i.quantity_ordered), sub: null as SellableVariant | null, subQty: "", notes: "" })));
@@ -30,16 +32,16 @@ export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
-        Recibir pedido
+        {t("Recibir pedido")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         wide
-        title={`Recibir el pedido #${orderNumber}`}
+        title={t("Recibir el pedido #{orderNumber}", { orderNumber })}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending || invalid || totalUnits === 0}
@@ -58,25 +60,24 @@ export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId
                 if (r.ok) setOpen(false);
               }}
             >
-              {pending ? "Guardando…" : `Confirmar recepción (${totalUnits} uds.)`}
+              {pending ? t("Guardando…") : t("Confirmar recepción ({totalUnits} uds.)", { totalUnits })}
             </Button>
           </>
         }
       >
         <p className="text-sm text-ink-soft">
-          Escribe las unidades que han llegado de verdad. Si de una línea no llega nada, pon 0 y se cancela. Si llegó otro producto en su lugar, indícalo como sustitución: el pedido no
-          entra en stock y el sustituto sí.
+          {t("Escribe las unidades que han llegado de verdad. Si de una línea no llega nada, pon 0 y se cancela. Si llegó otro producto en su lugar, indícalo como sustitución: el pedido no entra en stock y el sustituto sí.")}
         </p>
-        <Field label="Fecha de recepción" className="mt-3 max-w-xs">
+        <Field label={t("Fecha de recepción")} className="mt-3 max-w-xs">
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
         <Table className="mt-4">
           <thead>
             <tr>
-              <Th>Línea</Th>
-              <Th num>Pedidas</Th>
-              <Th num>Recibidas</Th>
-              <Th num>Coste real</Th>
+              <Th>{t("Línea")}</Th>
+              <Th num>{t("Pedidas")}</Th>
+              <Th num>{t("Recibidas")}</Th>
+              <Th num>{t("Coste real")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -87,20 +88,20 @@ export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId
                   {r.sub ? (
                     <div className="mt-2 rounded-[var(--radius-sm)] border border-line bg-paper p-2">
                       <p className="text-[13px]">
-                        Sustituido por <strong>{variantDisplay(r.sub.product_name, r.sub.variant_name, r.sub.variant_count)}</strong>
+                        {t("Sustituido por")}{" "}<strong>{variantDisplay(r.sub.product_name, r.sub.variant_name, r.sub.variant_count)}</strong>
                       </p>
                       <div className="mt-2 flex items-center gap-2">
-                        <Input type="number" min={1} className="h-9 w-24" placeholder="Uds." value={r.subQty} onChange={(e) => set(r.id, { subQty: e.target.value })} />
+                        <Input type="number" min={1} className="h-9 w-24" placeholder={t("Uds.")} value={r.subQty} onChange={(e) => set(r.id, { subQty: e.target.value })} />
                         <Button size="sm" variant="ghost" onClick={() => set(r.id, { sub: null, subQty: "" })}>
-                          Quitar sustitución
+                          {t("Quitar sustitución")}
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <details className="mt-1 text-[13px]">
-                      <summary className="cursor-pointer text-brand-ink">Llegó otro producto en su lugar</summary>
+                      <summary className="cursor-pointer text-brand-ink">{t("Llegó otro producto en su lugar")}</summary>
                       <div className="mt-2">
-                        <ProductPicker allowCreate onSelect={(v) => set(r.id, { sub: v, subQty: String(r.quantity_ordered), received: "0" })} placeholder="Busca el producto recibido" />
+                        <ProductPicker allowCreate onSelect={(v) => set(r.id, { sub: v, subQty: String(r.quantity_ordered), received: "0" })} placeholder={t("Busca el producto recibido")} />
                       </div>
                     </details>
                   )}
@@ -110,14 +111,14 @@ export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId
                   <Input type="number" min={0} className="ml-auto h-9 w-24 text-right" value={r.received} onChange={(e) => set(r.id, { received: e.target.value })} />
                 </Td>
                 <Td num>
-                  {money(real[i * 2], { precise: true })}
-                  {r.sub && <span className="block text-xs text-muted">sustituto: {money(real[i * 2 + 1], { precise: true })}</span>}
+                  {f.money(real[i * 2], { precise: true })}
+                  {r.sub && <span className="block text-xs text-muted">{t("sustituto:")}{" "}{f.money(real[i * 2 + 1], { precise: true })}</span>}
                 </Td>
               </tr>
             ))}
           </tbody>
         </Table>
-        {invalid && <Notice tone="warn" className="mt-3">Revisa las cantidades: deben ser números enteros (0 o más).</Notice>}
+        {invalid && <Notice tone="warn" className="mt-3">{t("Revisa las cantidades: deben ser números enteros (0 o más).")}</Notice>}
         <ActionMessages error={error} />
       </Modal>
     </>
@@ -125,20 +126,22 @@ export function ReceiveButton({ poId, orderNumber, items, extra, today }: { poId
 }
 
 export function CostsButton({ poId, costs, received }: { poId: string; costs: POCosts; received: boolean }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [c, setC] = useState<POCosts>(costs);
   const { run, pending, error } = useServerAction(setPurchaseCosts);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Costes del pedido</Button>
+      <Button onClick={() => setOpen(true)}>{t("Costes del pedido")}</Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         wide
-        title="Costes del pedido"
+        title={t("Costes del pedido")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending}
@@ -152,14 +155,14 @@ export function CostsButton({ poId, costs, received }: { poId: string; costs: PO
                 if (r.ok) setOpen(false);
               }}
             >
-              Guardar costes
+              {t("Guardar costes")}
             </Button>
           </>
         }
       >
         {received && (
           <Notice tone="warn" className="mb-3">
-            El pedido ya está recibido: al guardar se recalcula el coste real de sus lotes y, con él, el beneficio de las ventas que salieron de ellos.
+            {t("El pedido ya está recibido: al guardar se recalcula el coste real de sus lotes y, con él, el beneficio de las ventas que salieron de ellos.")}
           </Notice>
         )}
         <CostsEditor costs={c} setCosts={setC} />
@@ -170,6 +173,8 @@ export function CostsButton({ poId, costs, received }: { poId: string; costs: PO
 }
 
 export function HeaderEditButton({ po, suppliers }: { po: { id: string; order_number: number; supplier_id: string; order_date: string; notes: string | null }; suppliers: Option[] }) {
+  const t = useT();
+  const f = useFormat();
   const [open, setOpen] = useState(false);
   const [supplier, setSupplier] = useState(po.supplier_id);
   const [date, setDate] = useState(po.order_date);
@@ -177,14 +182,14 @@ export function HeaderEditButton({ po, suppliers }: { po: { id: string; order_nu
   const { run, pending, error } = useServerAction(savePurchaseOrder);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Proveedor y datos</Button>
+      <Button onClick={() => setOpen(true)}>{t("Proveedor y datos")}</Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={`Pedido #${po.order_number}`}
+        title={t("Pedido #{order_number}", { order_number: po.order_number })}
         footer={
           <>
-            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
             <Button
               variant="primary"
               disabled={pending}
@@ -193,13 +198,13 @@ export function HeaderEditButton({ po, suppliers }: { po: { id: string; order_nu
                 if (r.ok) setOpen(false);
               }}
             >
-              Guardar
+              {t("Guardar")}
             </Button>
           </>
         }
       >
         <div className="grid gap-3">
-          <Field label="Proveedor">
+          <Field label={t("Proveedor")}>
             <Select value={supplier} onChange={(e) => setSupplier(e.target.value)}>
               {suppliers.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -208,10 +213,10 @@ export function HeaderEditButton({ po, suppliers }: { po: { id: string; order_nu
               ))}
             </Select>
           </Field>
-          <Field label="Fecha del pedido">
+          <Field label={t("Fecha del pedido")}>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </Field>
-          <Field label="Notas">
+          <Field label={t("Notas")}>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
         </div>
@@ -222,12 +227,14 @@ export function HeaderEditButton({ po, suppliers }: { po: { id: string; order_nu
 }
 
 export function CancelPOButton({ poId, orderNumber }: { poId: string; orderNumber: number }) {
+  const t = useT();
+  const f = useFormat();
   return (
     <ConfirmAction
-      label="Cancelar pedido"
-      title={`Cancelar el pedido #${orderNumber}`}
-      description="El pedido queda cancelado y no entra nada en stock. Se conserva en el historial."
-      confirmLabel="Cancelar pedido"
+      label={t("Cancelar pedido")}
+      title={t("Cancelar el pedido #{orderNumber}", { orderNumber })}
+      description={t("El pedido queda cancelado y no entra nada en stock. Se conserva en el historial.")}
+      confirmLabel={t("Cancelar pedido")}
       requireReason
       action={(reason) => cancelPurchaseOrder(poId, reason)}
     />
