@@ -4,7 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import { ProductPicker } from "@/components/product-picker";
 import { Button, Field, Input, LotTag, Notice, Select, Textarea, clsx } from "@/components/ui";
 import { money } from "@/lib/format";
-import { createClient } from "@/lib/supabase/client";
+// El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
+const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 import type { AvailableLot, MobileOption, Option, PlatformOption, SellableVariant } from "@/lib/types";
 import { variantDisplay } from "@/lib/types";
 import { createSale, getLots, updateSale } from "../actions";
@@ -150,7 +151,7 @@ export function SaleForm({
       const saleId = res.data;
       goingAway = true;
       if (needsShipping && label) {
-        const supabase = createClient();
+        const supabase = await browserClient();
         const path = `${saleId}/${Date.now()}-${label.name.replace(/[^\w.\-]+/g, "_")}`;
         const up = await supabase.storage.from("shipping-labels").upload(path, label, { upsert: false, contentType: label.type });
         if (up.error) {

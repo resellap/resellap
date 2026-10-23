@@ -10,7 +10,8 @@ import { buildPlan, collectProductNames, suggestMerges, type ImportExisting, typ
 import { CONFIRMED_MERGES, DEFAULT_OPTIONS } from "@/lib/import/presets";
 import { readWorkbook, type ParsedWorkbook } from "@/lib/import/read";
 import { dateTime, money, units } from "@/lib/format";
-import { createClient } from "@/lib/supabase/client";
+// El cliente de Supabase del navegador (~66 KB) se carga solo al subir un archivo
+const browserClient = async () => (await import("@/lib/supabase/client")).createClient();
 
 type DbResult = {
   batch_id: string;
@@ -95,7 +96,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
     if (!plan) return;
     setRunning(true);
     setDbError(null);
-    const supabase = createClient();
+    const supabase = await browserClient();
     const { data, error } = await supabase.rpc("import_data", { p: plan.payload, p_dry_run: dryRun });
     setRunning(false);
     if (error) {

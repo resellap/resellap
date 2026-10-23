@@ -443,6 +443,38 @@ run("Lógica de negocio de Resellap", () => {
     expect(sumBalances).toBeCloseTo(0, 1);
   });
 
+  it("totales de los pedidos de compra: iguales al detalle por líneas (recibidos, pendientes, cancelados, con costes y sustituciones)", async () => {
+    // Un pedido pendiente y otro cancelado, además de los ya creados (recibidos, con costes y sustituciones)
+    const variant = (await selectAs<{ id: string }>(db, admin, "select id from product_variants limit 1"))[0].id;
+    await rpc(db, admin, "save_purchase_order", { supplier_id: supplier, order_date: "2026-02-01", items: [{ variant_id: variant, quantity: 3, unit_cost: 7.5 }] });
+    const cancelled = await rpc<string>(db, admin, "save_purchase_order", { supplier_id: supplier, order_date: "2026-02-02", items: [{ variant_id: variant, quantity: 2, unit_cost: 4 }] });
+    await rpc(db, admin, "cancel_purchase_order", cancelled, "prueba");
+    const rows = await selectAs<{ id: string; merchandise_cost: string; extra_costs: string; total_cost: string; line_count: number; units_ordered: number; units_received: number }>(
+      db,
+      admin,
+      "select id, merchandise_cost, extra_costs, total_cost, line_count, units_ordered, units_received from v_purchase_orders",
+    );
+    expect(rows.length).toBeGreaterThanOrEqual(4);
+    for (const r of rows) {
+      const ref = (
+        await selectAs<{ m: string; c: string; n: number; o: number; rc: number }>(
+          db,
+          admin,
+          `select round(coalesce((select sum(merchandise_raw) from v_purchase_lines where purchase_order_id = $1), 0), 2) m,
+                  coalesce((select sum(amount) from purchase_order_costs where purchase_order_id = $1), 0) c,
+                  (select count(*)::int from purchase_order_items where purchase_order_id = $1) n,
+                  (select coalesce(sum(quantity_ordered), 0)::int from purchase_order_items where purchase_order_id = $1 and substitutes_item_id is null) o,
+                  (select coalesce(sum(quantity_received), 0)::int from purchase_order_items where purchase_order_id = $1) rc`,
+          [r.id],
+        )
+      )[0];
+      expect(Number(r.merchandise_cost)).toBe(Number(ref.m));
+      expect(Number(r.extra_costs)).toBe(Number(ref.c));
+      expect(Number(r.total_cost)).toBe(Number(ref.m) + Number(ref.c));
+      expect([r.line_count, r.units_ordered, r.units_received]).toEqual([ref.n, ref.o, ref.rc]);
+    }
+  });
+
   it("la comprobación de integridad no encuentra problemas", async () => {
     const rows = await selectAs<{ check_name: string; ok: boolean }>(db, admin, "select * from check_integrity()");
     const failing = rows.filter((r) => !r.ok && !r.check_name.startsWith("Pedidos recibidos con proveedor"));
