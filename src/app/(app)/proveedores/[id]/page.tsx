@@ -15,9 +15,14 @@ export default async function SupplierDetail({ params }: PageProps<"/proveedores
   await requirePerm("compras");
   const { id } = await params;
   const supabase = await createClient();
-  const s = must(await supabase.from("suppliers").select("*").eq("id", id).maybeSingle(), "el proveedor");
+  // Proveedor y pedidos a la vez (una espera en lugar de dos)
+  const [sRes, posRes] = await Promise.all([
+    supabase.from("suppliers").select("*").eq("id", id).maybeSingle(),
+    supabase.from("v_purchase_orders").select("*").eq("supplier_id", id).order("order_date", { ascending: false }),
+  ]);
+  const s = must(sRes, "el proveedor");
   if (!s) notFound();
-  const pos = must(await supabase.from("v_purchase_orders").select("*").eq("supplier_id", id).order("order_date", { ascending: false }), "los pedidos");
+  const pos = must(posRes, "los pedidos");
   const active = (pos ?? []).filter((p) => p.status !== "cancelado");
   const total = active.reduce((a, p) => a + Number(p.total_cost), 0);
   return (

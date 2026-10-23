@@ -88,6 +88,20 @@ run("Varias organizaciones", () => {
     expect((await one<{ status: string }>(adminA, "select status from sales where id = $1", [saleA])).status).toBe("activa");
   });
 
+  it("2b. la etiqueta y la foto de una venta solo pueden apuntar a sus propias carpetas", async () => {
+    // Ruta de otra venta (aunque sea de su mismo espacio): no se acepta
+    await expect(rpc(db, adminA, "update_sale", { id: saleA, shipping_label_path: "00000000-0000-0000-0000-000000000000/etiqueta.pdf" })).rejects.toThrow(/sales_label_path_own_folder/);
+    // Su propia carpeta sí
+    await rpc(db, adminA, "update_sale", { id: saleA, shipping_label_path: `${saleA}/etiqueta.pdf` });
+    expect((await one<{ p: string }>(adminA, "select shipping_label_path p from sales where id = $1", [saleA])).p).toBe(`${saleA}/etiqueta.pdf`);
+    await rpc(db, adminA, "update_sale", { id: saleA, shipping_label_path: null });
+    // La foto del anuncio no puede estar en la carpeta de otra organización
+    await expect(db.client.query("update sales set image_path = $2 || '/x.jpg' where id = $1", [saleA, orgB])).rejects.toThrow(/sales_image_path_own_org/);
+    // Sin sesión no se puede preguntar por la organización activa
+    await expect(db.client.query("set role anon; select public.current_org_id();")).rejects.toThrow(/permission denied/);
+    await db.client.query("reset role");
+  });
+
   it("3. manipular organization_id no sirve: ni al crear, ni al mover filas, ni cambiando de espacio", async () => {
     await expect(selectAs(db, adminB, "insert into brands (organization_id, name) values ($1, 'Intrusa')", [orgA])).rejects.toThrow(/row-level security/);
     await selectAs(db, adminB, "insert into brands (name) values ('Propia de B')");

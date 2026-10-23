@@ -67,6 +67,17 @@ export async function purgeOrganizationAction(org: string, confirmName: string):
   try {
     await purgeFolders("product-photos", "products");
     await purgeFolders("shipping-labels", "sales");
+    // Fotos de anuncios guardadas desde el correo: carpeta de la organización
+    for (;;) {
+      const { data: objs, error: le } = await db.storage.from("sale-images").list(org, { limit: 1000 });
+      if (le) throw new Error(le.message);
+      const paths = (objs ?? []).filter((x) => x.name).map((x) => `${org}/${x.name}`);
+      if (!paths.length) break;
+      const { error: e } = await db.storage.from("sale-images").remove(paths);
+      if (e) throw new Error(e.message);
+      files += paths.length;
+      if (paths.length < 1000) break;
+    }
   } catch (e) {
     return { ok: false, error: `No se han podido borrar los archivos: ${e instanceof Error ? e.message : "error"}. No se ha borrado nada más.` };
   }
