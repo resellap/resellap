@@ -9,9 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 export type SignupState = { error: string | null; sent?: boolean; email?: string; next?: string };
 
 const schema = z.object({
-  name: z.string().trim().min(2, "Escribe tu nombre.").max(80),
-  email: z.email("Escribe un email válido.").max(200),
-  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(200),
+  name: z.string().trim().min(2, msg("Escribe tu nombre.")).max(80),
+  email: z.email(msg("Escribe un email válido.")).max(200),
+  password: z.string().min(8, msg("La contraseña debe tener al menos 8 caracteres.")).max(200),
   business: z.string().trim().max(80).optional(),
   terms: z.literal("on", { error: msg("Tienes que aceptar las condiciones y la política de privacidad.") }),
 });
@@ -39,14 +39,14 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
     },
   });
   if (error) {
-    const msg = /registered|already/i.test(error.message)
-      ? "Ya existe una cuenta con ese email. Entra o recupera tu contraseña."
+    const message = /registered|already/i.test(error.message)
+      ? msg("Ya existe una cuenta con ese email. Entra o recupera tu contraseña.")
       : /signups not allowed|disabled/i.test(error.message)
-        ? "El registro no está disponible ahora mismo."
+        ? msg("El registro no está disponible ahora mismo.")
         : /rate limit/i.test(error.message)
-          ? "Demasiados intentos. Espera unos minutos y vuelve a probar."
-          : "No se ha podido crear la cuenta. Inténtalo de nuevo.";
-    return { error: msg, email: v.data.email, next };
+          ? msg("Demasiados intentos. Espera unos minutos y vuelve a probar.")
+          : msg("No se ha podido crear la cuenta. Inténtalo de nuevo.");
+    return { error: t(message), email: v.data.email, next };
   }
   // Si el proyecto no exige confirmar el correo, ya hay sesión
   if (data.session) return { error: null, sent: false, email: v.data.email, next };

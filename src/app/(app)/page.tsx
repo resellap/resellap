@@ -198,7 +198,7 @@ function Hero({ today, month, losses = 0 }: { today: Period; month: Period; loss
       className="grid overflow-hidden rounded-[var(--radius-lg)] border border-white/6 shadow-[var(--shadow-pop)] md:grid-cols-2"
       aria-label={t("Facturación y beneficio")}
     >
-      {block("Hoy", today, true)}
+      {block(t("Hoy"), today, true)}
       {block(t("Este mes"), month, false)}
     </section>
   );

@@ -265,7 +265,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           key: r.product_id,
           href: `/productos/${r.product_id}`,
           name: r.product_name,
-          subtitle: [r.brand_name ?? "Marca pendiente", r.category_name, r.variant_count > 1 ? `${r.variant_count} variantes` : null]
+          subtitle: [r.brand_name ?? t("Marca pendiente"), r.category_name, r.variant_count > 1 ? `${r.variant_count} variantes` : null]
             .filter(Boolean)
             .join(" · "),
           photo: r.photo_path ? photos.get(r.photo_path) : undefined,
@@ -276,7 +276,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             ...(profitOf(r) !== null ? [{ label: t("Gana"), value: money(profitOf(r)) }] : []),
             ...(marginOf(r) !== null ? [{ label: t("Margen"), value: percent(marginOf(r)) }] : []),
           ],
-          warn: r.has_missing_data ? "Datos pendientes" : null,
+          warn: r.has_missing_data ? t("Datos pendientes") : null,
         }))}
       />
       <Panel padded={false} className={rows.length ? "max-lg:mt-3 max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none" : undefined}>
@@ -310,7 +310,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                                   {r.product_name}
                                 </Link>
                                 <span className="block text-xs text-muted">
-                                  {[r.brand_name ?? "Marca pendiente", r.sku ?? t("Sin SKU"), r.variant_count > 1 ? `${r.variant_count} variantes` : null]
+                                  {[r.brand_name ?? t("Marca pendiente"), r.sku ?? t("Sin SKU"), r.variant_count > 1 ? `${r.variant_count} variantes` : null]
                                     .filter(Boolean)
                                     .join(", ")}
                                 </span>

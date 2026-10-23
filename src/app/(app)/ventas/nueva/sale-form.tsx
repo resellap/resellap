@@ -165,14 +165,14 @@ export function SaleForm({
       router.push(`/ventas/${saleId}?aviso=creada`);
     } catch {
       // Sin conexión o corte: se puede volver a pulsar sin miedo (no se duplica)
-      setError("No se ha podido conectar. Comprueba la conexión y vuelve a pulsar «Registrar venta»: no se registrará dos veces.");
+      setError(t("No se ha podido conectar. Comprueba la conexión y vuelve a pulsar «Registrar venta»: no se registrará dos veces."));
     } finally {
       // Si se va a la venta, el botón sigue en «Guardando…» hasta cambiar de pantalla
       if (!goingAway) setPending(false);
     }
   }
 
-  const steps = [t("Producto"), "Datos", "Confirmar"];
+  const steps = [t("Producto"), t("Datos"), t("Confirmar")];
 
   return (
     <div className="grid gap-5 max-md:pb-24 lg:grid-cols-[1fr_340px]">
@@ -398,9 +398,9 @@ export function SaleForm({
               {[
                 platform?.name,
                 needsShipping ? (carriers.find((c) => c.id === carrierId)?.name ?? t("Paquetería sin indicar")) : t("En mano"),
-                needsShipping ? (shipping === "enviado" ? "Enviado" : t("Pendiente de envío")) : null,
+                needsShipping ? (shipping === "enviado" ? t("Enviado") : t("Pendiente de envío")) : null,
                 isAdmin ? responsibles.find((r) => r.id === responsible)?.name : ownResponsible?.name,
-                date !== today ? date.split("-").reverse().join("/") : "Hoy",
+                date !== today ? date.split("-").reverse().join("/") : t("Hoy"),
               ]
                 .filter(Boolean)
                 .join(" · ")}

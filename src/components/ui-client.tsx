@@ -119,7 +119,7 @@ export function ConfirmAction({
   confirmLabel,
   requireReason,
   optionalReason,
-  reasonLabel = "Motivo",
+  reasonLabel,
   variant = "danger",
   size = "md",
   action,
@@ -175,7 +175,7 @@ export function ConfirmAction({
       >
         {description && <div className="text-sm text-ink-soft">{description}</div>}
         {(requireReason || optionalReason) && (
-          <Field label={reasonLabel} className="mt-3" required={requireReason}>
+          <Field label={reasonLabel ?? t("Motivo")} className="mt-3" required={requireReason}>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
           </Field>
         )}

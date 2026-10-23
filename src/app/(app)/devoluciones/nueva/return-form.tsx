@@ -34,7 +34,7 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
           {(
             [
               ["devolucion_producto", t("El cliente devuelve el producto"), t("Le devuelves el dinero y la unidad vuelve a su lote. Se reduce la facturación y se recalcula el beneficio.")],
-              ["reembolso_sin_producto", t("Reembolso sin devolver el producto"), "Vinted o Wallapop devuelve el dinero y el cliente se queda el producto. No vuelve al stock y su coste se registra como pérdida."],
+              ["reembolso_sin_producto", t("Reembolso sin devolver el producto"), t("Vinted o Wallapop devuelve el dinero y el cliente se queda el producto. No vuelve al stock y su coste se registra como pérdida.")],
             ] as const
           ).map(([value, title, text]) => (
             <label key={value} className={clsx("cursor-pointer rounded-[var(--radius-sm)] border p-3", type === value ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong")}>

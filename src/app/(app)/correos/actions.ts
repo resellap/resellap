@@ -15,7 +15,7 @@ import { runTracking } from "@/lib/tracking/service";
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error("No tienes permisos para hacer esto.");
+  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error(msg("No tienes permisos para hacer esto."));
   return u as typeof u & { orgId: string };
 }
 
@@ -36,16 +36,16 @@ export async function syncNow(): Promise<ActionResult> {
   const s = await runSync("manual", me.orgId);
   if (!s.skipped && !s.error) await trackNewCodes(me.orgId);
   revalidatePath("/", "layout");
-  if (s.skipped) return { ok: false, error: s.skipped };
-  if (s.error) return { ok: false, error: s.error };
+  if (s.skipped) return { ok: false, error: t(s.skipped) };
+  if (s.error) return { ok: false, error: t(s.error) };
   const parts = [
-    `${s.new_emails} ${s.new_emails === 1 ? "correo nuevo" : "correos nuevos"}`,
-    `${s.detected} ${s.detected === 1 ? "venta detectada (por confirmar)" : "ventas detectadas (por confirmar)"}`,
-    `${s.labels} ${s.labels === 1 ? "etiqueta añadida" : "etiquetas añadidas"}`,
+    s.new_emails === 1 ? t("1 correo nuevo") : t("{n} correos nuevos", { n: s.new_emails }),
+    s.detected === 1 ? t("1 venta detectada (por confirmar)") : t("{n} ventas detectadas (por confirmar)", { n: s.detected }),
+    s.labels === 1 ? t("1 etiqueta añadida") : t("{n} etiquetas añadidas", { n: s.labels }),
   ];
-  if (s.review) parts.push(`${s.review} para revisar`);
-  if (s.waiting) parts.push(`${s.waiting} esperando su venta`);
-  if (s.errors) parts.push(`${s.errors} con error (se reintentarán)`);
+  if (s.review) parts.push(t("{n} para revisar", { n: s.review }));
+  if (s.waiting) parts.push(t("{n} esperando su venta", { n: s.waiting }));
+  if (s.errors) parts.push(t("{n} con error (se reintentarán)", { n: s.errors }));
   return { ok: true, message: t("Hecho: {v}.", { v: parts.join(" · ") }) };
 }
 
@@ -70,7 +70,7 @@ export async function saveAccount(input: z.input<typeof accountSchema>): Promise
     .update({ responsible_id: v.data.responsible_id, mobile_device_id: v.data.mobile_device_id })
     .eq("id", v.data.id);
   if (error) return { ok: false, error: friendlyError(error) };
-  return done("Guardado.");
+  return done(msg("Guardado."));
 }
 
 /** El administrador elige el producto de una venta que no se pudo identificar. */
@@ -93,7 +93,7 @@ export async function resolveSale(emailId: string, variantId: string, remember: 
   const { orgId } = await admin();
   await runSync("manual", orgId).catch(() => undefined);
   await trackNewCodes(orgId);
-  return done(remember ? "Venta registrada. La próxima vez ese nombre se reconocerá solo." : "Venta registrada.");
+  return done(remember ? msg("Venta registrada. La próxima vez ese nombre se reconocerá solo.") : msg("Venta registrada."));
 }
 
 /** El administrador indica a qué venta va una etiqueta de Vinted. */
@@ -112,7 +112,7 @@ export async function linkLabel(emailId: string, saleId: string, force: boolean)
       return { ok: false, error: again?.review_reason ?? t("No se ha podido añadir la etiqueta.") };
     }
     await trackNewCodes(orgId);
-    return done("Etiqueta añadida a la venta.");
+    return done(msg("Etiqueta añadida a la venta."));
   } catch (err) {
     if (err instanceof GmailAuthError) {
       await markAuthError(db, orgId, err.message);

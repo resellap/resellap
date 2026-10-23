@@ -63,7 +63,7 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
     }
     let photoError = false;
     if (photos.length && id) {
-      const up = await uploadProductPhotos(id, photos, (p) => setProgress(`Subiendo fotos: ${p.done} de ${p.total}`));
+      const up = await uploadProductPhotos(id, photos, (p) => setProgress(t("Subiendo fotos: {done} de {total}", { done: p.done, total: p.total })));
       photoError = up.errors.length > 0;
     }
     setProgress(null);

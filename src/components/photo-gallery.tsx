@@ -133,7 +133,7 @@ export function PhotoGallery({
     previews.forEach((p) => URL.revokeObjectURL(p));
     setUploading(null);
     setErrors(r.errors);
-    if (r.saved) setMessage(r.saved === 1 ? "Foto guardada." : `${r.saved} fotos guardadas.`);
+    if (r.saved) setMessage(r.saved === 1 ? t("Foto guardada.") : t("{n} fotos guardadas.", { n: r.saved }));
     startTransition(() => router.refresh());
   }
 
@@ -190,7 +190,7 @@ export function PhotoGallery({
             <div role="radiogroup" aria-label={t("Vista")} className="flex rounded-full border border-line-strong bg-surface p-0.5">
               {(
                 [
-                  ["carrusel", GalleryHorizontal, "Carrusel"],
+                  ["carrusel", GalleryHorizontal, t("Carrusel")],
                   ["cuadricula", LayoutGrid, t("Cuadrícula")],
                 ] as const
               ).map(([v, Icon, label]) => (

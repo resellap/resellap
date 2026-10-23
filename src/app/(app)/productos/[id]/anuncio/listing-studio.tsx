@@ -148,7 +148,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
     const out: File[] = [];
     const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
     for (let i = 0; i < chosen.length; i++) {
-      setBusy(`Preparando ${i + 1} de ${chosen.length}…`);
+      setBusy(t("Preparando {n} de {total}…", { n: i + 1, total: chosen.length }));
       try {
         out.push(await freshCopy(chosen[i].url, `${slug}-${stamp}-${i + 1}.jpg`));
       } catch {
@@ -185,7 +185,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
-    setMessage(`${files.length} ${files.length === 1 ? "foto descargada" : "fotos descargadas"}.`);
+    setMessage(files.length === 1 ? t("1 foto descargada.") : t("{n} fotos descargadas.", { n: files.length }));
     setAskUsed(true);
   }
 
@@ -415,7 +415,7 @@ function TextStep({
       const r = await saveListing(payload());
       if (!r.ok) return setError(r.error);
       if (then) await then();
-      else setMessage("Guardado.");
+      else setMessage(t("Guardado."));
       router.refresh();
     });
   }

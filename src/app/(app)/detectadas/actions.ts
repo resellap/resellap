@@ -86,8 +86,8 @@ export async function confirmMany(items: { emailId: string; variantId: string; c
     else ok++;
   }
   await afterChange();
-  if (failed.length) return { ok: false, error: t("{ok} registradas. {length} no se han podido registrar: {v}", { ok, length: failed.length, v: [...new Set(failed)].join(" ") }) };
-  return { ok: true, message: `${ok} ${ok === 1 ? "venta registrada" : "ventas registradas"}.` };
+  if (failed.length) return { ok: false, error: t("{ok} registradas. {failed} no se han podido registrar: {reasons}", { ok, failed: failed.length, reasons: [...new Set(failed)].map((x) => t(x)).join(" ") }) };
+  return { ok: true, message: ok === 1 ? t("1 venta registrada.") : t("{n} ventas registradas.", { n: ok }) };
 }
 
 /** «Ya estaba apuntada»: no se crea nada y el correo queda unido a esa venta. */

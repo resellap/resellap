@@ -15,11 +15,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const next = typeof sp.next === "string" ? sp.next : "/";
   const error =
     sp.error === "inactivo"
-      ? "Tu usuario está desactivado."
+      ? t("Tu usuario está desactivado.")
       : sp.error === "enlace"
-        ? "El enlace no es válido o ha caducado. Vuelve a intentarlo."
+        ? t("El enlace no es válido o ha caducado. Vuelve a intentarlo.")
         : null;
-  const notice = sp.aviso === "clave" ? "Contraseña cambiada. Ya puedes entrar." : null;
+  const notice = sp.aviso === "clave" ? t("Contraseña cambiada. Ya puedes entrar.") : null;
   return (
     <AuthLayout title={t("Entrar")} subtitle={t("Con tu email y tu contraseña.")}>
       {notice && <p className="mb-4 rounded-[var(--radius-sm)] bg-good-soft px-3 py-2 text-sm font-semibold text-good-ink">{notice}</p>}

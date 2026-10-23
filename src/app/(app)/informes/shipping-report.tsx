@@ -47,7 +47,7 @@ export async function ShippingReport({ from, to }: { from: string | null; to: st
           <Answer
             q={t("¿Cuál tiene más incidencias?")}
             name={worst && worst.incidents > 0 ? worst.carrier : null}
-            a={worst && worst.incidents > 0 ? `${worst.incidents} de ${worst.shipments} (${pct(worst.incidents, worst.shipments)})` : "Ninguna incidencia"}
+            a={worst && worst.incidents > 0 ? `${worst.incidents} de ${worst.shipments} (${pct(worst.incidents, worst.shipments)})` : t("Ninguna incidencia")}
           />
         </dl>
       )}

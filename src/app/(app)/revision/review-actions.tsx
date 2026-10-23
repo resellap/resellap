@@ -24,10 +24,10 @@ export function ReviewActions({ id, status }: { id: string; status: string }) {
         description={t("Anota qué has hecho (opcional), para que quede en el historial.")}
         confirmLabel={t("Marcar como resuelto")}
         optionalReason
-        reasonLabel="Nota"
+        reasonLabel={t("Nota")}
         action={(note) => resolveReview(id, "resuelto", note)}
       />
-      <ConfirmAction size="sm" variant="secondary" label={t("Descartar")} title={t("Descartar")} description={t("Se quita de la lista de pendientes.")} confirmLabel={t("Descartar")} optionalReason reasonLabel="Nota" action={(note) => resolveReview(id, "descartado", note)} />
+      <ConfirmAction size="sm" variant="secondary" label={t("Descartar")} title={t("Descartar")} description={t("Se quita de la lista de pendientes.")} confirmLabel={t("Descartar")} optionalReason reasonLabel={t("Nota")} action={(note) => resolveReview(id, "descartado", note)} />
     </span>
   );
 }

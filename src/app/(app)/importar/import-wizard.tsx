@@ -65,7 +65,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
       setMerges(suggestMerges(collectProductNames(parsed, cfgs), CONFIRMED_MERGES).map((m) => ({ ...m, on: m.preset })));
       setStep(1);
     } catch (e) {
-      setReadError(e instanceof Error ? `No se ha podido leer el archivo: ${e.message}` : t("No se ha podido leer el archivo."));
+      setReadError(e instanceof Error ? t("No se ha podido leer el archivo: {error}", { error: e.message }) : t("No se ha podido leer el archivo."));
     } finally {
       setReading(false);
     }
@@ -399,8 +399,8 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
               <div className="flex gap-1">
                 {(
                   [
-                    ["error", `Errores (${plan.summary.errors})`],
-                    ["warning", `Avisos (${plan.summary.warnings})`],
+                    ["error", t("Errores ({n})", { n: plan.summary.errors })],
+                    ["warning", t("Avisos ({n})", { n: plan.summary.warnings })],
                     ["info", t("Información")],
                     ["all", t("Todo")],
                   ] as const

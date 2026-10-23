@@ -56,7 +56,7 @@ export async function sendFeedback(input: z.infer<typeof feedbackSchema>): Promi
   const supabase = await createClient();
   const { error } = await supabase.rpc("submit_feedback", { p_kind: f.kind, p_message: f.message, p_page: f.page ?? null, p_screenshot: f.screenshot ?? null });
   if (error) return { ok: false, error: friendlyError(error) };
-  const label = { idea: "Idea", fallo: "Fallo", otro: "Comentario" }[f.kind];
+  const label = { idea: msg("Idea"), fallo: msg("Fallo"), otro: msg("Comentario") }[f.kind];
   await notifySupport(`Feedback · ${label} · ${user.orgName ?? ""}`, `${user.email} (${user.orgName ?? "sin espacio"}) en ${f.page ?? "—"}:\n\n${f.message}`);
   return { ok: true };
 }

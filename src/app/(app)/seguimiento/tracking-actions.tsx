@@ -159,16 +159,17 @@ export function RefreshAllButton() {
         <RefreshCw size={16} strokeWidth={1.75} className={pending ? "animate-spin" : undefined} />
         {pending ? t("Actualizando…") : t("Actualizar envíos")}
       </Button>
-      {(error || message) && <span className={error ? "mt-1 max-w-xs text-right text-xs text-danger" : "mt-1 text-xs text-good-ink"}>{error ?? message}</span>}
+      {(error || message) && <span className={error ? "mt-1 max-w-xs text-right text-xs text-danger" : "mt-1 text-xs text-good-ink"}>{t(error ?? message ?? "")}</span>}
     </span>
   );
 }
 
-export function MarkAlertsReadButton({ ids, label = "Marcar como vistas" }: { ids: number[] | null; label?: string }) {
+export function MarkAlertsReadButton({ ids, label }: { ids: number[] | null; label?: string }) {
+  const t = useT();
   const { run, pending } = useServerAction(markAlertsRead);
   return (
     <Button size="sm" variant="ghost" onClick={() => run(ids)} disabled={pending}>
-      {pending ? "…" : label}
+      {pending ? "…" : (label ?? t("Marcar como vistas"))}
     </Button>
   );
 }

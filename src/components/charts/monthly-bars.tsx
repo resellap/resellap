@@ -12,8 +12,8 @@ type Point = { month: string; revenue: number; profit: number; orders: number; u
 export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[]; unit?: "mes" | "semana" | "dia"; height?: number }) {
   const t = useT();
   const f = useFormat();
-  const axisLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? dayMonth(k) : String(Number(k.slice(8, 10))));
-  const longLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? `Semana del ${dayMonth(k)}` : dayMonth(k));
+  const axisLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? dayMonth(k, f.tag) : String(Number(k.slice(8, 10))));
+  const longLabel = (k: string) => (unit === "mes" ? f.monthLabel(k) : unit === "semana" ? t("Semana del {date}", { date: dayMonth(k, f.tag) }) : dayMonth(k, f.tag));
   const every = data.length > 16 ? 5 : 1;
   const [hover, setHover] = useState<number | null>(null);
   const [asTable, setAsTable] = useState(false);
@@ -90,14 +90,14 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
         viewBox={`0 0 ${W} ${H}`}
         className="h-auto w-full"
         role="img"
-        aria-label={t("Ingresos y beneficio bruto {v}", { v: unit === "mes" ? "por mes" : unit === "semana" ? "por semana" : "por día" })}
+        aria-label={unit === "mes" ? t("Ingresos y beneficio bruto por mes") : unit === "semana" ? t("Ingresos y beneficio bruto por semana") : t("Ingresos y beneficio bruto por día")}
         onMouseLeave={() => setHover(null)}
       >
-        {ticks.map((t) => (
-          <g key={t}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} className="stroke-line" strokeWidth={1} />
-            <text x={pad.l - 8} y={y(t) + 4} textAnchor="end" fontSize={11} className="num fill-muted">
-              {compactEur(t)}
+        {ticks.map((tick) => (
+          <g key={tick}>
+            <line x1={pad.l} x2={W - pad.r} y1={y(tick)} y2={y(tick)} className="stroke-line" strokeWidth={1} />
+            <text x={pad.l - 8} y={y(tick) + 4} textAnchor="end" fontSize={11} className="num fill-muted">
+              {compactEur(tick, f.tag)}
             </text>
           </g>
         ))}
@@ -128,7 +128,7 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
               )}
               {showLabel && (
                 <text x={x} y={yTop - 7} textAnchor="middle" fontSize={12} fontWeight={700} className="num fill-ink">
-                  {compactEur(d.revenue)}
+                  {compactEur(d.revenue, f.tag)}
                 </text>
               )}
               {(i % every === 0 || i === last || hover === i) && (
@@ -159,9 +159,9 @@ export function MonthlyBars({ data, unit = "mes", height = 220 }: { data: Point[
   );
 }
 
-function dayMonth(iso: string) {
+function dayMonth(iso: string, tag: string) {
   const [y, m, d] = iso.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("es-ES", { day: "numeric", month: "short", timeZone: "UTC" }).replace(".", "");
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(tag, { day: "numeric", month: "short", timeZone: "UTC" }).replace(".", "");
 }
 
 function niceStep(raw: number) {
@@ -171,7 +171,6 @@ function niceStep(raw: number) {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
 }
 
-function compactEur(v: number) {
-  if (v >= 1000) return `${(v / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 })} mil €`;
-  return `${Math.round(v)} €`;
+function compactEur(v: number, tag: string) {
+  return new Intl.NumberFormat(tag, { style: "currency", currency: "EUR", notation: v >= 1000 ? "compact" : "standard", maximumFractionDigits: v >= 1000 ? 1 : 0 }).format(v);
 }

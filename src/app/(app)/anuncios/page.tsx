@@ -30,7 +30,7 @@ type Row = {
 const VIEWS = {
   "sin-anunciar": msg("Sin anunciar"),
   "por-retirar": msg("Por quitar"),
-  publicados: "Publicados",
+  publicados: msg("Publicados"),
   todos: msg("Todo con stock"),
 } as const;
 type ViewKey = keyof typeof VIEWS;

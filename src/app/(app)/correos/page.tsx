@@ -217,7 +217,7 @@ function ConnectionPanel({
   const t = tSync();
   const status = s?.status ?? "desconectado";
   const tone = status === "conectado" ? "good" : status === "desconectado" ? "neutral" : "bad";
-  const label = { conectado: "Conectado", desconectado: t("Sin conectar"), error_autorizacion: "Permiso caducado", error: t("Error en la última revisión") }[status];
+  const label = { conectado: t("Conectado"), desconectado: t("Sin conectar"), error_autorizacion: t("Permiso caducado"), error: t("Error en la última revisión") }[status];
   const sum = s?.last_summary;
   return (
     <Panel padded={false}>

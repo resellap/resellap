@@ -49,7 +49,7 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
             {t("Pedido de compra #{order_number}", { order_number: po.order_number })}{" "}<POStatus status={po.status} />
           </span>
         }
-        description={`${date(po.order_date)}${received ? `, recibido el ${date(po.received_at)}` : ""}${raw?.source_ref ? `. Importado del Excel.` : ""}`}
+        description={`${date(po.order_date)}${received ? `, ${t("recibido el {date}", { date: date(po.received_at) })}` : ""}${raw?.source_ref ? `. ${t("Importado del Excel.")}` : ""}`}
         actions={
           <>
             {po.status !== "cancelado" && <HeaderEditButton po={po} suppliers={suppliers} />}
