@@ -25,12 +25,12 @@ const STATUS: Record<string, { label: string; tone: "good" | "warn" | "bad" | "i
 };
 
 const ERRORS: Record<string, string> = {
-  permiso: "Solo un administrador puede gestionar el pago.",
-  "no-configurado": "Los pagos aún no están configurados en este servidor.",
-  estado: "El espacio no está activo; no se puede contratar ahora.",
-  "ya-suscrito": "Ya tienes una suscripción. Gestiónala desde «Gestionar pago».",
-  "sin-cliente": "Aún no hay ningún pago asociado a este espacio.",
-  stripe: "No se ha podido conectar con Stripe. Inténtalo de nuevo en unos minutos.",
+  permiso: msg("Solo un administrador puede gestionar el pago."),
+  "no-configurado": msg("Los pagos aún no están configurados en este servidor."),
+  estado: msg("El espacio no está activo; no se puede contratar ahora."),
+  "ya-suscrito": msg("Ya tienes una suscripción. Gestiónala desde «Gestionar pago»."),
+  "sin-cliente": msg("Aún no hay ningún pago asociado a este espacio."),
+  stripe: msg("No se ha podido conectar con Stripe. Inténtalo de nuevo en unos minutos."),
 };
 
 export default async function SubscriptionPage({ searchParams }: PageProps<"/suscripcion">) {
@@ -54,7 +54,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/sus
       )}
       {error && (
         <Notice tone="bad" className="mb-4">
-          {error}
+          {t(error)}
           {detail && <span className="mt-1 block text-xs">{t("Motivo de Stripe:")}{" "}{detail}</span>}
         </Notice>
       )}
@@ -71,7 +71,7 @@ export default async function SubscriptionPage({ searchParams }: PageProps<"/sus
             <dt className="text-muted">{t("Espacio")}</dt>
             <dd className="font-semibold">{me.orgName}</dd>
             <dt className="text-muted">{t("Suscripción")}</dt>
-            <dd>{s?.comped ? <Badge tone="good">{t("Acceso gratuito")}</Badge> : <Badge tone={st.tone}>{st.label}</Badge>}</dd>
+            <dd>{s?.comped ? <Badge tone="good">{t("Acceso gratuito")}</Badge> : <Badge tone={st.tone}>{t(st.label)}</Badge>}</dd>
             {s?.status === "trialing" && s.trialEndsAt && (
               <>
                 <dt className="text-muted">{t("Prueba hasta")}</dt>

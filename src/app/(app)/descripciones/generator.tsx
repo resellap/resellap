@@ -169,7 +169,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
     const items = only ? [only] : selected;
     if (!items.length) return;
     if (platform === "otra" && !otherPlatform.trim()) {
-      setError("Escribe el nombre de la plataforma.");
+      setError(t("Escribe el nombre de la plataforma."));
       return;
     }
     inFlight.current = true;
@@ -194,7 +194,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         });
         if (!only) setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
       } catch {
-        setError("No se ha podido conectar con el servidor. Comprueba la conexión.");
+        setError(t("No se ha podido conectar con el servidor. Comprueba la conexión."));
       } finally {
         inFlight.current = false;
         setBusyKey(null);
@@ -226,7 +226,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                       {[
                         s.variant.brand_name,
                         s.variant.sku,
-                        s.variant.stock > 0 ? `${s.variant.stock} en stock` : "Sin stock",
+                        s.variant.stock > 0 ? `${s.variant.stock} en stock` : t("Sin stock"),
                         s.variant.normal_sale_price !== null ? f.money(s.variant.normal_sale_price) : null,
                       ]
                         .filter(Boolean)

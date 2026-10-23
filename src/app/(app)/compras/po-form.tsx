@@ -29,7 +29,7 @@ export function CostsEditor({ costs, setCosts }: { costs: POCosts; setCosts: (c:
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       {Object.entries(COST_TYPES).map(([k, label]) => (
-        <Field key={k} label={`${label} (€)`}>
+        <Field key={k} label={`${t(label)} (€)`}>
           <Input inputMode="decimal" value={costs[k] ?? ""} onChange={(e) => setCosts({ ...costs, [k]: e.target.value })} placeholder="0,00" />
         </Field>
       ))}

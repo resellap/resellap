@@ -1,4 +1,5 @@
 "use client";
+import { msg } from "@/i18n/translate";
 import { useFormat, useT } from "@/i18n/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ type DbResult = {
   totals: Record<string, number>;
 };
 
-const STEPS = ["Archivo", "Hojas y columnas", "Revisión", "Simulación", "Resultado"];
+const STEPS = [msg("Archivo"), msg("Hojas y columnas"), msg("Revisión"), msg("Simulación"), msg("Resultado")];
 
 function display(v: unknown) {
   if (v === null || v === undefined) return "";
@@ -64,7 +65,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
       setMerges(suggestMerges(collectProductNames(parsed, cfgs), CONFIRMED_MERGES).map((m) => ({ ...m, on: m.preset })));
       setStep(1);
     } catch (e) {
-      setReadError(e instanceof Error ? `No se ha podido leer el archivo: ${e.message}` : "No se ha podido leer el archivo.");
+      setReadError(e instanceof Error ? `No se ha podido leer el archivo: ${e.message}` : t("No se ha podido leer el archivo."));
     } finally {
       setReading(false);
     }
@@ -145,7 +146,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
               i === step ? "border-ink bg-ink text-paper" : i < step ? "border-good/40 bg-good-soft text-good-ink" : "border-line text-muted",
             )}
           >
-            {i + 1}. {s}
+            {i + 1}. {t(s)}
           </li>
         ))}
       </ol>
@@ -400,8 +401,8 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                   [
                     ["error", `Errores (${plan.summary.errors})`],
                     ["warning", `Avisos (${plan.summary.warnings})`],
-                    ["info", "Información"],
-                    ["all", "Todo"],
+                    ["info", t("Información")],
+                    ["all", t("Todo")],
                   ] as const
                 ).map(([k, l]) => (
                   <Button key={k} size="sm" variant={issueFilter === k ? "primary" : "ghost"} onClick={() => setIssueFilter(k)}>

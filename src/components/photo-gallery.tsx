@@ -191,7 +191,7 @@ export function PhotoGallery({
               {(
                 [
                   ["carrusel", GalleryHorizontal, "Carrusel"],
-                  ["cuadricula", LayoutGrid, "Cuadrícula"],
+                  ["cuadricula", LayoutGrid, t("Cuadrícula")],
                 ] as const
               ).map(([v, Icon, label]) => (
                 <button

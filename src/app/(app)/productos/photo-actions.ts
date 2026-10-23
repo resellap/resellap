@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -16,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !can(u, "catalogo")) throw new Error("No tienes permisos para cambiar las fotos.");
+  if (!u || !u.active || !can(u, "catalogo")) throw new Error(msg("No tienes permisos para cambiar las fotos."));
   return u;
 }
 

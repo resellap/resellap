@@ -67,7 +67,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
                 <li key={r.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
-                      <Badge tone={k.tone}>{k.label}</Badge>
+                      <Badge tone={k.tone}>{t(k.label)}</Badge>
                       <span className="font-semibold">{r.title}</span>
                     </p>
                     {r.details && <p className="mt-1 text-sm text-ink-soft">{r.details}</p>}

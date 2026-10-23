@@ -110,7 +110,7 @@ export function TrackingEditor({
               <option value="">{t("Elige…")}</option>
               {(["en_transito", "en_reparto", "entregado", "incidencia", "devuelto", "cancelado"] as TrackingStatus[]).map((s) => (
                 <option key={s} value={s} disabled={s === status}>
-                  {TRACKING_LABEL[s]}
+                  {t(TRACKING_LABEL[s])}
                 </option>
               ))}
             </Select>

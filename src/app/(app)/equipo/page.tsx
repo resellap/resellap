@@ -1,3 +1,4 @@
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Badge, Notice, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -12,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("Equipo") };
 }
 
-const ROLE = { admin: "Administrador", vendedor: "Vendedor", almacen: "Almacén" } as const;
+const ROLE = { admin: msg("Administrador"), vendedor: msg("Vendedor"), almacen: msg("Almacén") } as const;
 const ROLE_TONE = { admin: "info", vendedor: "neutral", almacen: "warn" } as const;
 const STATE_TONE = { pendiente: "warn", aceptada: "good", revocada: "neutral", caducada: "neutral" } as const;
 
@@ -67,7 +68,7 @@ export default async function TeamPage() {
                   {m.full_name && <span className="block text-xs text-muted">{m.email}</span>}
                 </Td>
                 <Td>
-                  <Badge tone={ROLE_TONE[m.role]}>{ROLE[m.role]}</Badge>
+                  <Badge tone={ROLE_TONE[m.role]}>{t(ROLE[m.role])}</Badge>
                   {m.custom && <span className="ml-1.5 text-xs text-muted">{t("permisos a medida")}</span>}
                 </Td>
                 <Td>{dateTime(m.joined_at)}</Td>
@@ -103,7 +104,7 @@ export default async function TeamPage() {
                 {invites.map((i) => (
                   <Tr key={i.id} muted={i.state !== "pendiente"}>
                     <Td>{i.email}</Td>
-                    <Td>{ROLE[i.role]}</Td>
+                    <Td>{t(ROLE[i.role])}</Td>
                     <Td>
                       <Badge tone={STATE_TONE[i.state]}>{i.state}</Badge>
                     </Td>

@@ -25,9 +25,9 @@ export default async function SupplierDetail({ params }: PageProps<"/proveedores
     supabase.from("suppliers").select("*").eq("id", id).maybeSingle(),
     supabase.from("v_purchase_orders").select("*").eq("supplier_id", id).order("order_date", { ascending: false }),
   ]);
-  const s = must(sRes, "el proveedor");
+  const s = must(sRes, t("el proveedor"));
   if (!s) notFound();
-  const pos = must(posRes, "los pedidos");
+  const pos = must(posRes, t("los pedidos"));
   const active = (pos ?? []).filter((p) => p.status !== "cancelado");
   const total = active.reduce((a, p) => a + Number(p.total_cost), 0);
   return (

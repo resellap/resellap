@@ -56,7 +56,7 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
       const r = await createProduct({ ...payload, variants: variants.map((n) => n.trim()).filter(Boolean).map((name) => ({ name })) });
       if (!r.ok || !r.data) {
         setPending(false);
-        setError(r.ok ? "No se ha podido crear." : r.error);
+        setError(r.ok ? t("No se ha podido crear.") : r.error);
         return;
       }
       id = r.data;

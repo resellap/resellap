@@ -96,7 +96,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
                 className="rs-seg press inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-[8px] px-3.5 text-[13.5px] font-medium"
               >
                 {v.key === "alertas" && <Bell size={14} strokeWidth={1.75} />}
-                {v.label}
+                {t(v.label)}
                 {n ? <span className={clsx("num rounded-full px-1.5 text-[11px] font-semibold", on ? "bg-paper text-ink" : "bg-danger text-white")}>{n}</span> : null}
               </Link>
             );

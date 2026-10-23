@@ -153,7 +153,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
         out.push(await freshCopy(chosen[i].url, `${slug}-${stamp}-${i + 1}.jpg`));
       } catch {
         setBusy(null);
-        setError("No se ha podido preparar alguna foto. Recarga la página y vuelve a intentarlo.");
+        setError(t("No se ha podido preparar alguna foto. Recarga la página y vuelve a intentarlo."));
         return;
       }
     }
@@ -391,7 +391,7 @@ function TextStep({
   const [price, setPrice] = useState(l?.price != null ? String(l.price).replace(".", ",") : normalPrice != null ? String(normalPrice).replace(".", ",") : "");
   const [url, setUrl] = useState(l?.url ?? "");
   const [tone, setTone] = useState<Tone>("natural");
-  const [condition, setCondition] = useState<string>("Nuevo, sin usar");
+  const [condition, setCondition] = useState<string>(t("Nuevo, sin usar"));
   const [features, setFeatures] = useState("");
   const [defects, setDefects] = useState("");
   const [hashtags, setHashtags] = useState(platform === "vinted");
@@ -410,7 +410,7 @@ function TextStep({
   function save(then?: () => Promise<void>) {
     setError(null);
     setMessage(null);
-    if (!priceValid) return setError("El precio no es válido.");
+    if (!priceValid) return setError(t("El precio no es válido."));
     startTransition(async () => {
       const r = await saveListing(payload());
       if (!r.ok) return setError(r.error);
@@ -432,10 +432,10 @@ function TextStep({
     setGenerating(true);
     const r = await generateListingText({ productId, platform, tone, condition, features, defects, price: priceValid && priceNum ? String(priceNum) : "", hashtags });
     setGenerating(false);
-    if (!r.ok || !r.data) return setError(r.ok ? "No se ha podido generar." : r.error);
+    if (!r.ok || !r.data) return setError(r.ok ? t("No se ha podido generar.") : r.error);
     setTitle(r.data.title);
     setText(r.data.text);
-    setMessage("Texto generado. Revísalo y pulsa «Guardar».");
+    setMessage(t("Texto generado. Revísalo y pulsa «Guardar»."));
   }
 
   return (

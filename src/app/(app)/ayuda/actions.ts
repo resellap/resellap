@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 /**
  * Ayuda, soporte y feedback · parte de servidor.
  *
@@ -38,7 +39,7 @@ async function notifySupport(subject: string, text: string) {
 // ---------------------------------------------------------------------
 const feedbackSchema = z.object({
   kind: z.enum(["idea", "fallo", "otro"]),
-  message: z.string().trim().min(3, "Escribe tu mensaje.").max(4000, "El mensaje admite como máximo 4.000 caracteres."),
+  message: z.string().trim().min(3, msg("Escribe tu mensaje.")).max(4000, msg("El mensaje admite como máximo 4.000 caracteres.")),
   page,
   screenshot: z.string().max(300).optional(),
 });
@@ -107,7 +108,7 @@ async function askGemini(question: string): Promise<string | null> {
   return null;
 }
 
-const askSchema = z.object({ question: z.string().trim().min(3, "Escribe tu pregunta.").max(2000, "La pregunta admite como máximo 2.000 caracteres."), page });
+const askSchema = z.object({ question: z.string().trim().min(3, msg("Escribe tu pregunta.")).max(2000, msg("La pregunta admite como máximo 2.000 caracteres.")), page });
 
 export async function askSupport(input: z.infer<typeof askSchema>): Promise<ActionResult<{ id: number; answer: string | null }>> {
   const t = await getT();

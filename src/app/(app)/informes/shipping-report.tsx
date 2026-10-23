@@ -38,14 +38,14 @@ export async function ShippingReport({ from, to }: { from: string | null; to: st
 
       {measured.length > 0 && (
         <dl className="grid gap-3 sm:grid-cols-3">
-          <Answer q="¿Qué transportista tarda menos?" name={fastest?.carrier} a={fastest ? `${days(fastest.avg_days)} de media` : null} />
+          <Answer q={t("¿Qué transportista tarda menos?")} name={fastest?.carrier} a={fastest ? `${days(fastest.avg_days)} de media` : null} />
           <Answer
-            q="¿Cuál tarda más?"
+            q={t("¿Cuál tarda más?")}
             name={measured.length > 1 ? slowest?.carrier : null}
-            a={measured.length > 1 && slowest ? `${days(slowest.avg_days)} de media` : "Hace falta comparar al menos dos transportistas"}
+            a={measured.length > 1 && slowest ? `${days(slowest.avg_days)} de media` : t("Hace falta comparar al menos dos transportistas")}
           />
           <Answer
-            q="¿Cuál tiene más incidencias?"
+            q={t("¿Cuál tiene más incidencias?")}
             name={worst && worst.incidents > 0 ? worst.carrier : null}
             a={worst && worst.incidents > 0 ? `${worst.incidents} de ${worst.shipments} (${pct(worst.incidents, worst.shipments)})` : "Ninguna incidencia"}
           />

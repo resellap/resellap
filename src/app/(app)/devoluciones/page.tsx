@@ -23,7 +23,7 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Prom
   let q = supabase.from("v_returns").select("*");
   if (filters.from) q = q.gte("return_date", filters.from);
   if (filters.to) q = q.lte("return_date", filters.to);
-  const data = must(await q.order("return_date", { ascending: false }).limit(500), "las devoluciones");
+  const data = must(await q.order("return_date", { ascending: false }).limit(500), t("las devoluciones"));
   const rows = data ?? [];
   const refunded = rows.reduce((a, r) => a + Number(r.refund_amount), 0);
   const lost = rows.reduce((a, r) => a + Number(r.lost_cost), 0);

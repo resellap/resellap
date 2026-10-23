@@ -1,4 +1,5 @@
 "use client";
+import { msg } from "@/i18n/translate";
 import { useT } from "@/i18n/client";
 import { useState } from "react";
 import { Button, Field, Input, Notice, Select } from "@/components/ui";
@@ -144,7 +145,7 @@ export function RevokeButton({ id, email }: { id: string; email: string }) {
   );
 }
 
-const GROUPS = ["Ventas", "Productos y almacén", "Negocio"] as const;
+const GROUPS = [msg("Ventas"), msg("Productos y almacén"), msg("Negocio")] as const;
 
 /** Qué ve y qué puede hacer un miembro. Lo aplica la base de datos. */
 export function PermissionsButton({
@@ -201,17 +202,17 @@ export function PermissionsButton({
         </p>
         {GROUPS.map((g) => (
           <fieldset key={g} className="mt-4">
-            <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{g}</legend>
+            <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{t(g)}</legend>
             <div className="grid gap-1.5">
               {PERMISSIONS.filter((p) => p.group === g).map((p) => (
                 <label key={p.key} className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] border border-line px-3 py-2.5 hover:border-ink/30">
                   <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand)]" checked={sel.has(p.key)} onChange={() => toggle(p.key)} />
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold">
-                      {p.label}
+                      {t(p.label)}
                       {(defaults as string[]).includes(p.key) && <span className="ml-1.5 text-xs font-normal text-muted">{t("(de su rol)")}</span>}
                     </span>
-                    <span className="block text-xs text-muted">{p.hint}</span>
+                    <span className="block text-xs text-muted">{t(p.hint)}</span>
                   </span>
                 </label>
               ))}

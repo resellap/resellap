@@ -53,7 +53,7 @@ const itemSchema = z.object({
 });
 
 const requestSchema = z.object({
-  items: z.array(itemSchema).min(1, "Selecciona al menos un producto.").max(MAX_PRODUCTS, `Como máximo ${MAX_PRODUCTS} productos a la vez.`),
+  items: z.array(itemSchema).min(1, t("Selecciona al menos un producto.")).max(MAX_PRODUCTS, `Como máximo ${MAX_PRODUCTS} productos a la vez.`),
   tone: z.enum(Object.keys(TONES) as [keyof typeof TONES, ...(keyof typeof TONES)[]]),
   platform: z.enum(Object.keys(PLATFORMS) as [keyof typeof PLATFORMS, ...(keyof typeof PLATFORMS)[]]),
   otherPlatform: short,
@@ -74,7 +74,7 @@ export async function isGeneratorConfigured(): Promise<boolean> {
 // Instrucciones para la IA
 // ---------------------------------------------------------------------
 const TONE_GUIDE: Record<keyof typeof TONES, string> = {
-  profesional: "Profesional: redacción cuidada, clara y comercial. Frases completas, sin coloquialismos ni exageraciones.",
+  profesional: t("Profesional: redacción cuidada, clara y comercial. Frases completas, sin coloquialismos ni exageraciones."),
   natural: "Natural: como lo escribiría una persona normal que vende algo suyo. Cercano y directo, frases sencillas, primera persona si encaja.",
   informal: "Informal: desenfadado y con soltura, como hablando con un colega, pero sin sonar forzado ni infantil y sin abusar de expresiones de moda.",
   premium: "Premium: transmite calidad, diseño y cuidado con un vocabulario elegante y sobrio. Nada de superlativos vacíos ni promesas exageradas.",
@@ -98,8 +98,8 @@ const PLATFORM_GUIDE: Record<keyof typeof PLATFORMS, string> = {
 };
 
 const LENGTH_GUIDE: Record<keyof typeof LENGTHS, string> = {
-  corta: "Corta: lo esencial, unas 2-4 líneas (aprox. 30-60 palabras sin contar hashtags).",
-  media: "Media: aprox. 60-120 palabras sin contar hashtags.",
+  corta: t("Corta: lo esencial, unas 2-4 líneas (aprox. 30-60 palabras sin contar hashtags)."),
+  media: t("Media: aprox. 60-120 palabras sin contar hashtags."),
   detallada:
     "Detallada: aprox. 120-220 palabras sin contar hashtags, usando SOLO la información disponible; si no hay tanta información, escribe menos en lugar de rellenar.",
 };
@@ -144,21 +144,21 @@ function buildPrompt(req: GenerateRequest, p: DbProduct, variant: { name: string
   const add = (label: string, v: string | null | undefined) => {
     if (v && v.trim()) lines.push(`- ${label}: ${v.trim()}`);
   };
-  add("Producto (ficha del inventario)", p.name);
+  add(t("Producto (ficha del inventario)"), p.name);
   add("Marca", d.brand);
   add("Modelo", d.model);
-  add("Categoría / tipo de producto", d.category);
+  add(t("Categoría / tipo de producto"), d.category);
   add("Variante", d.variant || (variant && !GENERIC_VARIANT.test(variant.name) ? variant.name : ""));
   add("Referencia / SKU", variant?.sku ?? p.sku);
-  add("Color de la montura", d.frameColor);
-  add("Color o tipo de lente", d.lens);
+  add(t("Color de la montura"), d.frameColor);
+  add(t("Color o tipo de lente"), d.lens);
   add("Estado", d.condition);
-  add("Características a destacar", d.features);
-  add("Defectos o desperfectos", d.defects);
+  add(t("Características a destacar"), d.features);
+  add(t("Defectos o desperfectos"), d.defects);
   add("Accesorios incluidos", d.accessories);
-  add("Precio de venta", d.price ? `${d.price.replace(/\s*€\s*$/, "")} €` : "");
-  add("Descripción guardada en la ficha", p.description);
-  add("Otra información", d.extra);
+  add(t("Precio de venta"), d.price ? `${d.price.replace(/\s*€\s*$/, "")} €` : "");
+  add(t("Descripción guardada en la ficha"), p.description);
+  add(t("Otra información"), d.extra);
 
   return `Escribe un anuncio para publicar en ${platformName}.
 
@@ -189,18 +189,18 @@ const tryNext = (e: unknown) => e instanceof AiError && (e.status === 429 || e.s
 
 function friendlyAiError(e: unknown): string {
   if (e instanceof AiError) {
-    if (e.reason === "API_KEY_INVALID" || e.status === 401) return "La clave de Gemini (GEMINI_API_KEY) no es válida. Revísala en Vercel.";
-    if (e.status === 403) return "La clave de Gemini no tiene permiso para usar la API. Crea una nueva en aistudio.google.com y ponla en Vercel.";
+    if (e.reason === "API_KEY_INVALID" || e.status === 401) return t("La clave de Gemini (GEMINI_API_KEY) no es válida. Revísala en Vercel.");
+    if (e.status === 403) return t("La clave de Gemini no tiene permiso para usar la API. Crea una nueva en aistudio.google.com y ponla en Vercel.");
     if (e.status === 429) return "Se ha agotado el cupo gratuito de Gemini por ahora (por minuto o por día). Espera un poco y vuelve a intentarlo.";
-    if (e.status === 404) return "El modelo indicado en GEMINI_MODEL no existe. Quita esa variable para usar el modelo por defecto.";
-    if (e.status === 408 || e.reason === "TIMEOUT") return "La IA ha tardado demasiado en responder. Vuelve a intentarlo.";
+    if (e.status === 404) return t("El modelo indicado en GEMINI_MODEL no existe. Quita esa variable para usar el modelo por defecto.");
+    if (e.status === 408 || e.reason === "TIMEOUT") return t("La IA ha tardado demasiado en responder. Vuelve a intentarlo.");
     if (e.status >= 500) return "Los servidores de Gemini están saturados ahora mismo (se han probado varios modelos). Inténtalo en unos minutos.";
-    if (e.reason === "SAFETY" || e.reason === "BLOCKED") return "La IA no ha querido redactar este texto. Cambia las indicaciones e inténtalo de nuevo.";
-    if (e.reason === "EMPTY") return "La IA no ha devuelto texto. Vuelve a intentarlo.";
-    return "La IA ha rechazado la petición. Revisa los datos e inténtalo de nuevo.";
+    if (e.reason === "SAFETY" || e.reason === "BLOCKED") return t("La IA no ha querido redactar este texto. Cambia las indicaciones e inténtalo de nuevo.");
+    if (e.reason === "EMPTY") return t("La IA no ha devuelto texto. Vuelve a intentarlo.");
+    return t("La IA ha rechazado la petición. Revisa los datos e inténtalo de nuevo.");
   }
-  if (e instanceof TypeError) return "No se ha podido conectar con la IA. Comprueba la conexión y vuelve a intentarlo.";
-  return "No se ha podido generar la descripción. Inténtalo de nuevo.";
+  if (e instanceof TypeError) return t("No se ha podido conectar con la IA. Comprueba la conexión y vuelve a intentarlo.");
+  return t("No se ha podido generar la descripción. Inténtalo de nuevo.");
 }
 
 type GeminiResponse = {

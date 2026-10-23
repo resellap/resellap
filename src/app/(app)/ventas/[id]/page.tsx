@@ -56,10 +56,10 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
     isAdmin ? supabase.from("v_sale_lines").select("profit").eq("sale_id", id) : Promise.resolve({ data: [], error: null }),
     loadSaleOptions(),
   ]);
-  const sale = must(saleRes, "la venta");
+  const sale = must(saleRes, t("la venta"));
   if (!sale) notFound();
-  const items = must(itemsRes, "las líneas de la venta");
-  const returns = must(returnsRes, "las devoluciones") ?? [];
+  const items = must(itemsRes, t("las líneas de la venta"));
+  const returns = must(returnsRes, t("las devoluciones")) ?? [];
 
   const lotIds = (items ?? []).map((i) => i.lot_id);
   const [lots, labels, saleImages] = await Promise.all([
@@ -264,7 +264,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
                         {variantDisplay(r.product_name, r.variant_name)}
                         {r.reason && <span className="block text-xs text-muted">{r.reason}</span>}
                       </Td>
-                      <Td>{RETURN_TYPES[r.return_type]}</Td>
+                      <Td>{t(RETURN_TYPES[r.return_type])}</Td>
                       <Td num>{r.quantity}</Td>
                       <Td num>{money(r.refund_amount)}</Td>
                       {isAdmin && <Td num>{money(r.lost_cost)}</Td>}

@@ -29,14 +29,14 @@ export const LENGTHS = {
 export type Length = keyof typeof LENGTHS;
 
 export const CONDITIONS = [
-  "Nuevo con etiquetas",
-  "Nuevo sin etiquetas",
-  "Nuevo, sin usar",
-  "Como nuevo",
+  t("Nuevo con etiquetas"),
+  t("Nuevo sin etiquetas"),
+  t("Nuevo, sin usar"),
+  t("Como nuevo"),
   "Muy buen estado",
   "Buen estado",
-  "Usado, con señales de uso",
-  "Para piezas o reparar",
+  t("Usado, con señales de uso"),
+  t("Para piezas o reparar"),
 ] as const;
 
 /** Datos que el usuario puede completar o corregir para cada producto (no se guardan en la ficha). */

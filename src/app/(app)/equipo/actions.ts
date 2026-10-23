@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireUser } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
 type Role = "admin" | "vendedor" | "almacen";
-const ROLE_TEXT: Record<Role, string> = { admin: "administrador", vendedor: "vendedor", almacen: "almacén" };
+const ROLE_TEXT: Record<Role, string> = { admin: msg("administrador"), vendedor: msg("vendedor"), almacen: msg("almacén") };
 
 function done(message: string): ActionResult {
   revalidatePath("/equipo");
@@ -26,8 +27,8 @@ export async function inviteMemberAction(email: string, role: Role): Promise<Act
   const link = `${await siteUrl()}/invitacion/${data as string}`;
   const emailed = await sendMail(
     email.trim().toLowerCase(),
-    `Invitación a ${me.orgName} en Resellap`,
-    `${me.fullName ?? me.email} te invita a unirte a ${me.orgName} en Resellap como ${ROLE_TEXT[role]}.\nEl enlace caduca en 7 días.`,
+    t("Invitación a {org} en Resellap", { org: me.orgName ?? "" }),
+    `${t("{who} te invita a unirte a {org} en Resellap como {role}.", { who: me.fullName ?? me.email, org: me.orgName ?? "", role: t(ROLE_TEXT[role]) })}\n${t("El enlace caduca en 7 días.")}`,
     { href: link, label: t("Aceptar invitación") },
   );
   revalidatePath("/equipo");
@@ -43,7 +44,7 @@ export async function revokeInvitationAction(id: string): Promise<ActionResult> 
   const supabase = await createClient();
   const { error } = await supabase.rpc("revoke_invitation", { p_id: id });
   if (error) return { ok: false, error: friendlyError(error) };
-  return done("Invitación revocada.");
+  return done(msg("Invitación revocada."));
 }
 
 export async function changeRoleAction(userId: string, role: Role): Promise<ActionResult> {
@@ -51,7 +52,7 @@ export async function changeRoleAction(userId: string, role: Role): Promise<Acti
   const supabase = await createClient();
   const { error } = await supabase.rpc("update_member_role", { p_user: userId, p_role: role });
   if (error) return { ok: false, error: friendlyError(error) };
-  return done("Rol actualizado.");
+  return done(msg("Rol actualizado."));
 }
 
 export async function removeMemberAction(userId: string): Promise<ActionResult> {
@@ -59,7 +60,7 @@ export async function removeMemberAction(userId: string): Promise<ActionResult> 
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_member", { p_user: userId });
   if (error) return { ok: false, error: friendlyError(error) };
-  return done("Persona quitada del equipo. Sus ventas se conservan.");
+  return done(msg("Persona quitada del equipo. Sus ventas se conservan."));
 }
 
 /** Salir uno mismo del espacio (cualquier rol). */
@@ -79,5 +80,5 @@ export async function setPermissionsAction(userId: string, permissions: string[]
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_member_permissions", { p_user: userId, p_permissions: permissions });
   if (error) return { ok: false, error: friendlyError(error) };
-  return done(permissions === null ? "Permisos restablecidos a los de su rol." : "Permisos guardados.");
+  return done(permissions === null ? msg("Permisos restablecidos a los de su rol.") : msg("Permisos guardados."));
 }

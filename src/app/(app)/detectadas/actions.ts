@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -11,7 +12,7 @@ import { runTracking } from "@/lib/tracking/service";
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error("No tienes permisos para hacer esto.");
+  if (!u || !u.active || !u.orgId || !can(u, "correo")) throw new Error(msg("No tienes permisos para hacer esto."));
   return u as typeof u & { orgId: string };
 }
 

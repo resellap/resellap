@@ -1,4 +1,5 @@
 "use client";
+import { msg } from "@/i18n/translate";
 /**
  * Buscador de productos/variantes. Si no existe y el usuario es admin,
  * permite crearlo en el momento (sin stock: el stock solo entra con
@@ -18,10 +19,10 @@ async function searchVariants(term: string, onlyInStock: boolean, signal?: Abort
   try {
     const res = await fetch(`/api/buscar?q=${encodeURIComponent(term)}${onlyInStock ? "&stock=1" : ""}`, { signal });
     const j = await res.json();
-    return res.ok ? { ok: true, data: j.data ?? [] } : { ok: false, error: j.error ?? "No se ha podido buscar." };
+    return res.ok ? { ok: true, data: j.data ?? [] } : { ok: false, error: j.error ?? msg("No se ha podido buscar.") };
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw e;
-    return { ok: false, error: "No se puede conectar. Revisa tu conexión." };
+    return { ok: false, error: msg("No se puede conectar. Revisa tu conexión.") };
   }
 }
 

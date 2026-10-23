@@ -300,7 +300,7 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
         }
       >
         <p className="text-sm text-ink-soft">
-          {t("Etiqueta de")}{" "}<strong>{String((email.parsed as { product?: string }).product ?? "un artículo")}</strong>{t(". Elige la venta (número · fecha · comprador):")}
+          {t("Etiqueta de")}{" "}<strong>{String((email.parsed as { product?: string }).product ?? t("un artículo"))}</strong>{t(". Elige la venta (número · fecha · comprador):")}
         </p>
         <ul className="mt-3 flex flex-col gap-2">
           {candidates.map((c) => (

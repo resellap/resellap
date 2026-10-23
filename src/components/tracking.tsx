@@ -50,7 +50,7 @@ export function TrackingBadge({ status }: { status: string | null | undefined })
  */
 export type EnvioState = "pendiente" | "enviado" | "en_reparto" | "entregado";
 export const ENVIO_LABEL: Record<EnvioState, string> = { pendiente: msg("Pendiente de envío"), enviado: msg("Enviado"), en_reparto: msg("En reparto"), entregado: msg("Entregado") };
-export const ENVIO_OPTIONS = (Object.keys(ENVIO_LABEL) as EnvioState[]).map((value) => ({ value, label: ENVIO_LABEL[value] }));
+export const ENVIO_OPTIONS = (Object.keys(ENVIO_LABEL) as EnvioState[]).map((value) => ({ value, label: ENVIO_LABEL[value] })); // las etiquetas se traducen al pintarlas
 const ENVIO_TONE: Record<EnvioState, "warn" | "info" | "good"> = { pendiente: "warn", enviado: "info", en_reparto: "info", entregado: "good" };
 
 export function envioState(shipping: string | null | undefined, tracking?: string | null, deliveredAt?: string | null): EnvioState {

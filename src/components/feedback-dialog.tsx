@@ -50,7 +50,7 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
       if (shot) {
         try {
           const folder = await feedbackFolder();
-          if (!folder) throw new Error("sesión");
+          if (!folder) throw new Error(t("sesión"));
           const img = await prepareImage(shot.file, 1800);
           const path = `${folder}/${crypto.randomUUID()}.jpg`;
           const supabase = (await import("@/lib/supabase/client")).createClient();
@@ -58,7 +58,7 @@ export default function FeedbackDialog({ open, onClose }: { open: boolean; onClo
           if (up) throw new Error(up.message);
           screenshot = path;
         } catch {
-          setError("No se ha podido subir la captura. Quítala o prueba con otra imagen.");
+          setError(t("No se ha podido subir la captura. Quítala o prueba con otra imagen."));
           return;
         }
       }

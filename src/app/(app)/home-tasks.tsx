@@ -16,12 +16,12 @@ export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges;
   const has = (k: string) => perms.includes(k);
   // Cada aviso se puede desactivar en Ajustes → Avisos; solo se muestra lo que la persona puede abrir
   const all: (Task & { on: boolean })[] = [];
-  if (has("correo")) all.push({ href: "/detectadas", label: t("Ventas por confirmar"), done: "Sin ventas por confirmar", n: badges.detected, icon: MailCheck, strong: true, on: notify.detected });
-  all.push({ href: "/envios", label: t("Envíos pendientes"), done: "Todo enviado", n: badges.shipments, icon: Truck, strong: true, on: notify.shipments });
-  if (has("anuncios")) all.push({ href: "/anuncios?ver=por-retirar", label: t("Anuncios por quitar"), done: "Ningún anuncio por quitar", n: badges.listings, icon: Megaphone, on: notify.listings });
-  if (has("correo")) all.push({ href: "/correos", label: t("Correos a revisar"), done: "Correos al día", n: badges.emails, icon: Mail, on: notify.emails });
+  if (has("correo")) all.push({ href: "/detectadas", label: t("Ventas por confirmar"), done: t("Sin ventas por confirmar"), n: badges.detected, icon: MailCheck, strong: true, on: notify.detected });
+  all.push({ href: "/envios", label: t("Envíos pendientes"), done: t("Todo enviado"), n: badges.shipments, icon: Truck, strong: true, on: notify.shipments });
+  if (has("anuncios")) all.push({ href: "/anuncios?ver=por-retirar", label: t("Anuncios por quitar"), done: t("Ningún anuncio por quitar"), n: badges.listings, icon: Megaphone, on: notify.listings });
+  if (has("correo")) all.push({ href: "/correos", label: t("Correos a revisar"), done: t("Correos al día"), n: badges.emails, icon: Mail, on: notify.emails });
   if (has("catalogo") && notify.lowStock) {
-    all.push({ href: `/productos?bajo=${notify.lowStockThreshold}`, label: t("Stock bajo (≤ {lowStockThreshold} uds.)", { lowStockThreshold: notify.lowStockThreshold }), done: "Sin stock bajo", n: lowStock, icon: PackageMinus, on: true });
+    all.push({ href: `/productos?bajo=${notify.lowStockThreshold}`, label: t("Stock bajo (≤ {lowStockThreshold} uds.)", { lowStockThreshold: notify.lowStockThreshold }), done: t("Sin stock bajo"), n: lowStock, icon: PackageMinus, on: true });
   }
   if (has("importar") && notify.imports && badges.reviews > 0) {
     all.push({ href: "/revision", label: t("Pendientes de revisar (importación)"), done: "", n: badges.reviews, icon: CheckCheck, on: true });

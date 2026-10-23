@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -19,7 +20,7 @@ const platformEnum = z.enum(["vinted", "wallapop"]);
 
 async function admin() {
   const u = await getCurrentUser();
-  if (!u || !u.active || !can(u, "anuncios")) throw new Error("No tienes permisos para gestionar anuncios.");
+  if (!u || !u.active || !can(u, "anuncios")) throw new Error(msg("No tienes permisos para gestionar anuncios."));
   return u;
 }
 
@@ -32,14 +33,14 @@ function refresh(productId: string) {
 const draftSchema = z.object({
   productId: z.uuid(),
   platform: platformEnum,
-  title: z.string().trim().max(200, "El título es demasiado largo."),
-  description: z.string().trim().max(5000, "El texto es demasiado largo."),
+  title: z.string().trim().max(200, msg("El título es demasiado largo.")),
+  description: z.string().trim().max(5000, msg("El texto es demasiado largo.")),
   price: z.number().min(0).max(100000).nullable(),
   url: z
     .string()
     .trim()
     .max(500)
-    .refine((u) => u === "" || /^https?:\/\//i.test(u), "El enlace debe empezar por https://"),
+    .refine((u) => u === "" || /^https?:\/\//i.test(u), msg("El enlace debe empezar por https://")),
 });
 
 export async function saveListing(input: z.input<typeof draftSchema>): Promise<ActionResult> {

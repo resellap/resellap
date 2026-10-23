@@ -30,7 +30,7 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
     supabase.from("purchase_orders").select("cancel_reason, source_ref").eq("id", id).maybeSingle(),
     loadSuppliers(),
   ]);
-  const po = must(poRes, "el pedido");
+  const po = must(poRes, t("el pedido"));
   if (!po) notFound();
   const costMap: Record<string, string> = {};
   for (const c of costs ?? []) costMap[c.cost_type] = String(Number(costMap[c.cost_type] ?? 0) + Number(c.amount));
@@ -143,7 +143,7 @@ export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
             <dl className="flex flex-col gap-2 text-sm">
               {Object.entries(costMap).map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3">
-                  <dt className="text-muted">{COST_TYPES[k]}</dt>
+                  <dt className="text-muted">{t(COST_TYPES[k])}</dt>
                   <dd className="num">{money(v)}</dd>
                 </div>
               ))}

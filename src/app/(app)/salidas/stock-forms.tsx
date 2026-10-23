@@ -113,7 +113,7 @@ export function NewExitButton({ responsibles, today }: { responsibles: Option[];
                   .filter(([k]) => k !== "pendiente")
                   .map(([k, v]) => (
                     <option key={k} value={k}>
-                      {v}
+                      {t(v)}
                     </option>
                   ))}
               </Select>
@@ -257,7 +257,7 @@ export function ExitReasonEditor({ id, reason }: { id: string; reason: string })
       <select value={value} onChange={(e) => setValue(e.target.value)} className="h-11 rounded-[var(--radius-sm)] border border-line-strong bg-surface px-2 text-base sm:h-8 sm:text-[13px]" aria-label={t("Motivo")}>
         {Object.entries(EXIT_REASONS).map(([k, v]) => (
           <option key={k} value={k}>
-            {v}
+            {t(v)}
           </option>
         ))}
       </select>

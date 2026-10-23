@@ -1,3 +1,4 @@
+import { msg } from "@/i18n/translate";
 import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -27,10 +28,10 @@ type Row = {
 };
 
 const VIEWS = {
-  "sin-anunciar": "Sin anunciar",
-  "por-retirar": "Por quitar",
+  "sin-anunciar": msg("Sin anunciar"),
+  "por-retirar": msg("Por quitar"),
   publicados: "Publicados",
-  todos: "Todo con stock",
+  todos: msg("Todo con stock"),
 } as const;
 type ViewKey = keyof typeof VIEWS;
 
@@ -41,7 +42,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   // Todo se calcula en la base de datos (sin límite de filas)
   const requested = first(sp.ver);
-  const o = must(await supabase.rpc("listings_overview", { p_view: requested && requested in VIEWS ? requested : null }), "los anuncios") as {
+  const o = must(await supabase.rpc("listings_overview", { p_view: requested && requested in VIEWS ? requested : null }), t("los anuncios")) as {
     view: ViewKey;
     counts: Record<ViewKey, number>;
     rows: Row[];
@@ -68,7 +69,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       )}
       <Tabs
         current={view}
-        items={(Object.keys(VIEWS) as ViewKey[]).map((k) => ({ key: k, label: `${VIEWS[k]} (${counts[k]})`, href: `/anuncios?ver=${k}` }))}
+        items={(Object.keys(VIEWS) as ViewKey[]).map((k) => ({ key: k, label: `${t(VIEWS[k])} (${counts[k]})`, href: `/anuncios?ver=${k}` }))}
       />
       {list.length === 0 ? (
         <Empty title={view === "por-retirar" ? t("Nada que quitar") : view === "sin-anunciar" ? t("Todo lo que tienes en stock está anunciado") : t("Nada por aquí")} />

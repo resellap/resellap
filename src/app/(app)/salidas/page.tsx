@@ -93,7 +93,7 @@ export default async function ExitsPage() {
             </tbody>
           </Table>
         )}
-        {pending > 0 && <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">{t("Elige el motivo de las que están como «{pendiente}» y pulsa Guardar.", { pendiente: EXIT_REASONS.pendiente })}</p>}
+        {pending > 0 && <p className="border-t border-line px-3 py-2.5 text-[13px] text-muted">{t("Elige el motivo de las que están como «{pendiente}» y pulsa Guardar.", { pendiente: t(EXIT_REASONS.pendiente) })}</p>}
       </Panel>
       <Panel title={t("Ajustes de stock")} padded={false}>
         {(adjustments ?? []).length === 0 ? (

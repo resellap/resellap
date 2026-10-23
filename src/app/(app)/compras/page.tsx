@@ -46,7 +46,7 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
           { type: "date", name: "from", label: t("Desde") },
           { type: "date", name: "to", label: t("Hasta") },
           { type: "select", name: "supplier_id", label: t("Proveedor"), options: suppliers.map((s) => ({ value: s.id, label: s.name })) },
-          { type: "select", name: "status", label: t("Estado"), options: Object.entries(PO_STATUS).map(([value, label]) => ({ value, label })) },
+          { type: "select", name: "status", label: t("Estado"), options: Object.entries(PO_STATUS).map(([value, label]) => ({ value, label: t(label) })) },
         ]}
         extra={<ExportLinks type="compras" filters={filters} />}
       />

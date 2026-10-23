@@ -46,12 +46,12 @@ export type EmailRowView = {
 };
 
 const KIND: Record<string, string> = {
-  vinted_venta: "Venta Vinted",
-  vinted_etiqueta: "Etiqueta Vinted",
-  wallapop_venta: "Venta Wallapop",
-  otra_venta: "Venta (leída con IA)",
-  wallapop_aviso: "Aviso Wallapop (se ignora)",
-  otro: "Otro correo",
+  vinted_venta: msg("Venta Vinted"),
+  vinted_etiqueta: msg("Etiqueta Vinted"),
+  wallapop_venta: msg("Venta Wallapop"),
+  otra_venta: msg("Venta (leída con IA)"),
+  wallapop_aviso: msg("Aviso Wallapop (se ignora)"),
+  otro: msg("Otro correo"),
 };
 
 const STATUS: Record<string, { label: string; tone: "good" | "warn" | "bad" | "info" | "neutral" }> = {
@@ -217,7 +217,7 @@ function ConnectionPanel({
   const t = tSync();
   const status = s?.status ?? "desconectado";
   const tone = status === "conectado" ? "good" : status === "desconectado" ? "neutral" : "bad";
-  const label = { conectado: "Conectado", desconectado: "Sin conectar", error_autorizacion: "Permiso caducado", error: t("Error en la última revisión") }[status];
+  const label = { conectado: "Conectado", desconectado: t("Sin conectar"), error_autorizacion: "Permiso caducado", error: t("Error en la última revisión") }[status];
   const sum = s?.last_summary;
   return (
     <Panel padded={false}>
@@ -305,8 +305,8 @@ function EmailSummary({ e, saleNumber, compact }: { e: EmailRowView; saleNumber?
   return (
     <div className="min-w-0">
       <p className="flex flex-wrap items-center gap-2">
-        <Badge tone={st.tone}>{st.label}</Badge>
-        <span className="text-[13px] font-semibold text-ink-soft">{KIND[e.kind] ?? e.kind}</span>
+        <Badge tone={st.tone}>{t(st.label)}</Badge>
+        <span className="text-[13px] font-semibold text-ink-soft">{t(KIND[e.kind] ?? e.kind)}</span>
         <span className="num text-xs text-faint">{dateTime(e.received_at)}</span>
       </p>
       {(p.product || p.price) && (

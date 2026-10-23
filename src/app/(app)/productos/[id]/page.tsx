@@ -66,7 +66,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
         ])
       : null,
   ]);
-  const product = must(productRes, "el producto");
+  const product = must(productRes, t("el producto"));
   if (!product || product.deleted_at) notFound();
   const p = product as unknown as {
     id: string;
@@ -134,7 +134,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   );
 
   if (!isAdmin || !adminData) {
-    const vs = (sellerVariants ? must(sellerVariants, "las variantes") ?? [] : []) as SellableVariant[];
+    const vs = (sellerVariants ? must(sellerVariants, t("las variantes")) ?? [] : []) as SellableVariant[];
     return (
       <>
         <PageHeader
@@ -187,9 +187,9 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
   }
 
   const [variantsRes, lotsRes, movementsRes, opts, invRes] = adminData;
-  const variants = must(variantsRes, "las variantes");
-  const lots = must(lotsRes, "los lotes");
-  const movements = must(movementsRes, "los movimientos");
+  const variants = must(variantsRes, t("las variantes"));
+  const lots = must(lotsRes, t("los lotes"));
+  const movements = must(movementsRes, t("los movimientos"));
   const inv = invRes.data;
   const vs = (variants ?? []) as VariantInv[];
   const totals = vs.reduce(
@@ -221,7 +221,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
       <Figures
         className="mb-5"
         items={[
-          { label: t("Stock"), value: totals.stock > 0 ? units(totals.stock) : "Sin stock" },
+          { label: t("Stock"), value: totals.stock > 0 ? units(totals.stock) : t("Sin stock") },
           { label: t("Coste medio ponderado"), value: money(inv?.weighted_avg_cost, { precise: true }) },
           { label: t("Precio medio de venta"), value: money(inv?.avg_sale_price) },
           { label: t("Unidades vendidas"), value: units(totals.sold) },
@@ -350,7 +350,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
                   {(movements ?? []).map((m) => (
                     <Tr key={m.id}>
                       <Td className="num">{date(m.occurred_at)}</Td>
-                      <Td>{MOVEMENT_TYPES[m.movement_type] ?? m.movement_type}</Td>
+                      <Td>{t(MOVEMENT_TYPES[m.movement_type] ?? m.movement_type)}</Td>
                       <Td>
                         <LotTag label={m.lot_label} />
                       </Td>
@@ -369,7 +369,7 @@ export default async function ProductDetail({ params, searchParams }: PageProps<
                             {t("Pedido #{purchase_order_number}", { purchase_order_number: m.purchase_order_number })}
                           </Link>
                         )}
-                        {m.exit_reason && <span>{EXIT_REASONS[m.exit_reason]}</span>}
+                        {m.exit_reason && <span>{t(EXIT_REASONS[m.exit_reason] ?? m.exit_reason)}</span>}
                         {m.notes && <span className="block text-xs text-muted">{m.notes}</span>}
                       </Td>
                     </Tr>

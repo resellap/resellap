@@ -50,7 +50,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   if (!isAdmin) {
     const q = first(sp.search) ?? "";
-    const data = must(await supabase.rpc("search_sellable_variants", { p_query: q || null, p_only_in_stock: first(sp.only_in_stock) === "true", p_limit: 200 }), "los productos");
+    const data = must(await supabase.rpc("search_sellable_variants", { p_query: q || null, p_only_in_stock: first(sp.only_in_stock) === "true", p_limit: 200 }), t("los productos"));
     const rows = (data ?? []) as SellableVariant[];
     const sellerPhotos = await signPhotos(rows.map((r) => r.photo_path), { thumbs: true });
     return (
@@ -310,7 +310,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                                   {r.product_name}
                                 </Link>
                                 <span className="block text-xs text-muted">
-                                  {[r.brand_name ?? "Marca pendiente", r.sku ?? "Sin SKU", r.variant_count > 1 ? `${r.variant_count} variantes` : null]
+                                  {[r.brand_name ?? "Marca pendiente", r.sku ?? t("Sin SKU"), r.variant_count > 1 ? `${r.variant_count} variantes` : null]
                                     .filter(Boolean)
                                     .join(", ")}
                                 </span>
