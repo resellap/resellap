@@ -13,6 +13,7 @@ const SECTION_LABEL: Record<Section, string> = {
   tables: "Tablas",
   notifications: "Avisos",
   sales: "Ventas e inventario",
+  language: "Idioma",
 };
 
 async function currentStored(): Promise<{ userId: string; stored: StoredPrefs } | null> {

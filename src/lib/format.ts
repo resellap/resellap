@@ -1,55 +1,55 @@
-/** Formatos en español de España. */
-// Separador de miles siempre (1.284,50 €), también con 4 cifras, como en el manual de marca
-const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", useGrouping: "always" });
-const eur4 = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 4, useGrouping: "always" });
-const int = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0, useGrouping: "always" });
-const pct = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+/**
+ * Formatos de fechas, números y moneda en el idioma del usuario.
+ * En el servidor se usa el idioma de la petición; en el navegador, el que
+ * fija I18nProvider. En componentes del navegador es mejor useFormat().
+ */
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { makeFormat, msg } from "@/i18n/translate";
+
+function currentLocale(): Locale {
+  if (typeof window !== "undefined") return (window as { __rsLocale?: Locale }).__rsLocale ?? DEFAULT_LOCALE;
+  return (globalThis as { __rsServerLocale?: () => Locale }).__rsServerLocale?.() ?? DEFAULT_LOCALE;
+}
+const fmt = () => makeFormat(currentLocale());
 
 export function money(v: number | string | null | undefined, opts?: { precise?: boolean }): string {
-  if (v === null || v === undefined || v === "") return "—";
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "—";
-  return (opts?.precise ? eur4 : eur).format(n);
+  return fmt().money(v, opts);
 }
 
 export function units(v: number | string | null | undefined): string {
-  if (v === null || v === undefined || v === "") return "—";
-  return int.format(Number(v));
+  return fmt().units(v);
 }
 
+const UDS: Record<Locale, [string, string]> = {
+  es: ["ud.", "uds."],
+  en: ["unit", "units"],
+  fr: ["unité", "unités"],
+  de: ["Stk.", "Stk."],
+  it: ["pz.", "pz."],
+  pt: ["un.", "un."],
+};
 /** "1 ud." / "3 uds." */
 export function udsLabel(v: number | string | null | undefined): string {
   const n = Number(v ?? 0);
-  return `${units(n)} ${n === 1 ? "ud." : "uds."}`;
+  const [one, many] = UDS[currentLocale()];
+  return `${units(n)} ${n === 1 ? one : many}`;
 }
 
 export function percent(v: number | string | null | undefined): string {
-  if (v === null || v === undefined || v === "") return "—";
-  return `${pct.format(Number(v))} %`;
+  return fmt().percent(v);
 }
 
-const madridDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" });
-
-/**
- * dd/mm/aaaa. Las fechas sin hora («2026-10-09») se muestran tal cual; los
- * instantes (con hora) se pasan a la hora de Madrid, para que una venta de
- * las 00:30 no aparezca en el día anterior.
- */
+/** Fecha corta. Las fechas sin hora se muestran tal cual; los instantes, en hora de Madrid. */
 export function date(v: string | Date | null | undefined): string {
-  if (!v) return "—";
-  const s = typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : madridDay.format(typeof v === "string" ? new Date(v) : v);
-  const [y, m, d] = s.slice(0, 10).split("-");
-  return `${d}/${m}/${y}`;
+  return fmt().date(v);
 }
 
 export function dateTime(v: string | null | undefined): string {
-  if (!v) return "—";
-  return new Date(v).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Madrid" });
+  return fmt().dateTime(v);
 }
 
 export function monthLabel(ym: string): string {
-  const [y, m] = ym.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("es-ES", { month: "short", year: "2-digit", timeZone: "UTC" });
+  return fmt().monthLabel(ym);
 }
 
 /** Fecha de hoy en Madrid, "aaaa-mm-dd". */
@@ -58,37 +58,37 @@ export function todayIso(): string {
 }
 
 export const EXIT_REASONS: Record<string, string> = {
-  regalo: "Regalo",
-  perdida: "Pérdida",
-  otro: "Otro",
-  pendiente: "Motivo pendiente",
+  regalo: msg("Regalo"),
+  perdida: msg("Pérdida"),
+  otro: msg("Otro"),
+  pendiente: msg("Motivo pendiente"),
 };
 
 export const RETURN_TYPES: Record<string, string> = {
-  devolucion_producto: "El cliente devuelve el producto",
-  reembolso_sin_producto: "Reembolso sin devolver el producto",
+  devolucion_producto: msg("El cliente devuelve el producto"),
+  reembolso_sin_producto: msg("Reembolso sin devolver el producto"),
 };
 
-export const PO_STATUS: Record<string, string> = { pendiente: "Pendiente", recibido: "Recibido", cancelado: "Cancelado" };
+export const PO_STATUS: Record<string, string> = { pendiente: msg("Pendiente"), recibido: msg("Recibido"), cancelado: msg("Cancelado") };
 
 export const COST_TYPES: Record<string, string> = {
-  transporte: "Transporte / porte",
-  aduanas: "Aduanas",
-  aranceles: "Aranceles",
-  comisiones: "Comisiones",
-  gestion: "Gestión",
-  otros: "Otros costes",
+  transporte: msg("Transporte / porte"),
+  aduanas: msg("Aduanas"),
+  aranceles: msg("Aranceles"),
+  comisiones: msg("Comisiones"),
+  gestion: msg("Gestión"),
+  otros: msg("Otros costes"),
 };
 
 export const MOVEMENT_TYPES: Record<string, string> = {
-  entrada_compra: "Entrada por compra",
-  venta: "Venta",
-  anulacion_venta: "Venta anulada",
-  devolucion: "Devolución",
-  salida_sin_venta: "Salida sin venta",
-  anulacion_salida: "Salida anulada",
-  ajuste_entrada: "Ajuste (entrada)",
-  ajuste_salida: "Ajuste (salida)",
+  entrada_compra: msg("Entrada por compra"),
+  venta: msg("Venta"),
+  anulacion_venta: msg("Venta anulada"),
+  devolucion: msg("Devolución"),
+  salida_sin_venta: msg("Salida sin venta"),
+  anulacion_salida: msg("Salida anulada"),
+  ajuste_entrada: msg("Ajuste (entrada)"),
+  ajuste_salida: msg("Ajuste (salida)"),
 };
 
 /** Días completos que faltan hasta una fecha (0 si ya pasó). */

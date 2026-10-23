@@ -5,6 +5,7 @@
  * Este archivo no depende del servidor: lo usan también las pantallas.
  */
 import { z } from "zod";
+import { LOCALES } from "@/i18n/config";
 
 // ---------------------------------------------------------------------
 // Widgets del inicio
@@ -193,6 +194,8 @@ export const prefsSchema = z.object({
     })
     .optional(),
   sales: z.object({ defaultPlatformId: z.uuid().nullable().optional() }).optional(),
+  /** Idioma de la app (también en la cookie del idioma). */
+  language: z.enum(LOCALES).optional(),
 });
 export type StoredPrefs = z.infer<typeof prefsSchema>;
 
