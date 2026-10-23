@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Badge, Notice, PageHeader, Panel, Table, Td, Th, Tr } from "@/components/ui";
@@ -8,7 +7,10 @@ import { mailConfigured } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
 import { InviteButton, MemberActions, RevokeButton } from "./team-forms";
 
-export const metadata: Metadata = { title: msg("Equipo") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Equipo") };
+}
 
 const ROLE = { admin: "Administrador", vendedor: "Vendedor", almacen: "Almacén" } as const;
 const ROLE_TONE = { admin: "info", vendedor: "neutral", almacen: "warn" } as const;

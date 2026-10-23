@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -11,7 +10,10 @@ import { variantDisplay } from "@/lib/types";
 import { PurchaseOrderForm } from "../../po-form";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Editar pedido") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Editar pedido") };
+}
 
 export default async function EditPO({ params }: PageProps<"/compras/[id]/editar">) {
   const t = await getT();

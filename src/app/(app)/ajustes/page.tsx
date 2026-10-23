@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader, Panel } from "@/components/ui";
@@ -6,7 +5,10 @@ import { requirePerm } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ListEditor } from "./list-editor";
 
-export const metadata: Metadata = { title: msg("Listas") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Listas") };
+}
 
 export default async function SettingsPage() {
   const t = await getT();

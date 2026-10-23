@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -12,7 +11,10 @@ import { trackingConfigured } from "@/lib/tracking/seventeen";
 import { RefreshAllButton } from "../seguimiento/tracking-actions";
 import { groupByCarrier, loadPendingShipments, NO_CARRIER } from "./data";
 
-export const metadata: Metadata = { title: msg("Pendientes de envío") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Pendientes de envío") };
+}
 
 export default async function ShipmentsPage() {
   const t = await getT();

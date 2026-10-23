@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -20,7 +19,10 @@ import { ProductThumb } from "@/components/thumb";
 import { ENVIO_OPTIONS, EnvioBadge, envioState } from "@/components/tracking";
 import { saleThumbs } from "@/lib/storage";
 
-export const metadata: Metadata = { title: msg("Ventas") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ventas") };
+}
 
 type Ship = "pendiente" | "enviado" | null;
 const shipOf = (status: string | null, requires: boolean): Ship => (requires ? (status === "enviado" ? "enviado" : "pendiente") : null);

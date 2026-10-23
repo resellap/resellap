@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -16,7 +15,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { SellableVariant } from "@/lib/types";
 import { DeleteProductButton, EditProductButton, VariantEditor } from "./product-editors";
 
-export const metadata: Metadata = { title: msg("Producto") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Producto") };
+}
 
 type VariantInv = {
   variant_id: string;

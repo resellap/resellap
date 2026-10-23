@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +10,10 @@ import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Devoluciones") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Devoluciones") };
+}
 
 export default async function ReturnsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const t = await getT();

@@ -1,5 +1,4 @@
-import { msg } from "@/i18n/translate";
-import { tSync } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Check, MailCheck, MapPinned, PackageCheck, ChartColumn, Tag, Users } from "lucide-react";
 import Link from "next/link";
@@ -9,10 +8,13 @@ import { PublicLayout } from "@/components/public-layout";
 import { buttonClass } from "@/components/ui";
 import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: msg("Resellap · Inventario y ventas para revendedores"),
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+  title: t("Resellap · Inventario y ventas para revendedores"),
   description: `Detecta tus ventas de Vinted y Wallapop, controla el stock, los envíos y el beneficio real. ${TRIAL_DAYS} días gratis, después ${PRICE_LABEL} al mes.`,
 };
+}
 
 const FLOW = [
   { n: "1", t: "Resellap detecta", d: "Lee los correos de venta de Vinted y Wallapop: producto, comprador, precio, foto y transportista." },

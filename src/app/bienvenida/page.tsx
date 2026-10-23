@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -8,7 +7,10 @@ import { TRIAL_DAYS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { CreateOrgForm } from "./create-org-form";
 
-export const metadata: Metadata = { title: msg("Bienvenida") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Bienvenida") };
+}
 
 /** Primer paso tras registrarse: crear el espacio de trabajo (o esperar una invitación). */
 export default async function WelcomePage() {

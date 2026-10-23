@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
@@ -7,7 +6,10 @@ import type { ImportExisting } from "@/lib/import/plan";
 import { createClient } from "@/lib/supabase/server";
 import { ImportWizard } from "./import-wizard";
 
-export const metadata: Metadata = { title: msg("Importar Excel") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Importar Excel") };
+}
 
 async function fetchAll<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null }>) {
   const out: T[] = [];

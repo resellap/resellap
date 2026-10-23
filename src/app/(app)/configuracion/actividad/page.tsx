@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +7,10 @@ import { must } from "@/lib/db";
 import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: msg("Historial de actividad") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Historial de actividad") };
+}
 
 const LABEL: Record<string, string> = {
   exportar: "Exportación",

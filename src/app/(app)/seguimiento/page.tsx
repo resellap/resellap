@@ -16,7 +16,10 @@ import { trackingConfigured } from "@/lib/tracking/seventeen";
 import { checkStaleShipments } from "@/lib/tracking/service";
 import { MarkAlertsReadButton, RefreshAllButton } from "./tracking-actions";
 
-export const metadata: Metadata = { title: msg("Seguimiento") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Seguimiento") };
+}
 
 const VIEWS: { key: ShipmentView | "alertas"; label: string }[] = [
   { key: "curso", label: msg("En curso") },

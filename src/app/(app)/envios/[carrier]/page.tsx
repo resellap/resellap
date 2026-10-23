@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,7 +13,10 @@ import { BulkShippingBar, SaleCheckbox, SelectAllCheckbox, ShippingSelection } f
 import { NO_CARRIER, loadPendingShipments } from "../data";
 import { MarkOneShipped } from "./mark-one";
 
-export const metadata: Metadata = { title: msg("Pendientes de envío") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Pendientes de envío") };
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -11,7 +11,10 @@ import { REPORTS, type Column, type ReportType } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
 import { ShippingReport } from "./shipping-report";
 
-export const metadata: Metadata = { title: msg("Informes") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Informes") };
+}
 
 function fmt(c: Column, r: Record<string, unknown>) {
   const v = c.value(r);

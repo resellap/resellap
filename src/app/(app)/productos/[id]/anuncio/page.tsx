@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -9,7 +8,10 @@ import { createClient } from "@/lib/supabase/server";
 import { isGeneratorConfigured } from "../../../descripciones/actions";
 import { ListingStudio, type ListingDraft, type PriceHistory } from "./listing-studio";
 
-export const metadata: Metadata = { title: msg("Preparar anuncio") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Preparar anuncio") };
+}
 export const maxDuration = 60;
 
 export default async function PrepareListing({ params }: { params: Promise<{ id: string }> }) {

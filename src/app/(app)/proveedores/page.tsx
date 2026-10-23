@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +7,10 @@ import { money, units } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { SupplierButton } from "./supplier-form";
 
-export const metadata: Metadata = { title: msg("Proveedores") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Proveedores") };
+}
 
 export default async function SuppliersPage() {
   const t = await getT();

@@ -8,7 +8,10 @@ import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
 import { stripeConfigured, stripeTestMode } from "@/lib/stripe";
 import { CancelDeletion, RequestDeletion } from "./deletion";
 
-export const metadata: Metadata = { title: msg("Suscripción") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Suscripción") };
+}
 
 const STATUS: Record<string, { label: string; tone: "good" | "warn" | "bad" | "info" | "neutral" }> = {
   trialing: { label: msg("Prueba gratuita"), tone: "info" },

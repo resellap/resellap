@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -16,7 +15,10 @@ import { RemovedButton } from "../../anuncios/listing-buttons";
 import { TrackingPanel } from "../../seguimiento/tracking-panel";
 import { loadShipment } from "@/lib/tracking/data";
 
-export const metadata: Metadata = { title: msg("Venta") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Venta") };
+}
 
 export default async function SaleDetail({ params, searchParams }: PageProps<"/ventas/[id]">) {
   const t = await getT();

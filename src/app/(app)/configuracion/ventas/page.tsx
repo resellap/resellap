@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
@@ -7,7 +6,10 @@ import { loadSaleOptions } from "@/lib/options";
 import { loadPrefs } from "@/lib/user-prefs";
 import { SalesPrefsEditor } from "./sales-prefs-editor";
 
-export const metadata: Metadata = { title: msg("Ventas e inventario") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ventas e inventario") };
+}
 
 export default async function SalesSettings() {
   const t = await getT();

@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/filter-bar";
@@ -9,7 +8,10 @@ import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Auditoría") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Auditoría") };
+}
 
 const ENTITIES: Record<string, string> = {
   sales: "Ventas",

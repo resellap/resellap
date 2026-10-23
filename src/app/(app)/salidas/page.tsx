@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,7 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 import { variantDisplay } from "@/lib/types";
 import { ExitReasonEditor, NewAdjustmentButton, NewExitButton, VoidExitButton } from "./stock-forms";
 
-export const metadata: Metadata = { title: msg("Salidas y ajustes") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Salidas y ajustes") };
+}
 
 export default async function ExitsPage() {
   const t = await getT();

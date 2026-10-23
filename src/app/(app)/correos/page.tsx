@@ -12,7 +12,10 @@ import { dateTime, money } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { AccountRow, ConnectionButtons, DefaultResponsible, IncidentActions, UndoButton } from "./email-actions";
 
-export const metadata: Metadata = { title: msg("Ventas por correo") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ventas por correo") };
+}
 export const maxDuration = 60;
 
 type Status = {

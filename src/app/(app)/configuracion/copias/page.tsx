@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Download } from "lucide-react";
@@ -7,7 +6,10 @@ import { requireAdmin } from "@/lib/auth";
 import { BackupChecker } from "./backup-checker";
 import { DownloadBackup } from "./download-backup";
 
-export const metadata: Metadata = { title: msg("Copias de seguridad") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Copias de seguridad") };
+}
 
 export default async function BackupSettings() {
   const t = await getT();

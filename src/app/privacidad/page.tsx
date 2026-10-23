@@ -1,10 +1,12 @@
-import { msg } from "@/i18n/translate";
-import { tSync } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/public-layout";
 import { LEGAL } from "@/lib/site";
 
-export const metadata: Metadata = { title: msg("Privacidad") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Privacidad") };
+}
 
 export default function PrivacyPage() {
   const t = tSync();

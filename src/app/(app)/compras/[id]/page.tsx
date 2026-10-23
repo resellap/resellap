@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,7 +12,10 @@ import { variantDisplay } from "@/lib/types";
 import { CancelPOButton, CostsButton, HeaderEditButton, ReceiveButton } from "./po-actions";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Pedido de compra") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Pedido de compra") };
+}
 
 export default async function PODetail({ params }: PageProps<"/compras/[id]">) {
   const t = await getT();

@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Download, LogOut } from "lucide-react";
@@ -7,7 +6,10 @@ import { requireUser } from "@/lib/auth";
 import { PasswordForm } from "../../cuenta/password-form";
 import { SignOutEverywhere } from "./sign-out-everywhere";
 
-export const metadata: Metadata = { title: msg("Seguridad y privacidad") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Seguridad y privacidad") };
+}
 
 export default async function SecuritySettings() {
   const t = await getT();

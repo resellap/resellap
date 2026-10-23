@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Notice, PageHeader, Panel } from "@/components/ui";
@@ -10,7 +9,10 @@ import { variantDisplay } from "@/lib/types";
 import { ReturnForm } from "./return-form";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Nueva devolución") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nueva devolución") };
+}
 
 export default async function NewReturn({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const t = await getT();

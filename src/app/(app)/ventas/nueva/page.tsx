@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Notice, PageHeader } from "@/components/ui";
@@ -10,7 +9,10 @@ import { loadSaleOptions } from "@/lib/options";
 import { loadPrefs } from "@/lib/user-prefs";
 import { SaleForm } from "./sale-form";
 
-export const metadata: Metadata = { title: msg("Nueva venta") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nueva venta") };
+}
 
 export default async function NewSalePage() {
   const t = await getT();

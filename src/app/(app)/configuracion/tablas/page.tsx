@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
@@ -6,7 +5,10 @@ import { requirePerm } from "@/lib/auth";
 import { loadPrefs } from "@/lib/user-prefs";
 import { TablesEditor } from "./tables-editor";
 
-export const metadata: Metadata = { title: msg("Tablas") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Tablas") };
+}
 
 export default async function TablesSettings() {
   const t = await getT();

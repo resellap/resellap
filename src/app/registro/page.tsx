@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +7,10 @@ import { PRICE_LABEL, TRIAL_DAYS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { SignupForm } from "./signup-form";
 
-export const metadata: Metadata = { title: msg("Crear cuenta") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Crear cuenta") };
+}
 
 export default async function SignupPage({ searchParams }: PageProps<"/registro">) {
   const t = await getT();

@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,7 +12,10 @@ import { PLATFORM_LABEL } from "@/lib/email/parse";
 import { loadDetected, type DetectedSale, type Option } from "./data";
 import { ConfidenceBadge, ConfirmAllButton, DetectedActions } from "./detected-actions";
 
-export const metadata: Metadata = { title: msg("Ventas detectadas") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ventas detectadas") };
+}
 export const maxDuration = 60;
 
 const PLATFORM_NAME = PLATFORM_LABEL;

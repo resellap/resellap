@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +10,10 @@ import { createClient } from "@/lib/supabase/server";
 import { SupplierButton } from "../supplier-form";
 import { must } from "@/lib/db";
 
-export const metadata: Metadata = { title: msg("Proveedor") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Proveedor") };
+}
 
 export default async function SupplierDetail({ params }: PageProps<"/proveedores/[id]">) {
   const t = await getT();

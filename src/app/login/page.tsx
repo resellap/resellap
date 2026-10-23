@@ -1,11 +1,13 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: msg("Entrar") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Entrar") };
+}
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const t = await getT();

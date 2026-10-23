@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +7,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AcceptInvitation } from "./accept";
 
-export const metadata: Metadata = { title: msg("Invitación") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Invitación") };
+}
 
 const ROLE = { admin: "administrador", vendedor: "vendedor", almacen: "almacén" } as const;
 

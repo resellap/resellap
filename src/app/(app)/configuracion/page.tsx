@@ -1,5 +1,6 @@
 import { msg } from "@/i18n/translate";
-import { getT } from "@/i18n/server";
+import { getFormat, getT } from "@/i18n/server";
+import { LanguagePicker } from "@/components/language-picker";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bell, ChevronRight, DatabaseBackup, History, LayoutDashboard, List, Palette, Receipt, ShieldCheck, Table2, type LucideIcon } from "lucide-react";
@@ -8,7 +9,10 @@ import { requireUser } from "@/lib/auth";
 import { can, type Perm } from "@/lib/permissions";
 import { ResetAllButton } from "./reset-all";
 
-export const metadata: Metadata = { title: msg("Ajustes") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ajustes") };
+}
 
 type Item = { href: string; title: string; text: string; icon: LucideIcon; admin?: boolean; perm?: Perm };
 const GROUPS: { label: string; items: Item[] }[] = [
@@ -35,6 +39,7 @@ const GROUPS: { label: string; items: Item[] }[] = [
 
 export default async function SettingsHub() {
   const t = await getT();
+  const f = await getFormat();
   const user = await requireUser();
   const isAdmin = user.role === "admin";
   return (
@@ -42,8 +47,8 @@ export default async function SettingsHub() {
       <PageHeader title={t("Ajustes")} description={t("Tus preferencias se guardan en tu usuario: las verás igual en el iPhone, el iPad y el ordenador, y no cambian las de nadie más.")} />
       <div className="flex flex-col gap-6">
         {GROUPS.map((g) => (
-          <section key={g.label} aria-label={g.label}>
-            <h2 className="mb-2 px-1 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted">{g.label}</h2>
+          <section key={g.label} aria-label={t(g.label)}>
+            <h2 className="mb-2 px-1 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted">{t(g.label)}</h2>
             <ul className="grid gap-2.5 md:grid-cols-2">
               {g.items
                 .filter((i) => (!i.admin || isAdmin) && (!i.perm || can(user, i.perm)))
@@ -57,8 +62,8 @@ export default async function SettingsHub() {
                         <i.icon size={20} strokeWidth={2.25} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[15px] font-semibold">{i.title}</span>
-                        <span className="block text-[13px] text-muted">{i.text}</span>
+                        <span className="block text-[15px] font-semibold">{t(i.title)}</span>
+                        <span className="block text-[13px] text-muted">{t(i.text)}</span>
                       </span>
                       <ChevronRight size={18} className="shrink-0 text-faint" />
                     </Link>
@@ -68,16 +73,15 @@ export default async function SettingsHub() {
           </section>
         ))}
         <div className="grid gap-5 lg:grid-cols-2">
-          <Panel title={t("Formato regional")} description={t("La app trabaja con un único formato; por eso no se puede cambiar aquí.")}>
+          <Panel title={t("Idioma y formato")} description={t("El idioma se guarda en tu usuario. Las fechas, los números y los importes siguen el formato de ese idioma.")}>
+            <LanguagePicker current={t.locale} className="mb-4 w-full max-w-xs" />
             <dl className={clsx("grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm")}>
-              <dt className="text-muted">{t("Idioma")}</dt>
-              <dd>{t("Español (es la única traducción disponible)")}</dd>
               <dt className="text-muted">{t("Moneda")}</dt>
               <dd>{t("Euro (€). Los importes no se convierten a otras monedas.")}</dd>
               <dt className="text-muted">{t("Fechas")}</dt>
-              <dd>{t("dd/mm/aaaa")}</dd>
+              <dd className="num">{f.date("2026-12-31")}</dd>
               <dt className="text-muted">{t("Números")}</dt>
-              <dd>1.234,56</dd>
+              <dd className="num">{f.money(1234.56)}</dd>
               <dt className="text-muted">{t("Zona horaria")}</dt>
               <dd>{t("Hora de Madrid (Europa/Madrid)")}</dd>
             </dl>

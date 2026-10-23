@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Notice, PageHeader } from "@/components/ui";
@@ -8,7 +7,10 @@ import { can } from "@/lib/permissions";
 import { isGeneratorConfigured } from "./actions";
 import { DescriptionGenerator } from "./generator";
 
-export const metadata: Metadata = { title: msg("Generador de descripciones") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Generador de descripciones") };
+}
 
 export default async function DescriptionsPage() {
   const t = await getT();

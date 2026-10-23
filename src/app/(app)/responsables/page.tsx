@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -12,7 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 import { type SaleLine, variantDisplay } from "@/lib/types";
 import { ResponsibleButton } from "./responsible-form";
 
-export const metadata: Metadata = { title: msg("Responsables") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Responsables") };
+}
 
 type Perf = { responsible_id: string; responsible_name: string; active: boolean; units: number; orders: number; revenue: number; avg_ticket: number; revenue_pct: number; profit: number; ranking: number };
 

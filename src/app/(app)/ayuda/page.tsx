@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Badge, PageHeader, Panel } from "@/components/ui";
@@ -10,7 +9,10 @@ import { FaqList } from "./faq-list";
 import { OpenFeedbackButton } from "./open-feedback";
 import { RichText } from "./rich-text";
 
-export const metadata: Metadata = { title: msg("Ayuda y soporte") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Ayuda y soporte") };
+}
 
 type Req = { id: number; question: string; status: "abierto" | "respondido"; reply: string | null; replied_at: string | null; created_at: string };
 

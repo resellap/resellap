@@ -9,7 +9,10 @@ import { dateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewActions } from "./review-actions";
 
-export const metadata: Metadata = { title: msg("Pendientes de revisar") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Pendientes de revisar") };
+}
 
 const KINDS: Record<string, { label: string; tone: "warn" | "bad" | "info" | "neutral" }> = {
   proveedor_pendiente: { label: msg("Proveedor pendiente"), tone: "warn" },

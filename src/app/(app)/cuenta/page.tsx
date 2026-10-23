@@ -1,11 +1,13 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader, Panel } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { PasswordForm } from "./password-form";
 
-export const metadata: Metadata = { title: msg("Mi cuenta") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Mi cuenta") };
+}
 
 export default async function AccountPage() {
   const t = await getT();

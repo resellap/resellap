@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
@@ -7,7 +6,10 @@ import { todayIso } from "@/lib/format";
 import { loadSuppliers } from "@/lib/options";
 import { PurchaseOrderForm } from "../po-form";
 
-export const metadata: Metadata = { title: msg("Nuevo pedido de compra") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nuevo pedido de compra") };
+}
 
 export default async function NewPO() {
   const t = await getT();

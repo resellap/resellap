@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/filter-bar";
@@ -10,7 +9,10 @@ import { todayIso } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteTransferButton, TransferButton } from "./transfer-form";
 
-export const metadata: Metadata = { title: msg("Reparto entre socios") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Reparto entre socios") };
+}
 
 type Settlement = {
   total: number;

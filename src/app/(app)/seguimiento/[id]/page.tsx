@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,7 +6,10 @@ import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { loadShipment } from "@/lib/tracking/data";
 
-export const metadata: Metadata = { title: msg("Seguimiento del envío") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Seguimiento del envío") };
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import { PageHeader, Panel } from "@/components/ui";
@@ -6,7 +5,10 @@ import { requirePerm } from "@/lib/auth";
 import { loadCatalogOptions } from "@/lib/options";
 import { ProductForm } from "../product-form";
 
-export const metadata: Metadata = { title: msg("Nuevo producto") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Nuevo producto") };
+}
 
 export default async function NewProduct() {
   const t = await getT();

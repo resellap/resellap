@@ -1,4 +1,3 @@
-import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -18,7 +17,10 @@ import { createClient } from "@/lib/supabase/server";
 import { type SellableVariant, variantDisplay } from "@/lib/types";
 import { ProductCards, ProductThumb } from "./product-cards";
 
-export const metadata: Metadata = { title: msg("Inventario") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Inventario") };
+}
 
 type ProductRow = {
   product_id: string;

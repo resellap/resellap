@@ -1,10 +1,12 @@
-import { msg } from "@/i18n/translate";
-import { tSync } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import { Fragment, type ReactNode } from "react";
 import { LegalPage } from "@/components/public-layout";
 
-export const metadata: Metadata = { title: msg("Términos y condiciones") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Términos y condiciones") };
+}
 
 const SUPPORT_EMAIL = "soporte@resellap.com";
 

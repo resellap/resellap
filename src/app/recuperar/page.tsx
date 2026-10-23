@@ -1,11 +1,13 @@
-import { msg } from "@/i18n/translate";
-import { tSync } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthLayout } from "@/components/auth-layout";
 import { RecoverForm } from "./recover-form";
 
-export const metadata: Metadata = { title: msg("Recuperar contraseña") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Recuperar contraseña") };
+}
 
 export default function RecoverPage() {
   const t = tSync();
