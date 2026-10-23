@@ -47,7 +47,7 @@ export default function PricingPage() {
               <Link href="/registro" className={buttonClass("primary", "md", "h-12 px-5 text-[15px] sm:h-11")}>
                 Empezar {TRIAL_DAYS} días gratis
               </Link>
-              <Link href="/login" className="inline-flex h-12 items-center rounded-[10px] border border-[#343C39] px-5 text-[15px] font-semibold text-[#F4F6F5] hover:bg-[#151A18] sm:h-11">
+              <Link href="/login" className="inline-flex h-12 items-center rounded-full border border-[#343C39] px-5 text-[15px] font-semibold text-[#F4F6F5] hover:bg-[#151A18] sm:h-11">
                 Ya tengo cuenta
               </Link>
             </div>
@@ -98,8 +98,8 @@ export default function PricingPage() {
                 </div>
               </dl>
               <div className="mt-4 flex gap-2">
-                <span className="flex h-10 flex-1 items-center justify-center rounded-[10px] bg-[#36C784] text-[14px] font-semibold text-[#0B0F0E]">Confirmar venta</span>
-                <span className="flex h-10 items-center justify-center rounded-[10px] border border-[#343C39] px-3 text-[13.5px] text-[#D5DBD8]">Ya estaba apuntada</span>
+                <span className="flex h-10 flex-1 items-center justify-center rounded-full bg-[#36C784] text-[14px] font-semibold text-[#0B0F0E]">Confirmar venta</span>
+                <span className="flex h-10 items-center justify-center rounded-full border border-[#343C39] px-3 text-[13.5px] text-[#D5DBD8]">Ya estaba apuntada</span>
               </div>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function PricingPage() {
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {FLOW.map((f) => (
             <li key={f.n} className="rs-card rounded-[var(--radius-md)] bg-surface p-5">
-              <span className="num flex h-8 w-8 items-center justify-center rounded-[8px] bg-ink text-[14px] font-semibold text-paper">{f.n}</span>
+              <span className="num flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[14px] font-semibold text-paper">{f.n}</span>
               <p className="mt-4 text-[16px] font-semibold">{f.t}</p>
               <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{f.d}</p>
             </li>
@@ -129,7 +129,7 @@ export default function PricingPage() {
             <ul className="mt-8 grid gap-6 sm:grid-cols-2">
               {FEATURES.map((f) => (
                 <li key={f.t} className="flex gap-3.5">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-line bg-paper">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-paper">
                     <f.icon size={20} strokeWidth={1.75} className="text-brand" aria-hidden />
                   </span>
                   <span>

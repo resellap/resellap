@@ -54,7 +54,7 @@ export function HomeTasks({ badges, perms, notify, lowStock }: { badges: Badges;
               >
                 <span
                   className={clsx(
-                    "display num flex h-10 min-w-10 items-center justify-center rounded-[12px] px-2 text-[21px]",
+                    "display num flex h-10 min-w-10 items-center justify-center rounded-[var(--radius-sm)] px-2 text-[21px]",
                     t.n === 0 ? "bg-ink/6 text-muted" : t.strong ? "bg-brand text-on-brand" : "bg-tag text-tag-ink",
                   )}
                 >

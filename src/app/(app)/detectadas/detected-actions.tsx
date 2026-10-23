@@ -129,7 +129,7 @@ function ConfirmDialog({
         </div>
       </div>
 
-      <p className="mt-4 flex items-start gap-2 rounded-[10px] bg-brand-soft px-3 py-2 text-[13px] text-brand-ink">
+      <p className="mt-4 flex items-start gap-2 rounded-[var(--radius-sm)] bg-brand-soft px-3 py-2 text-[13px] text-brand-ink">
         <Sparkles size={15} strokeWidth={2} className="mt-0.5 shrink-0" />
         Resellap lo ha rellenado con lo que dice el correo. Revisa y cambia lo que haga falta.
       </p>
@@ -151,7 +151,7 @@ function ConfirmDialog({
           )}
         </div>
         {picked && (
-          <div className="flex items-center gap-3 rounded-[12px] border border-line p-2.5">
+          <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-line p-2.5">
             <ProductThumb src={picked.photo} alt="" size={48} rounded={10} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14.5px] font-semibold">{picked.label}</p>
@@ -178,7 +178,7 @@ function ConfirmDialog({
                         setChanging(false);
                       }}
                       className={clsx(
-                        "press flex w-full items-center gap-2.5 rounded-[12px] border p-2 text-left",
+                        "press flex w-full items-center gap-2.5 rounded-[var(--radius-sm)] border p-2 text-left",
                         picked?.id === o.id ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong",
                       )}
                     >
@@ -241,13 +241,13 @@ function ConfirmDialog({
         </Field>
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] font-medium text-muted">Envío</span>
-          <div className="flex min-h-11 items-center rounded-[10px] border border-line bg-surface-2 px-3 text-[14px]">
+          <div className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-line bg-surface-2 px-3 text-[14px]">
             <CarrierIcon name={carrierName} size={20} />
             {sale.tracking && <span className="num ml-auto text-[12.5px] text-faint">{sale.tracking}</span>}
           </div>
         </div>
       </div>
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-[12px] bg-surface-2 px-3.5 py-3 text-[13px] sm:grid-cols-4">
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-[var(--radius-sm)] bg-surface-2 px-3.5 py-3 text-[13px] sm:grid-cols-4">
         <div>
           <dt className="text-faint">Plataforma</dt>
           <dd className="font-medium">{PLATFORM_NAME[sale.platform]}</dd>
@@ -316,7 +316,7 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
           </>
         }
       >
-        <div className="flex items-center gap-3 rounded-[12px] bg-surface-2 p-2.5">
+        <div className="flex items-center gap-3 rounded-[var(--radius-sm)] bg-surface-2 p-2.5">
           <ProductThumb src={sale.image} alt="" size={44} rounded={8} />
           <div className="min-w-0 text-[13px]">
             <p className="truncate font-semibold">{sale.product}</p>
@@ -351,7 +351,7 @@ function DuplicateDialog({ sale, onNotDuplicate }: { sale: DetectedSale; onNotDu
 
 function ExistingCard({ d, best, checked, onPick, name }: { d: ExistingOption; best: boolean; checked: boolean; onPick: () => void; name: string }) {
   return (
-    <label className={clsx("press flex cursor-pointer items-center gap-3 rounded-[12px] border p-2.5", checked ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong")}>
+    <label className={clsx("press flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] border p-2.5", checked ? "border-brand bg-brand-soft" : "border-line hover:border-line-strong")}>
       <input type="radio" name={name} checked={checked} onChange={onPick} className="h-5 w-5 shrink-0 accent-[var(--color-brand)]" />
       <ProductThumb src={d.photo} alt="" size={52} rounded={10} />
       <span className="min-w-0 flex-1">

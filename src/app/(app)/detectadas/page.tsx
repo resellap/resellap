@@ -88,7 +88,7 @@ function DetectedCard({ sale: r, carriers, responsibles }: { sale: DetectedSale;
       </header>
 
       <div className="flex gap-3.5 px-4 pt-4 sm:gap-4">
-        <ProductThumb src={r.image} alt={r.product} size={88} rounded={12} className="max-sm:h-[72px] max-sm:w-[72px]" />
+        <ProductThumb src={r.image} alt={r.product} size={88} rounded={14} className="max-sm:h-[72px] max-sm:w-[72px]" />
         <div className="min-w-0 flex-1">
           <p className="line-clamp-2 text-[16px] font-semibold leading-snug text-ink">{r.product || "Artículo sin nombre"}</p>
           <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[13px] text-muted">
@@ -101,15 +101,19 @@ function DetectedCard({ sale: r, carriers, responsibles }: { sale: DetectedSale;
           <p className="num text-[22px] font-semibold leading-none tracking-[-0.02em] text-ink sm:text-[24px]">{r.price !== null ? money(r.price) : "—"}</p>
           {(r.shipping !== null || r.total !== null) && (
             <p className="num mt-1 text-[12px] text-faint">
-              {r.shipping !== null && `envío ${money(r.shipping)}`}
-              {r.total !== null && ` · total ${money(r.total)}`}
+              {r.shipping !== null && <span className="block sm:inline">envío {money(r.shipping)}</span>}
+              {r.total !== null && (
+                <span className="block sm:inline">
+                  <span className="max-sm:hidden">{r.shipping !== null && " · "}</span>total {money(r.total)}
+                </span>
+              )}
             </p>
           )}
         </div>
       </div>
 
       {/* Lo que Resellap ha detectado */}
-      <div className="mx-4 mt-4 overflow-hidden rounded-[12px] border border-line">
+      <div className="mx-4 mt-4 overflow-hidden rounded-[14px] border border-line">
         <p className="flex items-center gap-1.5 border-b border-line px-3 py-2 text-[11.5px] font-semibold uppercase tracking-[0.06em] text-faint">
           <Sparkles size={13} strokeWidth={2} className="text-brand" /> Resellap ha detectado
         </p>

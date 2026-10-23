@@ -46,7 +46,7 @@ export function DashboardEditor({ initial, platforms }: { initial: D; platforms:
                 <li
                   key={w.id}
                   className={clsx(
-                    "flex items-start overflow-hidden rounded-[10px] border border-brand/30 bg-brand-soft p-2 text-[11.5px] font-semibold leading-tight text-brand-ink",
+                    "flex items-start overflow-hidden rounded-[var(--radius-sm)] border border-brand/30 bg-brand-soft p-2 text-[11.5px] font-semibold leading-tight text-brand-ink",
                     PREVIEW[w.size],
                   )}
                 >

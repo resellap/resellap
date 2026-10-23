@@ -181,7 +181,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               {rows.map((r, i) => (
                 <Tr key={i}>
                   {report.columns.map((c) => (
-                    <Td key={c.key} num={c.kind !== "text" && c.kind !== "date"} className={c.kind === "date" ? "num" : undefined}>
+                    <Td key={c.key} num={c.kind !== "text" && c.kind !== "date"} className={c.kind === "date" ? "num" : c.key.endsWith("_number") || c.key === "lot_label" ? "whitespace-nowrap" : undefined}>
                       {fmt(c, r)}
                     </Td>
                   ))}
