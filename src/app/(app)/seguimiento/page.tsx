@@ -111,11 +111,11 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
 
       {view === "alertas" ? (
         alerts.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-line bg-surface">
+          <div className="rs-card rounded-[var(--radius-md)] bg-surface">
             <Empty title="Sin alertas">Te avisaremos aquí cuando un envío se entregue, se retrase, tenga una incidencia o vuelva.</Empty>
           </div>
         ) : (
-          <section className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface">
+          <section className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
               <p className="text-[14px] font-semibold">{alerts.length === 1 ? "1 alerta sin ver" : `${alerts.length} alertas sin ver`}</p>
               <MarkAlertsReadButton ids={null} label="Marcar todas como vistas" />
@@ -137,7 +137,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
           </section>
         )
       ) : rows.length === 0 ? (
-        <div className="rounded-[var(--radius-md)] border border-line bg-surface">
+        <div className="rs-card rounded-[var(--radius-md)] bg-surface">
           <Empty title={q ? "Nada coincide con la búsqueda" : view === "curso" ? "Ningún envío en camino" : "Nada por aquí"}>
             {view === "curso" && !q ? "Cuando marques un paquete como enviado en «Pendientes de envío», aparecerá aquí y empezará su seguimiento." : undefined}
           </Empty>
@@ -148,7 +148,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
             <li key={s.id}>
               <Link
                 href={`/seguimiento/${s.id}`}
-                className="press group flex h-full flex-col gap-3 rounded-[var(--radius-md)] border border-line bg-surface p-4 transition-colors hover:border-line-strong"
+                className="press group flex h-full flex-col gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-4 transition-colors hover:border-line-strong"
               >
                 <div className="flex gap-3">
                   <ProductThumb src={s.photo} alt="" size={60} rounded={12} />

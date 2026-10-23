@@ -27,7 +27,7 @@ export function SaveBar({
   return (
     // Solo queda fija abajo cuando hay algo pendiente de guardar (o un error)
     <div className={clsx("z-20 mt-5", (dirty || error) && "sticky bottom-[calc(5.2rem+env(safe-area-inset-bottom))] md:bottom-4")}>
-      <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-line bg-surface/95 p-3 shadow-[var(--shadow-pop)] backdrop-blur">
+      <div className="flex flex-wrap items-center gap-2 rs-card rounded-[var(--radius-md)] bg-surface/95 p-3 shadow-[var(--shadow-pop)] backdrop-blur">
         <p className="min-w-0 flex-1 text-[13px] text-muted" role="status" aria-live="polite">
           {error ? (
             <span className="font-semibold text-danger">{error}</span>

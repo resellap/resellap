@@ -68,7 +68,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       {list.length === 0 ? (
         <Empty title={view === "por-retirar" ? "Nada que quitar" : view === "sin-anunciar" ? "Todo lo que tienes en stock está anunciado" : "Nada por aquí"} />
       ) : (
-        <ul className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface shadow-[var(--shadow-card)]">
+        <ul className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface shadow-[var(--shadow-card)]">
           {list.map((r) => (
             <li key={r.id} className="flex flex-col gap-2 border-b border-line px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-center">
               <Link href={`/productos/${r.id}/anuncio`} className="group flex min-w-0 flex-1 items-center gap-3">

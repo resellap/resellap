@@ -211,7 +211,7 @@ export function PhotoGallery({
       </div>
 
       {uploading && (
-        <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-line bg-surface p-3" aria-live="polite">
+        <div className="flex flex-col gap-2 rs-card rounded-[var(--radius-md)] bg-surface p-3" aria-live="polite">
           <p className="text-[13px] font-semibold">
             Subiendo {Math.min(uploading.progress.done + 1, uploading.progress.total)} de {uploading.progress.total}…
           </p>
@@ -284,7 +284,7 @@ function Carousel({ photos, name, onOpen, showUsed }: { photos: GalleryPhotoView
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="group relative overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface-2">
+      <div className="group relative overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface-2">
         <div
           ref={track}
           onScroll={onScroll}

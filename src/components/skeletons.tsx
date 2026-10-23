@@ -11,7 +11,7 @@ export function ListSkeleton({ rows = 8, filters = true }: { rows?: number; filt
       <Bar className="mb-2 h-9 w-48" />
       <Bar className="mb-5 h-4 w-72 max-w-full" />
       {filters && <Bar className="mb-4 h-11 w-full md:h-[66px]" />}
-      <div className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface">
+      <div className="overflow-hidden rs-card rounded-[var(--radius-md)] bg-surface">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
             <Bar className="h-10 w-10 shrink-0" />

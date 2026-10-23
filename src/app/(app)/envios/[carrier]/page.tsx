@@ -52,7 +52,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
       {error && <Notice tone="bad">{error}</Notice>}
 
       {!error && rows.length === 0 && (
-        <div className="rounded-[var(--radius-md)] border border-line bg-surface">
+        <div className="rs-card rounded-[var(--radius-md)] bg-surface">
           <Empty title={`Todo enviado con ${carrierName}`} action={<LinkButton href="/envios">Ver otros transportistas</LinkButton>} />
         </div>
       )}
@@ -66,7 +66,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
           </div>
           <ul className="flex flex-col gap-2.5">
             {rows.map((r) => (
-              <li key={r.id} className="flex gap-3 rounded-[var(--radius-md)] border border-line bg-surface p-3 sm:p-4">
+              <li key={r.id} className="flex gap-3 rs-card rounded-[var(--radius-md)] bg-surface p-3 sm:p-4">
                 <div className="flex items-center self-stretch sm:items-start sm:pt-1">
                   <SaleCheckbox saleId={r.id} status="pendiente" label={`la venta ${r.sale_number}`} />
                 </div>

@@ -198,7 +198,7 @@ export function SaleForm({
       </ol>
 
       <div className="flex min-w-0 flex-col gap-5">
-        <section className={clsx("rounded-[var(--radius-md)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(1))}>
+        <section className={clsx("rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(1))}>
           <h2 className="display mb-3 text-[22px]">
             <span className="md:hidden">¿Qué vendes?</span>
             <span className="max-md:hidden">Productos</span>
@@ -270,7 +270,7 @@ export function SaleForm({
           </ul>
         </section>
 
-        <section className={clsx("rounded-[var(--radius-md)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(2))}>
+        <section className={clsx("rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]", stepHidden(2))}>
           <h2 className="display mb-3 text-[22px]">Datos de la venta</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -371,7 +371,7 @@ export function SaleForm({
       </div>
 
       <aside className={clsx("lg:sticky lg:top-6 lg:self-start", stepHidden(3))}>
-        <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+        <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4 shadow-[var(--shadow-card)]">
           <h2 className="display text-[22px]">Resumen</h2>
           {/* Repaso de todo (solo móvil, en el paso 3) */}
           <div className="mt-3 flex flex-col gap-3 md:hidden">
@@ -433,7 +433,7 @@ export function SaleForm({
 
       {/* Botón fijo abajo (móvil), encima de la barra de navegación */}
       <div className="fixed inset-x-0 bottom-[calc(4.6rem+env(safe-area-inset-bottom))] z-20 px-4 md:hidden no-print">
-        <div className="mx-auto flex max-w-xl items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface/95 p-2 pl-4 shadow-[var(--shadow-pop)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-xl items-center gap-3 rs-card rounded-[var(--radius-lg)] bg-surface/95 p-2 pl-4 shadow-[var(--shadow-pop)] backdrop-blur-md">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
               {lines.length ? `${totalUnits} ${totalUnits === 1 ? "ud." : "uds."}` : "Sin productos"}

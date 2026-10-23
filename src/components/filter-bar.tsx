@@ -38,7 +38,7 @@ export function FilterBar({
       <input type="checkbox" id={toggleId} className="peer sr-only" />
       <label
         htmlFor={toggleId}
-        className="press flex h-11 cursor-pointer items-center justify-between gap-2 rounded-[var(--radius-md)] border border-line bg-surface px-4 text-sm font-semibold shadow-[var(--shadow-card)] peer-checked:rounded-b-none peer-focus-visible:outline-2 peer-focus-visible:outline-brand md:hidden"
+        className="press flex h-11 cursor-pointer items-center justify-between gap-2 rs-card rounded-[var(--radius-md)] bg-surface px-4 text-sm font-semibold shadow-[var(--shadow-card)] peer-checked:rounded-b-none peer-focus-visible:outline-2 peer-focus-visible:outline-brand md:hidden"
       >
         <span className="flex items-center gap-2">
           <SlidersHorizontal size={17} strokeWidth={2.25} className="text-brand" />
@@ -51,7 +51,7 @@ export function FilterBar({
       <Form
         action={basePath}
         scroll={false}
-        className="flex flex-wrap items-end gap-2.5 rounded-[var(--radius-md)] border border-line bg-surface p-3 shadow-[var(--shadow-card)] max-md:hidden max-md:rounded-t-none max-md:border-t-0 max-md:peer-checked:flex max-md:[&>div]:w-full max-md:[&_input:not([type=checkbox])]:w-full max-md:[&_select]:w-full"
+        className="flex flex-wrap items-end gap-2.5 rs-card rounded-[var(--radius-md)] bg-surface p-3 shadow-[var(--shadow-card)] max-md:hidden max-md:rounded-t-none max-md:border-t-0 max-md:peer-checked:flex max-md:[&>div]:w-full max-md:[&_input:not([type=checkbox])]:w-full max-md:[&_select]:w-full"
       >
         {Object.entries(keep ?? {}).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v} /> : null))}
         {fields.map((f) => {

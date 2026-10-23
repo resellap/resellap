@@ -26,7 +26,7 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <h2 className="mb-3 text-[15px] font-bold">¿Qué ha pasado?</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
@@ -46,7 +46,7 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
         </div>
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <h2 className="mb-3 text-[15px] font-bold">Productos de la venta {saleNumber}</h2>
         <Table>
           <thead>
@@ -77,7 +77,7 @@ export function ReturnForm({ saleId, saleNumber, lines, today }: { saleId: strin
         </Table>
       </section>
 
-      <section className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
+      <section className="rs-card rounded-[var(--radius-md)] bg-surface p-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Fecha" required>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
