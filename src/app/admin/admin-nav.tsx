@@ -6,6 +6,7 @@ import { clsx } from "@/components/ui";
 const ITEMS = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/espacios", label: "Espacios y suscripciones" },
+  { href: "/admin/soporte", label: "Soporte y feedback" },
 ] as const;
 
 export function AdminNav() {

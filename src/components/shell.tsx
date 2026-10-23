@@ -1,5 +1,6 @@
 "use client";
-import { Bell, ChevronDown, ChevronRight, LayoutGrid, LogOut, Mail, Moon, Plus, Settings, Sun, X } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, LayoutGrid, LifeBuoy, LogOut, Mail, MessageSquarePlus, Moon, Plus, Settings, Sun, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { savePreferences } from "@/app/(app)/configuracion/actions";
@@ -12,6 +13,10 @@ import { RememberList, forgetAllLists, useRememberedHref } from "./list-memory";
 import { NAV, type BadgeKey, type NavItem } from "./nav";
 import { NavProgress } from "./nav-progress";
 import { clsx } from "./ui";
+import { FEEDBACK_EVENT } from "./feedback-trigger";
+
+// La ventana de feedback solo se descarga la primera vez que se abre
+const FeedbackDialog = dynamic(() => import("./feedback-dialog"), { ssr: false });
 
 export { Logo };
 
@@ -158,6 +163,25 @@ export function Shell({
     if (more && !d.open) d.showModal();
     if (!more && d.open) d.close();
   }, [more]);
+
+  // Feedback: se abre desde el menú o desde cualquier pantalla (openFeedback)
+  const [fb, setFb] = useState(false);
+  const [fbLoaded, setFbLoaded] = useState(false);
+  const openFb = () => {
+    setFbLoaded(true);
+    setFb(true);
+    setMore(false);
+    setRailOpen(false);
+  };
+  useEffect(() => {
+    const on = () => {
+      setFbLoaded(true);
+      setFb(true);
+    };
+    window.addEventListener(FEEDBACK_EVENT, on);
+    return () => window.removeEventListener(FEEDBACK_EVENT, on);
+  }, []);
+  const helpActive = isActive(here, "/ayuda");
 
   const initials = userLabel
     .split(/[\s@.]+/)
@@ -399,6 +423,23 @@ export function Shell({
       </nav>
       </div>
       <div className="min-h-0 flex-1" />
+      <div className={clsx(railPill, "shrink-0")}>
+        <NavLink
+          href="/ayuda"
+          active={isActive(pathname, "/ayuda")}
+          title="Ayuda y soporte"
+          aria-label="Ayuda y soporte"
+          onClick={() => { closeRail(); setGoingTo("/ayuda"); }}
+          className={settingsBtn(helpActive)}
+        >
+          <LifeBuoy size={18} strokeWidth={1.75} className="shrink-0" />
+          <span className={railLabel}>Ayuda y soporte</span>
+        </NavLink>
+        <button type="button" onClick={openFb} title="Enviar feedback" aria-label="Enviar feedback" className={settingsBtn(fb)}>
+          <MessageSquarePlus size={18} strokeWidth={1.75} className="shrink-0" />
+          <span className={railLabel}>Enviar feedback</span>
+        </button>
+      </div>
       {settingsItems.length > 0 && (
         <div ref={cfgBox} className="relative shrink-0">
           <div className={railPill}>
@@ -565,6 +606,30 @@ export function Shell({
               </section>
             );
           })}
+          <section>
+            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">Ayuda</p>
+            <ul className="grid grid-cols-2 gap-2">
+              <li>
+                <NavLink
+                  href="/ayuda"
+                  active={isActive(pathname, "/ayuda")}
+                  className={clsx(
+                    "press flex min-h-[60px] items-center gap-3 rounded-[20px] p-3 text-[13px] font-medium leading-tight",
+                    isActive(pathname, "/ayuda") ? "bg-ink text-paper" : "bg-surface-2 text-ink-soft",
+                  )}
+                >
+                  <LifeBuoy size={21} strokeWidth={1.75} className={isActive(pathname, "/ayuda") ? "text-brand-bright" : "text-faint"} />
+                  Ayuda y soporte
+                </NavLink>
+              </li>
+              <li>
+                <button type="button" onClick={openFb} className="press flex min-h-[60px] w-full items-center gap-3 rounded-[20px] bg-surface-2 p-3 text-left text-[13px] font-medium leading-tight text-ink-soft">
+                  <MessageSquarePlus size={21} strokeWidth={1.75} className="text-faint" />
+                  Enviar feedback
+                </button>
+              </li>
+            </ul>
+          </section>
           {orgSwitcher && <div className="rounded-[20px] bg-surface-2 p-3">{orgSwitcher}</div>}
           <div className="rounded-full bg-surface-2 p-1.5">{account}</div>
         </div>
@@ -600,6 +665,7 @@ export function Shell({
         </div>
       </header>
       {moreSheet}
+      {fbLoaded && <FeedbackDialog open={fb} onClose={() => setFb(false)} />}
 
       <Suspense fallback={null}>
         <RememberList />

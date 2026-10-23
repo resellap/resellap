@@ -86,3 +86,39 @@ export async function purgeOrganizationAction(org: string, confirmName: string):
   revalidatePath("/admin", "layout");
   return { ok: true, message: `Espacio borrado definitivamente (${files} archivos).` };
 }
+
+// ---------------------------------------------------------------------
+// Soporte y feedback
+// ---------------------------------------------------------------------
+export async function setFeedbackStatusAction(feedbackId: number, status: "nuevo" | "visto" | "resuelto"): Promise<ActionResult> {
+  await platformAdmin();
+  if (!Number.isSafeInteger(feedbackId) || !["nuevo", "visto", "resuelto"].includes(status)) return { ok: false, error: "Datos no válidos." };
+  const { error } = await (await createClient()).rpc("platform_set_feedback_status", { p_id: feedbackId, p_status: status });
+  if (error) return { ok: false, error: friendlyError(error) };
+  revalidatePath("/admin/soporte");
+  return { ok: true };
+}
+
+/** Responde una consulta: queda en «Tus consultas» del usuario y se le envía por correo. */
+export async function replySupportAction(requestId: number, reply: string): Promise<ActionResult> {
+  await platformAdmin();
+  const text = z.string().trim().min(2, "Escribe la respuesta.").max(6000).safeParse(reply);
+  if (!Number.isSafeInteger(requestId) || !text.success) return { ok: false, error: text.success ? "Datos no válidos." : text.error.issues[0].message };
+  const { data, error } = await (await createClient()).rpc("platform_reply_support", { p_id: requestId, p_reply: text.data });
+  if (error) return { ok: false, error: friendlyError(error) };
+  const row = (data as { user_email: string | null; question: string }[] | null)?.[0];
+  let mailed = false;
+  if (row?.user_email) {
+    const { sendMail } = await import("@/lib/mail");
+    const { headers } = await import("next/headers");
+    const host = (await headers()).get("host");
+    mailed = await sendMail(
+      row.user_email,
+      "Respuesta a tu consulta en Resellap",
+      `Tu pregunta:\n${row.question}\n\nNuestra respuesta:\n${text.data}`,
+      host ? { href: `https://${host}/ayuda`, label: "Ver en Resellap" } : undefined,
+    );
+  }
+  revalidatePath("/admin/soporte");
+  return { ok: true, message: mailed ? "Respuesta enviada y avisado por correo." : "Respuesta guardada: la verá en «Tus consultas»." };
+}
