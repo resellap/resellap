@@ -1,4 +1,5 @@
 import { getT } from "@/i18n/server";
+import { rich } from "@/i18n/rich";
 import type { Metadata } from "next";
 import { Notice, PageHeader } from "@/components/ui";
 import { redirect } from "next/navigation";
@@ -28,15 +29,14 @@ export default async function DescriptionsPage() {
         <Notice tone="warn" className="mb-4" title={t("Falta la clave de la IA (GEMINI_API_KEY)")}>
           <p>{t("Puedes preparar el anuncio, pero para generarlo hace falta una clave gratuita de Google Gemini:")}</p>
           <ol className="mt-1 list-decimal pl-5">
+            <li>{rich(t("Entra en <b>aistudio.google.com</b> con tu cuenta de Google → <b>Get API key</b> → <b>Create API key</b> y cópiala."), { b: (c) => <strong>{c}</strong> })}</li>
             <li>
-              {t("Entra en")}{" "}<strong>{t("aistudio.google.com")}</strong>{" "}{t("con tu cuenta de Google →")}{" "}<strong>{t("Get API key")}</strong> → <strong>{t("Create API key")}</strong>{" "}{t("y cópiala.")}
+              {rich(t("En <b>Vercel</b> → proyecto Resellap → <b>Settings → Environment Variables</b>: nombre <c>GEMINI_API_KEY</c>, valor la clave."), {
+                b: (c) => <strong>{c}</strong>,
+                c: (c) => <code>{c}</code>,
+              })}
             </li>
-            <li>
-              {t("En")}{" "}<strong>{t("Vercel")}</strong>{" "}{t("→ proyecto Resellap →")}{" "}<strong>{t("Settings → Environment Variables")}</strong>{t(": nombre")}{" "}<code>{t("GEMINI_API_KEY")}</code>{t(", valor la clave.")}
-            </li>
-            <li>
-              <strong>{t("Deployments")}</strong>{" "}{t("→ el último →")}{" "}<strong>{t("Redeploy")}</strong>.
-            </li>
+            <li>{rich(t("<b>Deployments</b> → el último → <b>Redeploy</b>."), { b: (c) => <strong>{c}</strong> })}</li>
           </ol>
         </Notice>
       )}

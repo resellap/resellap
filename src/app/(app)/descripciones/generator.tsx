@@ -128,7 +128,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
     setHistory(readHistory());
   }, []);
 
-  const platformName = platform === "otra" ? otherPlatform.trim() || "Otra plataforma" : PLATFORMS[platform];
+  const platformName = platform === "otra" ? otherPlatform.trim() || t("Otra plataforma") : PLATFORMS[platform];
   const full = selected.length >= MAX_PRODUCTS;
 
   function add(v: SellableVariant) {
@@ -156,7 +156,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
     const now = new Date().toISOString();
     const entries = items
       .filter((r) => r.text)
-      .map((r, i) => ({ id: `${now}-${i}`, at: now, title: r.title, platform: platformName, tone: TONES[tone].label, text: r.text! }));
+      .map((r, i) => ({ id: `${now}-${i}`, at: now, title: r.title, platform: platformName, tone: t(TONES[tone].label), text: r.text! }));
     if (!entries.length) return;
     const next = [...entries, ...readHistory()].slice(0, HISTORY_MAX);
     writeHistory(next);
@@ -226,7 +226,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                       {[
                         s.variant.brand_name,
                         s.variant.sku,
-                        s.variant.stock > 0 ? `${s.variant.stock} en stock` : t("Sin stock"),
+                        s.variant.stock > 0 ? t("{n} en stock", { n: f.units(s.variant.stock) }) : t("Sin stock"),
                         s.variant.normal_sale_price !== null ? f.money(s.variant.normal_sale_price) : null,
                       ]
                         .filter(Boolean)
@@ -293,7 +293,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
                             <option value="">{t("Sin indicar")}</option>
                             {CONDITIONS.map((c) => (
                               <option key={c} value={c}>
-                                {c}
+                                {t(c)}
                               </option>
                             ))}
                           </Select>
@@ -326,18 +326,18 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
         <Section n={selected.length ? 3 : 2} title={t("Tono y plataforma")}>
           <p className="mb-2 text-[13px] font-semibold text-ink-soft">{t("Tono")}</p>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Tono")}>
-            {(Object.keys(TONES) as Tone[]).map((t) => (
-              <Chip key={t} active={tone === t} onClick={() => setTone(t)} title={TONES[t].hint}>
-                {TONES[t].label}
+            {(Object.keys(TONES) as Tone[]).map((k) => (
+              <Chip key={k} active={tone === k} onClick={() => setTone(k)} title={t(TONES[k].hint)}>
+                {t(TONES[k].label)}
               </Chip>
             ))}
           </div>
-          <p className="mt-1.5 text-[12.5px] text-muted">{TONES[tone].hint}.</p>
+          <p className="mt-1.5 text-[12.5px] text-muted">{t(TONES[tone].hint)}.</p>
           <p className="mb-2 mt-4 text-[13px] font-semibold text-ink-soft">{t("Plataforma")}</p>
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("Plataforma")}>
             {(Object.keys(PLATFORMS) as PlatformKey[]).map((p) => (
               <Chip key={p} active={platform === p} onClick={() => setPlatform(p)}>
-                {PLATFORMS[p]}
+                {t(PLATFORMS[p])}
               </Chip>
             ))}
           </div>
@@ -367,7 +367,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
               <div className="flex gap-2" role="radiogroup" aria-label={t("Extensión")}>
                 {(Object.keys(LENGTHS) as Length[]).map((l) => (
                   <Chip key={l} active={length === l} onClick={() => setLength(l)}>
-                    {LENGTHS[l]}
+                    {t(LENGTHS[l])}
                   </Chip>
                 ))}
               </div>
@@ -404,7 +404,7 @@ export function DescriptionGenerator({ configured }: { configured: boolean }) {
               {(selected.length ? selected : [null]).map((_, i) => (
                 <div key={i} className="h-36 animate-pulse rounded-[var(--radius-sm)] bg-surface-2" />
               ))}
-              <p className="text-[13px] text-muted">{t("Escribiendo")}{" "}{selected.length > 1 ? t("las descripciones") : t("la descripción")}{t("… suele tardar unos segundos.")}</p>
+              <p className="text-[13px] text-muted">{selected.length > 1 ? t("Escribiendo las descripciones… suele tardar unos segundos.") : t("Escribiendo la descripción… suele tardar unos segundos.")}</p>
             </div>
           )}
           {!pending && results.length === 0 && (

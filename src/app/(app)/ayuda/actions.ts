@@ -20,6 +20,8 @@ import { sendMail } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
 import { testOnlyEnv } from "@/lib/test-env";
 import { faqAsText } from "./faq";
+import type { Locale } from "@/i18n/config";
+import type { T } from "@/i18n/translate";
 
 const GEMINI_URL = testOnlyEnv("GEMINI_BASE_URL") || "https://generativelanguage.googleapis.com/v1beta/models";
 const MODELS = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite"];
@@ -63,17 +65,23 @@ export async function sendFeedback(input: z.infer<typeof feedbackSchema>): Promi
 // Dudas: primero la IA, si no sirve, soporte
 // ---------------------------------------------------------------------
 const SYSTEM = `Eres el asistente de ayuda de Resellap, una aplicación web para gestionar el inventario y las ventas de segunda mano (Vinted, Wallapop, eBay…).
-Responde en español de España, claro y breve (máximo 120 palabras), con pasos numerados si hace falta.
+Responde claro y breve (máximo 120 palabras), con pasos numerados si hace falta.
 Básate SOLO en la ayuda de abajo. Si la respuesta no está en la ayuda o no estás seguro, dilo con sinceridad y sugiere enviar la duda a soporte; no inventes botones, pantallas ni funciones.
 Cuando nombres una pantalla, escribe un enlace en formato Markdown con su ruta, por ejemplo [Nueva venta](/ventas/nueva). Usa solo rutas que aparezcan en la ayuda.
-No uses negritas, títulos ni otros formatos.
+No uses negritas, títulos ni otros formatos.`;
 
-AYUDA DE RESELLAP:
-`;
+const ANSWER_LANGUAGE: Record<Locale, string> = {
+  es: "español de España",
+  en: "inglés británico",
+  fr: "francés",
+  de: "alemán",
+  it: "italiano",
+  pt: "portugués de Portugal",
+};
 
 type GeminiResponse = { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] };
 
-async function askGemini(question: string): Promise<string | null> {
+async function askGemini(question: string, t: T): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) return null;
   const custom = process.env.GEMINI_MODEL?.trim();
@@ -83,7 +91,7 @@ async function askGemini(question: string): Promise<string | null> {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM + faqAsText() }] },
+          systemInstruction: { parts: [{ text: `${SYSTEM}\nResponde siempre en ${ANSWER_LANGUAGE[t.locale]}, aunque la pregunta llegue en otro idioma.\n\nAYUDA DE RESELLAP:\n${faqAsText(t)}` }] },
           contents: [{ role: "user", parts: [{ text: question }] }],
           generationConfig: { maxOutputTokens: 1200, temperature: 0.2 },
         }),
@@ -119,7 +127,7 @@ export async function askSupport(input: z.infer<typeof askSchema>): Promise<Acti
   const supabase = await createClient();
   const { data: id, error } = await supabase.rpc("support_ask", { p_question: parsed.data.question, p_page: parsed.data.page ?? null, p_direct: false });
   if (error) return { ok: false, error: friendlyError(error) };
-  const answer = await askGemini(parsed.data.question);
+  const answer = await askGemini(parsed.data.question, await getT());
   if (answer) await supabase.rpc("support_set_ai_answer", { p_id: id, p_answer: answer });
   return { ok: true, data: { id: Number(id), answer } };
 }

@@ -17,26 +17,26 @@ export const PLATFORMS = {
   instagram: "Instagram",
   facebook: "Facebook Marketplace",
   milanuncios: "Milanuncios",
-  otra: "Otra plataforma",
+  otra: msg("Otra plataforma"),
 } as const;
 export type PlatformKey = keyof typeof PLATFORMS;
 
 export const LENGTHS = {
-  corta: "Corta",
-  media: "Media",
-  detallada: "Detallada",
+  corta: msg("Corta"),
+  media: msg("Media"),
+  detallada: msg("Detallada"),
 } as const;
 export type Length = keyof typeof LENGTHS;
 
 export const CONDITIONS = [
-  t("Nuevo con etiquetas"),
-  t("Nuevo sin etiquetas"),
-  t("Nuevo, sin usar"),
-  t("Como nuevo"),
-  "Muy buen estado",
-  "Buen estado",
-  t("Usado, con señales de uso"),
-  t("Para piezas o reparar"),
+  msg("Nuevo con etiquetas"),
+  msg("Nuevo sin etiquetas"),
+  msg("Nuevo, sin usar"),
+  msg("Como nuevo"),
+  msg("Muy buen estado"),
+  msg("Buen estado"),
+  msg("Usado, con señales de uso"),
+  msg("Para piezas o reparar"),
 ] as const;
 
 /** Datos que el usuario puede completar o corregir para cada producto (no se guardan en la ficha). */

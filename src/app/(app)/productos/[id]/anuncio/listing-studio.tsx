@@ -480,15 +480,17 @@ function TextStep({
             <Field label={t("Estado")}>
               <Select value={condition} onChange={(e) => setCondition(e.target.value)}>
                 {CONDITIONS.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {t(c)}
+                  </option>
                 ))}
               </Select>
             </Field>
             <Field label={t("Tono")}>
               <Select value={tone} onChange={(e) => setTone(e.target.value as Tone)}>
-                {Object.entries(TONES).map(([k, t]) => (
+                {Object.entries(TONES).map(([k, tn]) => (
                   <option key={k} value={k}>
-                    {t.label}
+                    {t(tn.label)}
                   </option>
                 ))}
               </Select>

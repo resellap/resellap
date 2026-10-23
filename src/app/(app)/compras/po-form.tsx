@@ -26,11 +26,13 @@ export function distribute(lines: { quantity: number; unit_cost: number }[], ext
 }
 
 export function CostsEditor({ costs, setCosts }: { costs: POCosts; setCosts: (c: POCosts) => void }) {
+  const t = useT();
+  const f = useFormat();
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       {Object.entries(COST_TYPES).map(([k, label]) => (
         <Field key={k} label={`${t(label)} (€)`}>
-          <Input inputMode="decimal" value={costs[k] ?? ""} onChange={(e) => setCosts({ ...costs, [k]: e.target.value })} placeholder="0,00" />
+          <Input inputMode="decimal" value={costs[k] ?? ""} onChange={(e) => setCosts({ ...costs, [k]: e.target.value })} placeholder={f.money(0).replace(/[^\d.,]/g, "")} />
         </Field>
       ))}
     </div>
