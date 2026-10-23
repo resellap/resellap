@@ -46,7 +46,7 @@ export default async function ShipmentsPage() {
       {error && <Notice tone="bad">{error}</Notice>}
       {urgent > 0 && (
         <Notice tone="warn" className="mb-4">
-          {urgent === 1 ? t("1 paquete tiene") : t("{urgent} paquetes tienen", { urgent })}{" "}{t("la fecha límite de envío en menos de 36 horas.")}
+          {urgent === 1 ? t("1 paquete tiene la fecha límite de envío en menos de 36 horas.") : t("{n} paquetes tienen la fecha límite de envío en menos de 36 horas.", { n: urgent })}
         </Notice>
       )}
 

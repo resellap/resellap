@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
 import { MonthlyBars } from "@/components/charts/monthly-bars";
 import { CountUp } from "@/components/count-up";
 import { Notice, clsx } from "@/components/ui";
-import { EXIT_REASONS, MOVEMENT_TYPES, date, money, percent, units } from "@/lib/format";
+import { EXIT_REASONS, MOVEMENT_TYPES, date, decimal, money, percent, units } from "@/lib/format";
 import { INTL_TAG } from "@/i18n/config";
 import { GRANULARITIES, PERIODS, WIDGET_BY_ID, type Period, type WidgetItem, type WidgetSize } from "@/lib/preferences";
 import { createClient } from "@/lib/supabase/server";
@@ -264,7 +264,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
         else {
           const dd = m - pm;
           const dir = Math.abs(dd) < 0.05 ? "flat" : dd > 0 ? "up" : "down";
-          delta = { text: t("{sign}{n} puntos {vs}", { sign: dd > 0 ? "+" : "", n: units(dd) === "0" ? "0" : percent(dd).replace(/\s?%$/, ""), vs }), dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
+          delta = { text: t("{sign}{n} puntos {vs}", { sign: dd > 0 ? "+" : "", n: decimal(dd), vs }), dir, tone: dir === "flat" ? "neutral" : dir === "up" ? "good" : "bad" };
         }
       }
       return (

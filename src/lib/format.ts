@@ -25,6 +25,11 @@ export function udsLabel(v: number | string | null | undefined): string {
   return fmt().udsLabel(v);
 }
 
+/** Número con hasta 1 decimal. */
+export function decimal(v: number | string | null | undefined): string {
+  return fmt().decimal(v);
+}
+
 export function percent(v: number | string | null | undefined): string {
   return fmt().percent(v);
 }

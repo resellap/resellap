@@ -42,7 +42,7 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
     if (!file) return;
     setUploadError(null);
     if (file.size > 10 * 1024 * 1024) {
-      setUploadError("La etiqueta pesa más de 10 MB.");
+      setUploadError(t("La etiqueta pesa más de 10 MB."));
       setInputKey((k) => k + 1);
       return;
     }
@@ -52,7 +52,7 @@ export function ShippingEditor({ sale, carriers, labelUrl }: { sale: Sale; carri
     const up = await supabase.storage.from("shipping-labels").upload(path, file, { contentType: file.type || undefined });
     if (up.error) {
       setUploading(false);
-      setUploadError(`No se ha podido subir la etiqueta: ${up.error.message}`);
+      setUploadError(t("No se ha podido subir la etiqueta: {error}", { error: up.error.message }));
       setInputKey((k) => k + 1);
       return;
     }
@@ -265,7 +265,7 @@ export function VoidSaleButton({ saleId, saleNumber }: { saleId: string; saleNum
       description={t("Las unidades vuelven a su pedido/lote. La venta no se borra: queda anulada en el historial.")}
       confirmLabel={t("Anular venta")}
       requireReason
-      reasonLabel="Motivo de la anulación"
+      reasonLabel={t("Motivo de la anulación")}
       action={(reason) => voidSale(saleId, reason)}
     />
   );

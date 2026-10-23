@@ -26,7 +26,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
   if (carrier !== NO_CARRIER && !UUID.test(carrier)) notFound();
 
   const supabase = await createClient();
-  let carrierName = "Sin paquetería";
+  let carrierName = t("Sin paquetería");
   if (carrier !== NO_CARRIER) {
     const { data } = await supabase.from("carriers").select("name").eq("id", carrier).maybeSingle();
     if (!data) notFound();

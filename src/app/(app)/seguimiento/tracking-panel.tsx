@@ -1,11 +1,11 @@
-import { getT } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import Link from "next/link";
 import { CarrierIcon, PlatformIcon } from "@/components/marks";
 import { ProductThumb } from "@/components/thumb";
 import { TrackingBadge, TrackingProgress, TrackingTimeline } from "@/components/tracking";
 import { Notice, Panel } from "@/components/ui";
 import { trackingLink } from "@/lib/carriers";
-import { date, dateTime, money } from "@/lib/format";
+import { date, dateTime, decimal, money } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { loadEvents, type Shipment } from "@/lib/tracking/data";
 import { trackingConfigured } from "@/lib/tracking/seventeen";
@@ -13,7 +13,8 @@ import { TrackingCode, TrackingEditor } from "./tracking-actions";
 
 const days = (ms: number) => {
   const d = Math.max(0, Math.round(ms / 8640_000) / 10);
-  return `${d.toLocaleString("es-ES")} ${d === 1 ? "día" : "días"}`;
+  const t = tSync();
+  return d === 1 ? t("1 día") : t("{n} días", { n: decimal(d) });
 };
 
 /**

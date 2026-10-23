@@ -1,5 +1,5 @@
 import { msg } from "@/i18n/translate";
-import { getT } from "@/i18n/server";
+import { getT, tSync } from "@/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BubbleGroup } from "@/components/liquid";
@@ -10,7 +10,7 @@ import { ProductThumb } from "@/components/thumb";
 import { TrackingBadge, TrackingProgress } from "@/components/tracking";
 import { Empty, Notice, PageHeader, clsx } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
-import { date, dateTime, money } from "@/lib/format";
+import { date, dateTime, decimal, money } from "@/lib/format";
 import { loadAlerts, loadShipments, loadShippingStats, type ShipmentView } from "@/lib/tracking/data";
 import { trackingConfigured } from "@/lib/tracking/seventeen";
 import { checkStaleShipments } from "@/lib/tracking/service";
@@ -29,7 +29,11 @@ const VIEWS: { key: ShipmentView | "alertas"; label: string }[] = [
   { key: "alertas", label: msg("Alertas") },
 ];
 
-const days = (n: number | null | undefined) => (n === null || n === undefined ? "—" : `${n.toLocaleString("es-ES", { maximumFractionDigits: 1 })} ${n === 1 ? "día" : "días"}`);
+const days = (n: number | null | undefined) => {
+  if (n === null || n === undefined) return "—";
+  const t = tSync();
+  return n === 1 ? t("1 día") : t("{n} días", { n: decimal(n) });
+};
 
 export default async function TrackingPage({ searchParams }: PageProps<"/seguimiento">) {
   const t = await getT();
@@ -198,7 +202,7 @@ export default async function TrackingPage({ searchParams }: PageProps<"/seguimi
       )}
       {stats && stats.legacy_shipped > 0 && view === "todos" && (
         <p className="mt-4 text-[12.5px] text-faint">
-          {stats.legacy_shipped}{" "}{t("ventas enviadas antes de activar el seguimiento no aparecen aquí: no se sabe la hora exacta en que se enviaron y no cuentan en los tiempos.")}
+          {t("{n} ventas enviadas antes de activar el seguimiento no aparecen aquí: no se sabe la hora exacta en que se enviaron y no cuentan en los tiempos.", { n: stats.legacy_shipped })}
         </p>
       )}
     </>

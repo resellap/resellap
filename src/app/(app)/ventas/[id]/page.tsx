@@ -155,8 +155,10 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
       {toRemove.length > 0 && (
         <Notice tone="warn" className="mb-4" title={t("Quita el anuncio")}>
           <p>
-            {[...new Set(toRemove.map((t) => t.product_name))].join(", ")}{" "}{t("se ha quedado sin stock y sigue anunciado en")}{" "}
-            {[...new Set(toRemove.map((t) => (t.platform === "vinted" ? "Vinted" : "Wallapop")))].join(" y ")}{t(". Quítalo para no venderlo otra vez.")}
+            {t("{products} se ha quedado sin stock y sigue anunciado en {platforms}. Quítalo para no venderlo otra vez.", {
+              products: [...new Set(toRemove.map((x) => x.product_name))].join(", "),
+              platforms: [...new Set(toRemove.map((x) => (x.platform === "vinted" ? "Vinted" : "Wallapop")))].join(" / "),
+            })}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {toRemove.map((t) => (
@@ -281,7 +283,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
                 {/* eslint-disable-next-line @next/next/no-img-element -- URL firmada y temporal del almacén privado */}
                 <img src={imageUrl} alt={t("Foto del anuncio de la venta {sale_number}", { sale_number: s.sale_number })} className="mx-auto max-h-72 w-auto rounded-[var(--radius-md)] border border-line object-contain" />
               </a>
-              <p className="mt-2 text-xs text-muted">{t("Copiada del correo de")}{" "}{s.platforms?.name ?? t("la plataforma")}.</p>
+              <p className="mt-2 text-xs text-muted">{s.platforms?.name ? t("Copiada del correo de {platform}.", { platform: s.platforms.name }) : t("Copiada del correo de la plataforma.")}</p>
             </Panel>
           )}
           {s.platforms?.requires_shipping && active && (

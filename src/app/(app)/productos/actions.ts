@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { callRpc } from "@/lib/rpc";
 import type { ActionResult } from "@/lib/errors";
 
@@ -16,21 +17,21 @@ export type ProductInput = {
 };
 
 export async function createProduct(p: ProductInput): Promise<ActionResult<string>> {
-  return callRpc<string>("create_product", { p }, ["/productos", "/inventario"], "Producto creado.");
+  return callRpc<string>("create_product", { p }, ["/productos", "/inventario"], msg("Producto creado."));
 }
 
 export async function updateProduct(p: ProductInput & { id: string }): Promise<ActionResult> {
-  return callRpc("update_product", { p }, ["/productos", "/inventario"], "Producto actualizado.");
+  return callRpc("update_product", { p }, ["/productos", "/inventario"], msg("Producto actualizado."));
 }
 
 export async function saveVariant(v: { id?: string; product_id: string; name: string; sku?: string | null; normal_sale_price?: string | null }): Promise<ActionResult<string>> {
-  return callRpc<string>("save_variant", { p: v }, ["/productos", "/inventario"], "Variante guardada.");
+  return callRpc<string>("save_variant", { p: v }, ["/productos", "/inventario"], msg("Variante guardada."));
 }
 
 export async function deleteVariant(id: string): Promise<ActionResult> {
-  return callRpc("delete_variant", { p_variant_id: id }, ["/productos", "/inventario"], "Variante eliminada.");
+  return callRpc("delete_variant", { p_variant_id: id }, ["/productos", "/inventario"], msg("Variante eliminada."));
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  return callRpc("delete_product", { p_product_id: id }, ["/productos", "/inventario"], "Producto eliminado.");
+  return callRpc("delete_product", { p_product_id: id }, ["/productos", "/inventario"], msg("Producto eliminado."));
 }

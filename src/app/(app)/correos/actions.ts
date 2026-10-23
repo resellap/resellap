@@ -1,4 +1,5 @@
 "use server";
+import { msg } from "@/i18n/translate";
 import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -49,11 +50,11 @@ export async function syncNow(): Promise<ActionResult> {
 }
 
 export async function disconnectGmail(): Promise<ActionResult> {
-  return callRpc("email_disconnect", {}, ["/correos"], "Gmail desconectado. Ya no se leerán correos.");
+  return callRpc("email_disconnect", {}, ["/correos"], msg("Gmail desconectado. Ya no se leerán correos."));
 }
 
 export async function setDefaultResponsible(id: string | null): Promise<ActionResult> {
-  return callRpc("email_set_default_responsible", { p_responsible_id: id || null }, ["/correos"], "Guardado.");
+  return callRpc("email_set_default_responsible", { p_responsible_id: id || null }, ["/correos"], msg("Guardado."));
 }
 
 const accountSchema = z.object({ id: z.uuid(), responsible_id: z.uuid().nullable(), mobile_device_id: z.uuid().nullable() });
@@ -142,5 +143,5 @@ export async function retryEmail(emailId: string): Promise<ActionResult> {
 }
 
 export async function dismissEmail(emailId: string): Promise<ActionResult> {
-  return callRpc("email_set_status", { p_email_id: emailId, p_status: "ignorado" }, ["/"], "Descartado. No creará ninguna venta.");
+  return callRpc("email_set_status", { p_email_id: emailId, p_status: "ignorado" }, ["/"], msg("Descartado. No creará ninguna venta."));
 }

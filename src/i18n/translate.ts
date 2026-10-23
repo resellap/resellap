@@ -87,6 +87,8 @@ export type Formatter = {
   money(v: Num, opts?: { precise?: boolean }): string;
   units(v: Num): string;
   percent(v: Num): string;
+  /** Número con hasta 1 decimal («2,5») */
+  decimal(v: Num): string;
   udsLabel(v: Num): string;
   date(v: string | Date | null | undefined): string;
   dateTime(v: string | null | undefined): string;
@@ -131,6 +133,10 @@ export function makeFormat(locale: Locale): Formatter {
       const n = Number(v ?? 0);
       const [one, many] = UDS[locale];
       return `${int.format(n)} ${n === 1 ? one : many}`;
+    },
+    decimal(v: number | string | null | undefined): string {
+      if (isEmpty(v)) return "—";
+      return pct.format(Number(v));
     },
     percent(v: number | string | null | undefined): string {
       if (isEmpty(v)) return "—";

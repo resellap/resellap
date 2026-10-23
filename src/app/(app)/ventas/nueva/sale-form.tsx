@@ -147,7 +147,7 @@ export function SaleForm({
         })),
       });
       if (!res.ok || !res.data) {
-        setError(res.ok ? "No se ha podido registrar la venta." : res.error);
+        setError(res.ok ? t("No se ha podido registrar la venta.") : res.error);
         return;
       }
       const saleId = res.data;
@@ -172,7 +172,7 @@ export function SaleForm({
     }
   }
 
-  const steps = ["Producto", "Datos", "Confirmar"];
+  const steps = [t("Producto"), "Datos", "Confirmar"];
 
   return (
     <div className="grid gap-5 max-md:pb-24 lg:grid-cols-[1fr_340px]">
@@ -314,7 +314,7 @@ export function SaleForm({
               </Field>
             ) : (
               <Field label={t("Responsable")}>
-                <Input value={ownResponsible?.name ?? "Sin vincular"} disabled />
+                <Input value={ownResponsible?.name ?? t("Sin vincular")} disabled />
               </Field>
             )}
             <Field label={t("Móvil utilizado")}>
@@ -397,8 +397,8 @@ export function SaleForm({
             <p className="rounded-[var(--radius-sm)] bg-surface-2 px-3 py-2 text-[13px] text-ink-soft">
               {[
                 platform?.name,
-                needsShipping ? (carriers.find((c) => c.id === carrierId)?.name ?? "Paquetería sin indicar") : "En mano",
-                needsShipping ? (shipping === "enviado" ? "Enviado" : "Pendiente de envío") : null,
+                needsShipping ? (carriers.find((c) => c.id === carrierId)?.name ?? t("Paquetería sin indicar")) : t("En mano"),
+                needsShipping ? (shipping === "enviado" ? "Enviado" : t("Pendiente de envío")) : null,
                 isAdmin ? responsibles.find((r) => r.id === responsible)?.name : ownResponsible?.name,
                 date !== today ? date.split("-").reverse().join("/") : "Hoy",
               ]
