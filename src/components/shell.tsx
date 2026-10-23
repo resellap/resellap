@@ -1,5 +1,5 @@
 "use client";
-import { Bell, ChevronDown, LayoutGrid, LogOut, Mail, Moon, Plus, Settings, Sun, X } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, LayoutGrid, LogOut, Mail, Moon, Plus, Settings, Sun, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { savePreferences } from "@/app/(app)/configuracion/actions";
@@ -77,6 +77,9 @@ export function Shell({
   const pathname = usePathname();
   const [more, setMore] = useState(false);
   const [cfg, setCfg] = useState(false);
+  // Carril desplegado con la flechita: nunca se queda fijo
+  const [railOpen, setRailOpen] = useState(false);
+  const railBox = useRef<HTMLElement>(null);
   const cfgBox = useRef<HTMLDivElement>(null);
   const userMenu = useRef<HTMLDetailsElement>(null);
   const router = useRouter();
@@ -107,6 +110,20 @@ export function Shell({
       document.removeEventListener("keydown", onKey);
     };
   }, [cfg]);
+  // Carril desplegado: se recoge al pulsar fuera de él o con Escape
+  useEffect(() => {
+    if (!railOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (railBox.current && !railBox.current.contains(e.target as Node)) setRailOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setRailOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [railOpen]);
   const visible = (i: NavItem) => (!i.adminOnly || role === "admin") && (!i.perm || role === "admin" || permissions.includes(i.perm));
   const canSell = role === "admin" || permissions.includes("ventas_crear");
   const canSeeDetected = role === "admin" || permissions.includes("correo");
@@ -118,6 +135,7 @@ export function Shell({
     setLastPath(pathname);
     setMore(false);
     setCfg(false);
+    setRailOpen(false);
   }
   useEffect(() => {
     if (userMenu.current) userMenu.current.open = false;
@@ -200,10 +218,15 @@ export function Shell({
   const railItem = (active: boolean) =>
     clsx(
       "press relative flex h-10 w-full shrink-0 items-center gap-3 rounded-full px-[11px] text-[13.5px] font-medium [@media(max-height:760px)]:h-9",
-      active ? "bg-ink text-paper" : "text-muted hover:bg-subtle hover:text-ink",
+      active ? "bg-ink text-paper" : "text-ink-soft hover:bg-subtle hover:text-ink",
     );
-  const railLabel = "truncate whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/rail:opacity-100 group-hover/rail:delay-75 group-focus-within/rail:opacity-100";
-  const railPill = "rs-card flex w-12 flex-col gap-0.5 overflow-hidden rounded-[24px] bg-surface p-1 transition-[width] duration-200 ease-out group-hover/rail:w-60 group-hover/rail:delay-75 group-focus-within/rail:w-60";
+  const railLabel = clsx("truncate whitespace-nowrap transition-opacity duration-150", railOpen ? "opacity-100 delay-75" : "pointer-events-none opacity-0");
+  const railPill = clsx(
+    "flex flex-col gap-0.5 overflow-hidden rounded-[24px] border border-line-strong/70 bg-surface p-1 shadow-[var(--shadow-card)] transition-[width] duration-200 ease-out",
+    railOpen ? "w-60" : "w-12",
+  );
+  // Cualquier opción del carril lo vuelve a recoger
+  const closeRail = () => setRailOpen(false);
 
   const topBar = (
     <header className="sticky top-0 z-40 hidden items-center gap-3 bg-gradient-to-b from-paper from-70% to-transparent px-6 pb-4 pt-4 lg:flex no-print 2xl:px-8">
@@ -301,7 +324,8 @@ export function Shell({
   const rail = (
     <aside
       aria-label="Más secciones"
-      className="group/rail fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
+      ref={railBox}
+      className="fixed bottom-4 left-6 top-[84px] z-30 hidden w-12 flex-col gap-2.5 lg:flex no-print 2xl:left-8 [@media(max-height:760px)]:gap-2"
     >
       <div className={clsx(railPill, "shrink-0")}>
         {(
@@ -310,12 +334,26 @@ export function Shell({
             ["dark", Moon, "Modo oscuro"],
           ] as const
         ).map(([m, Icon, label]) => (
-          <button key={m} type="button" onClick={() => setMode(m)} className={railItem(mode === m)} aria-pressed={mode === m} title={label}>
+          <button key={m} type="button" onClick={() => { setMode(m); closeRail(); }} className={railItem(mode === m)} aria-pressed={mode === m} title={label}>
             <Icon size={17} strokeWidth={1.75} className="shrink-0" />
             <span className={railLabel}>{label}</span>
           </button>
         ))}
       </div>
+      <div className="relative flex min-h-0 shrink flex-col">
+      <button
+        type="button"
+        onClick={() => setRailOpen((v) => !v)}
+        aria-expanded={railOpen}
+        aria-label={railOpen ? "Recoger el menú" : "Desplegar el menú con los nombres"}
+        title={railOpen ? "Recoger" : "Ver nombres"}
+        className={clsx(
+          "press absolute top-[9px] z-10 flex h-[26px] w-[18px] items-center justify-center rounded-r-full bg-brand text-on-brand shadow-[var(--shadow-card)] transition-[left] duration-200 ease-out hover:bg-brand-strong [@media(max-height:760px)]:top-[7px]",
+          railOpen ? "left-[239px]" : "left-[47px]",
+        )}
+      >
+        <ChevronRight size={14} strokeWidth={2.75} className={clsx("transition-transform duration-200", railOpen && "rotate-180")} />
+      </button>
       <nav aria-label="Gestión" className={clsx(railPill, "no-scrollbar min-h-0 shrink overflow-y-auto")}>
         {railGroups.map((g, gi) => (
           <div key={gi} className={clsx("flex flex-col gap-0.5", gi > 0 && "mt-1 border-t border-line pt-1.5")}>
@@ -323,12 +361,12 @@ export function Shell({
               const active = isActive(pathname, it.href);
               const n = badgeOf(it);
               return (
-                <NavLink key={it.href} href={it.href} active={active} title={it.label} className={railItem(active)}>
+                <NavLink key={it.href} href={it.href} active={active} title={it.label} aria-label={it.label} onClick={closeRail} className={railItem(active)}>
                   <it.icon size={18} strokeWidth={1.75} className="shrink-0" />
                   {n > 0 && (
                     <span
                       className={clsx(
-                        "absolute left-[27px] top-1.5 h-2 w-2 rounded-full ring-2 ring-surface transition-opacity group-hover/rail:opacity-0",
+                        clsx("absolute left-[27px] top-1.5 h-2 w-2 rounded-full ring-2 ring-surface transition-opacity", railOpen && "opacity-0"),
                         it.badgeKey === "alerts" ? "bg-danger" : "bg-brand",
                       )}
                     />
@@ -345,13 +383,14 @@ export function Shell({
           </div>
         ))}
       </nav>
+      </div>
       <div className="min-h-0 flex-1" />
       {settingsItems.length > 0 && (
         <div ref={cfgBox} className="relative shrink-0">
           <div className={railPill}>
             <button
               type="button"
-              onClick={() => setCfg((v) => !v)}
+              onClick={() => { setCfg((v) => !v); closeRail(); }}
               aria-expanded={cfg}
               aria-controls="menu-config"
               title="Configuración"
@@ -364,7 +403,7 @@ export function Shell({
           {cfg && (
             <div
               id="menu-config"
-              className="absolute bottom-0 left-[60px] z-50 max-h-[calc(100dvh-110px)] w-64 animate-rise transition-[left] duration-200 group-hover/rail:left-[252px] group-focus-within/rail:left-[252px] overflow-y-auto rounded-[var(--radius-md)] border border-line bg-surface-2 p-2 shadow-[var(--shadow-pop)]"
+              className="absolute bottom-0 left-[60px] z-50 max-h-[calc(100dvh-110px)] w-64 animate-rise overflow-y-auto rounded-[var(--radius-md)] border border-line bg-surface-2 p-2 shadow-[var(--shadow-pop)]"
             >
               <p className="flex items-center gap-2 px-3 pb-2 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-faint">
                 <Settings size={13} strokeWidth={2} className="text-brand" />
