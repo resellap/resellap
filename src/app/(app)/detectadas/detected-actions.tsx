@@ -194,7 +194,7 @@ function ConfirmDialog({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13.5px] font-semibold">{o.label}</span>
                         <span className="block truncate text-[12px] text-faint">
-                          {o.score !== null ? `${Math.round(o.score * 100)} % · ` : ""}
+                          {o.score !== null ? `${f.percent(Math.round(o.score * 100))} · ` : ""}
                           {o.stock > 0 ? t("{stock} en stock", { stock: o.stock }) : t("sin stock")}
                         </span>
                       </span>
@@ -376,7 +376,7 @@ function ExistingCard({ d, best, checked, onPick, name }: { d: ExistingOption; b
           {d.buyer ? ` · ${d.buyer}` : ""}
           {d.carrier ? ` · ${d.carrier}` : ""}
         </span>
-        {d.reasons.length > 0 && <span className="mt-0.5 block truncate text-[12px] text-faint">{d.reasons.join(" · ")}</span>}
+        {d.reasons.length > 0 && <span className="mt-0.5 block truncate text-[12px] text-faint">{d.reasons.map((x) => t(x)).join(" · ")}</span>}
       </span>
       <span className="num shrink-0 text-[15px] font-semibold">{f.money(d.price)}</span>
     </label>

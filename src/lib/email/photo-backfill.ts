@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Gmail } from "./gmail";
@@ -98,7 +99,7 @@ export async function backfillSalePhotos(db: SupabaseClient, org: string, gmail:
     .in("platform_id", [...platOf.keys()])
     .gte("sale_date", since)
     .limit(2000);
-  if (error) throw new Error(`No se han podido leer las ventas sin foto: ${error.message}`);
+  if (error) throw new Error(fmtMsg(msg("No se han podido leer las ventas sin foto: {0}"), error.message));
 
   type Row = { id: string; sale_date: string; platform_id: string; sale_items: { quantity: number; unit_price: number; product_variants: { name: string | null; products: { name: string } | null } | null }[] };
   const cands: Candidate[] = ((sales ?? []) as unknown as Row[]).map((s) => ({

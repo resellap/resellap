@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "../supabase/admin";
@@ -124,10 +125,10 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
     .select("email, refresh_token_enc, status, connected_at, last_success_at, photos_backfill_at, photos_backfill_cursor")
     .eq("organization_id", org)
     .maybeSingle<Integration>();
-  if (!integ?.refresh_token_enc) return { ...summary, skipped: "Gmail no está conectado." };
+  if (!integ?.refresh_token_enc) return { ...summary, skipped: msg("Gmail no está conectado.") };
 
   const { data: locked } = await db.rpc("email_sync_try_lock", { p_org: org, p_seconds: 120 });
-  if (!locked) return { ...summary, skipped: "Ya hay una revisión en marcha." };
+  if (!locked) return { ...summary, skipped: msg("Ya hay una revisión en marcha.") };
 
   let gmail: Gmail | null = null;
   try {
@@ -135,7 +136,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
     try {
       refresh = decryptSecret(integ.refresh_token_enc);
     } catch {
-      throw new GmailAuthError("No se puede leer el permiso guardado. Vuelve a conectar Gmail.");
+      throw new GmailAuthError(msg("No se puede leer el permiso guardado. Vuelve a conectar Gmail."));
     }
     gmail = new Gmail(await refreshAccessToken(refresh));
 
@@ -183,7 +184,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
       } catch (err) {
         if (err instanceof GmailAuthError) throw err;
         // Si falla, se reintenta en la próxima revisión; las ventas nuevas no se ven afectadas
-        summary.photos_error = err instanceof Error ? err.message.slice(0, 300) : "Error desconocido";
+        summary.photos_error = err instanceof Error ? err.message.slice(0, 300) : msg("Error desconocido");
         console.error("Fotos de ventas anteriores:", summary.photos_error);
       }
     }
@@ -203,7 +204,7 @@ async function syncOrg(db: Admin, org: string, trigger: "auto" | "manual", deadl
     return summary;
   } catch (e) {
     const auth = e instanceof GmailAuthError;
-    summary.error = e instanceof Error ? e.message : "Error desconocido";
+    summary.error = e instanceof Error ? e.message : msg("Error desconocido");
     summary.finished_at = new Date().toISOString();
     await db
       .from("email_integration")
@@ -236,15 +237,15 @@ async function storeEmail(db: Admin, org: string, mail: MailMessage): Promise<"n
   let row: Record<string, unknown>;
   if (kind === "otro") {
     // Correo ajeno: ni remitente ni asunto (pueden ser datos personales)
-    row = { ...base, status: "ignorado", review_reason: "No es un correo de venta." };
+    row = { ...base, status: "ignorado", review_reason: msg("No es un correo de venta.") };
   } else if (kind === "wallapop_aviso") {
-    row = { ...base, from_address: senderAddress(mail.from), subject: mail.subject.slice(0, 200), status: "ignorado", review_reason: "Primer aviso de Wallapop (sin importe): no crea venta." };
+    row = { ...base, from_address: senderAddress(mail.from), subject: mail.subject.slice(0, 200), status: "ignorado", review_reason: msg("Primer aviso de Wallapop (sin importe): no crea venta.") };
   } else if (kind === "otra_venta" && platform) {
     // eBay, Milanuncios, Facebook Marketplace: lo lee la IA
     const head = { ...base, from_address: senderAddress(mail.from), subject: mail.subject.slice(0, 200) };
     const ai = await readSaleWithAi(platform, mail.subject, mail.text, mail.receivedAt);
     if (ai.kind === "not_sale") {
-      row = { ...head, status: "ignorado", review_reason: `Correo de ${PLATFORM_LABEL[platform]} que no es una venta: ${ai.reason}`.slice(0, 500) };
+      row = { ...head, status: "ignorado", review_reason: fmtMsg(msg("Correo de {0} que no es una venta: {1}"), PLATFORM_LABEL[platform], ai.reason).slice(0, 500) };
     } else if (ai.kind === "unavailable") {
       // Se vuelve a intentar en la próxima revisión (se relee el correo desde Gmail)
       row = { ...head, status: "pendiente", parsed: { needs_ai: true }, review_reason: ai.reason.slice(0, 500) };
@@ -264,13 +265,13 @@ async function storeEmail(db: Admin, org: string, mail: MailMessage): Promise<"n
       subject: mail.subject.slice(0, 200),
       parsed: parsed ? { ...parsed, ...extra } : extra,
       status: parsed ? "pendiente" : "revision",
-      review_reason: parsed ? null : "No se han podido leer los datos del correo (puede que el formato haya cambiado).",
+      review_reason: parsed ? null : msg("No se han podido leer los datos del correo (puede que el formato haya cambiado)."),
     };
   }
   const { error } = await db.from("email_messages").insert(row);
   if (error) {
     if (error.code === "23505") return "dup"; // ya estaba (otra revisión a la vez)
-    throw new Error(`No se ha podido guardar el correo: ${error.message}`);
+    throw new Error(fmtMsg(msg("No se ha podido guardar el correo: {0}"), error.message));
   }
   // Recordar la cuenta de la plataforma para poder asignarle responsable
   const p = row.parsed as Record<string, string | null> | undefined;
@@ -319,7 +320,7 @@ async function processQueue(db: Admin, org: string, gmail: Gmail, summary: SyncS
     .in("kind", ["vinted_venta", "wallapop_venta", "otra_venta", "vinted_etiqueta"])
     .order("received_at")
     .limit(100);
-  if (error) throw new Error(`No se ha podido leer la cola de correos: ${error.message}`);
+  if (error) throw new Error(fmtMsg(msg("No se ha podido leer la cola de correos: {0}"), error.message));
   const catalog = new Catalog(db, org);
   for (const e of (rows ?? []) as EmailRow[]) {
     if (Date.now() > deadline) break;
@@ -339,14 +340,14 @@ async function processQueue(db: Admin, org: string, gmail: Gmail, summary: SyncS
       if (err instanceof GmailAuthError) throw err;
       summary.errors++;
       const attempts = e.attempts + 1;
-      const msg = err instanceof Error ? err.message : "Error desconocido";
+      const errText = err instanceof Error ? err.message : msg("Error desconocido");
       await db
         .from("email_messages")
         .update({
           attempts,
-          last_error: msg.slice(0, 500),
+          last_error: errText.slice(0, 500),
           status: attempts >= MAX_ATTEMPTS ? "revision" : "error",
-          review_reason: attempts >= MAX_ATTEMPTS ? `Ha fallado ${attempts} veces: ${msg}`.slice(0, 500) : null,
+          review_reason: attempts >= MAX_ATTEMPTS ? fmtMsg(msg("Ha fallado {0} veces: {1}"), attempts, errText).slice(0, 500) : null,
           updated_at: new Date().toISOString(),
         })
         .eq("organization_id", org)
@@ -364,7 +365,7 @@ async function retryAi(db: Admin, org: string, gmail: Gmail, e: EmailRow): Promi
   if (ai.kind === "not_sale") {
     await db
       .from("email_messages")
-      .update({ status: "ignorado", parsed: {}, review_reason: `Correo de ${PLATFORM_LABEL[platform]} que no es una venta: ${ai.reason}`.slice(0, 500), updated_at: new Date().toISOString() })
+      .update({ status: "ignorado", parsed: {}, review_reason: fmtMsg(msg("Correo de {0} que no es una venta: {1}"), PLATFORM_LABEL[platform], ai.reason).slice(0, 500), updated_at: new Date().toISOString() })
       .eq("organization_id", org)
       .eq("id", e.id);
     return null;
@@ -402,7 +403,7 @@ async function processSale(db: Admin, org: string, catalog: Catalog, e: EmailRow
     price: typeof e.parsed.price === "number" ? e.parsed.price : null,
     platform: e.platform,
   });
-  const notes = [e.parsed.doubt ? `${e.parsed.doubt} Revisa el precio antes de confirmar.` : null, m.doubt].filter(Boolean);
+  const notes = [e.parsed.doubt ? fmtMsg(msg("{0} Revisa el precio antes de confirmar."), String(e.parsed.doubt)) : null, m.doubt].filter(Boolean);
   await db
     .from("email_messages")
     .update({
@@ -439,7 +440,7 @@ export class Catalog {
         .is("deleted_at", null)
         .is("products.deleted_at", null)
         .range(from, from + 999);
-      if (error) throw new Error(`No se ha podido leer el catálogo: ${error.message}`);
+      if (error) throw new Error(fmtMsg(msg("No se ha podido leer el catálogo: {0}"), error.message));
       all.push(...((data ?? []) as unknown as Row[]));
       if (!data || data.length < 1000) break;
     }
@@ -545,7 +546,7 @@ export async function findLabelSale(
     return {
       sale: null,
       wait: false,
-      reason: `Hay ${free.length} ventas de «${e.parsed.product ?? "?"}» sin etiqueta. Elige a cuál pertenece.`,
+      reason: fmtMsg(msg("Hay {0} ventas de «{1}» sin etiqueta. Elige a cuál pertenece."), free.length, String(e.parsed.product ?? "?")),
       candidates: free.map((s) => ({ sale_id: s.id, label: saleLabel(s) })),
     };
   }
@@ -556,8 +557,8 @@ export async function findLabelSale(
     wait: true,
     saleUnconfirmed: pendingSale,
     reason: pendingSale
-      ? "La venta de este artículo está en «Ventas detectadas» sin confirmar. En cuanto la confirmes, se pondrá la etiqueta sola."
-      : "Todavía no hay una venta de Vinted con este artículo. Se volverá a intentar automáticamente.",
+      ? msg("La venta de este artículo está en «Ventas detectadas» sin confirmar. En cuanto la confirmes, se pondrá la etiqueta sola.")
+      : msg("Todavía no hay una venta de Vinted con este artículo. Se volverá a intentar automáticamente."),
     candidates: await recentVintedSales(db, org),
   };
 }
@@ -598,7 +599,7 @@ async function processLabel(db: Admin, org: string, gmail: Gmail, e: EmailRow): 
         .eq("id", e.id);
       return "waiting";
     }
-    return toReview(db, org, e.id, found.wait ? `Han pasado ${WAIT_LABEL_DAYS} días y no aparece la venta. Vincúlala a mano.` : found.reason, found.candidates);
+    return toReview(db, org, e.id, found.wait ? fmtMsg(msg("Han pasado {0} días y no aparece la venta. Vincúlala a mano."), WAIT_LABEL_DAYS) : found.reason, found.candidates);
   }
   return attachLabel(db, org, gmail, e, found.sale.id, { force: false, userClient: null });
 }
@@ -618,18 +619,18 @@ export async function attachLabel(
 ): Promise<Outcome> {
   const mail = await gmail.message(e.gmail_message_id);
   const pdf = pdfAttachments(mail)[0];
-  if (!pdf) return toReview(db, org, e.id, "El correo no trae la etiqueta en PDF.", [{ sale_id: saleId, label: "Venta encontrada" }]);
-  if (pdf.size > 10 * 1024 * 1024) return toReview(db, org, e.id, "El PDF pesa más de 10 MB; no se ha guardado.");
+  if (!pdf) return toReview(db, org, e.id, msg("El correo no trae la etiqueta en PDF."), [{ sale_id: saleId, label: msg("Venta encontrada") }]);
+  if (pdf.size > 10 * 1024 * 1024) return toReview(db, org, e.id, msg("El PDF pesa más de 10 MB; no se ha guardado."));
   const buf = pdf.attachmentId ? await gmail.attachment(mail.id, pdf.attachmentId) : Buffer.from(pdf.inlineData ?? "", "base64url");
   const invalid = validatePdf(buf);
-  if (invalid) return toReview(db, org, e.id, `${invalid} No se ha guardado. Descárgala de Vinted y súbela a mano.`, [{ sale_id: saleId, label: "Venta encontrada" }]);
+  if (invalid) return toReview(db, org, e.id, fmtMsg(msg("{0} No se ha guardado. Descárgala de Vinted y súbela a mano."), invalid), [{ sale_id: saleId, label: msg("Venta encontrada") }]);
 
   // La venta tiene que ser de esta organización (el archivo va en su carpeta)
   const { data: owned } = await db.from("sales").select("id").eq("organization_id", org).eq("id", saleId).maybeSingle();
-  if (!owned) throw new Error("La venta no existe.");
+  if (!owned) throw new Error(msg("La venta no existe."));
   const path = `${saleId}/vinted-${mail.id.replace(/[^A-Za-z0-9_-]/g, "")}.pdf`;
   const up = await db.storage.from("shipping-labels").upload(path, buf, { contentType: "application/pdf", upsert: true });
-  if (up.error) throw new Error(`No se ha podido guardar el PDF: ${up.error.message}`);
+  if (up.error) throw new Error(fmtMsg(msg("No se ha podido guardar el PDF: {0}"), up.error.message));
 
   // La etiqueta también dice el transportista y el código (texto del PDF)
   let carrierText = (e.parsed.carrier_text as string | null) ?? null;
@@ -655,7 +656,7 @@ export async function attachLabel(
     if (s?.shipping_label_path !== path) await db.storage.from("shipping-labels").remove([path]);
     if (opts.userClient) throw new Error(error.message);
     if (NEEDS_PERSON.test(error.message) || /etiqueta|envío|anulada|corresponde/i.test(error.message)) {
-      return toReview(db, org, e.id, error.message, [{ sale_id: saleId, label: "Venta encontrada" }]);
+      return toReview(db, org, e.id, error.message, [{ sale_id: saleId, label: msg("Venta encontrada") }]);
     }
     throw new Error(error.message);
   }
@@ -681,12 +682,12 @@ async function carrierFromText(db: Admin, org: string, text: string | null): Pro
 
 export async function gmailForServer(db: Admin, org: string): Promise<Gmail> {
   const { data } = await db.from("email_integration").select("refresh_token_enc").eq("organization_id", org).maybeSingle();
-  if (!data?.refresh_token_enc) throw new GmailAuthError("Gmail no está conectado.");
+  if (!data?.refresh_token_enc) throw new GmailAuthError(msg("Gmail no está conectado."));
   let refresh: string;
   try {
     refresh = decryptSecret(data.refresh_token_enc);
   } catch {
-    throw new GmailAuthError("No se puede leer el permiso guardado. Vuelve a conectar Gmail.");
+    throw new GmailAuthError(msg("No se puede leer el permiso guardado. Vuelve a conectar Gmail."));
   }
   return new Gmail(await refreshAccessToken(refresh));
 }

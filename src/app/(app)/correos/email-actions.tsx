@@ -231,7 +231,7 @@ function ChooseProduct({ email, suggestions }: { email: EmailRowView; suggestion
                     picked?.id === s.variant_id ? "border-brand bg-brand text-on-brand" : "border-line-strong bg-surface hover:border-brand",
                   )}
                 >
-                  {s.label}
+                  {t(s.label)}
                 </button>
               ))}
             </div>
@@ -312,7 +312,7 @@ function ChooseSale({ email, candidates }: { email: EmailRowView; candidates: { 
                 )}
               >
                 <input type="radio" name={`sale-${email.id}`} checked={picked === c.sale_id} onChange={() => setPicked(c.sale_id!)} className="accent-[var(--color-brand)]" />
-                <span className="num">{c.label}</span>
+                <span className="num">{t(c.label)}</span>
               </label>
             </li>
           ))}

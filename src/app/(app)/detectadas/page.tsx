@@ -171,7 +171,7 @@ function DetectedCard({ sale: r, carriers, responsibles }: { sale: DetectedSale;
       )}
       {r.likelyDuplicate && r.existing[0] && (
         <Notice tone="warn" className="mx-4 mt-3" title={t("Puede que ya la tengas apuntada")}>
-          {t("Se parece a la venta {number} (", { number: r.existing[0].number })}{r.existing[0].reasons.join(", ").toLowerCase()}{t("). Si es la misma, pulsa «Ya estaba apuntada».")}
+          {t("Se parece a la venta {number} ({reasons}). Si es la misma, pulsa «Ya estaba apuntada».", { number: r.existing[0].number, reasons: r.existing[0].reasons.map((x) => t(x)).join(", ").toLowerCase() })}
         </Notice>
       )}
 

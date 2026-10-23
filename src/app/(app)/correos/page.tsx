@@ -247,12 +247,12 @@ function ConnectionPanel({
           )}
           {status === "error_autorizacion" && (
             <Notice tone="bad" title={t("Google ha retirado el permiso")}>
-              {s?.last_error}{" "}{t("Pulsa «Volver a conectar». No se pierde nada: los correos que hayan llegado mientras tanto se leerán al reconectar.")}
+              {s?.last_error ? t(s.last_error) : ""}{" "}{t("Pulsa «Volver a conectar». No se pierde nada: los correos que hayan llegado mientras tanto se leerán al reconectar.")}
             </Notice>
           )}
           {status === "error" && s?.last_error && (
             <Notice tone="bad" title={t("La última revisión falló")}>
-              {s.last_error}{" "}{t("Se volverá a intentar sola en unos minutos.")}
+              {t(s.last_error)}{" "}{t("Se volverá a intentar sola en unos minutos.")}
             </Notice>
           )}
           {s?.connected && !s.cron_active && (
@@ -328,11 +328,11 @@ function EmailSummary({ e, saleNumber, compact }: { e: EmailRowView; saleNumber?
           </Link>
         )}
       </p>
-      {!compact && e.review_reason && <p className="mt-1.5 text-sm text-ink-soft">{e.review_reason}</p>}
-      {compact && e.status !== "procesado" && e.review_reason && <p className="mt-1 text-[13px] text-muted">{e.review_reason}</p>}
+      {!compact && e.review_reason && <p className="mt-1.5 text-sm text-ink-soft">{t(e.review_reason)}</p>}
+      {compact && e.status !== "procesado" && e.review_reason && <p className="mt-1 text-[13px] text-muted">{t(e.review_reason)}</p>}
       {e.status === "error" && e.last_error && (
         <p className="mt-1 text-[13px] text-danger">
-          {t("Intento {attempts}:", { attempts: e.attempts })}{" "}{e.last_error}
+          {t("Intento {attempts}:", { attempts: e.attempts })}{" "}{t(e.last_error)}
         </p>
       )}
     </div>

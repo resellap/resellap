@@ -1,3 +1,4 @@
+import { fmtMsg, msg } from "@/i18n/translate";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "../supabase/admin";
@@ -56,7 +57,7 @@ async function openSales(db: SupabaseClient, opts: TrackingScope): Promise<OpenS
   if (opts.saleIds?.length) q = q.in("id", opts.saleIds);
   if (opts.onlyNew) q = q.is("tracking_checked_at", null);
   const { data, error } = await q;
-  if (error) throw new Error(`No se han podido leer los envíos: ${error.message}`);
+  if (error) throw new Error(fmtMsg(msg("No se han podido leer los envíos: {0}"), error.message));
   return (data ?? []) as OpenSale[];
 }
 
