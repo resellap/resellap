@@ -57,5 +57,30 @@ export async function POST(request: NextRequest) {
     p_org: org,
     p_created: new Date(event.created * 1000).toISOString(),
   });
+  if (org) await billingEmails(event.type, org);
   return NextResponse.json({ received: true });
+}
+
+/** Correos a los administradores del espacio (y aviso al dueño) según el evento. */
+async function billingEmails(type: string, orgId: string) {
+  const { orgAdmins, ownerEmail, sendTemplate } = await import("@/lib/mailer/send");
+  const tpl = await import("@/lib/mailer/templates");
+  const which =
+    type === "checkout.session.completed"
+      ? { user: tpl.subscriptionActive, owner: "Nueva suscripción" }
+      : type === "invoice.payment_failed"
+        ? { user: tpl.paymentFailed, owner: "Pago fallido" }
+        : type === "customer.subscription.deleted"
+          ? { user: tpl.subscriptionCanceled, owner: "Suscripción cancelada" }
+          : null;
+  if (!which) return;
+  const admins = await orgAdmins(orgId);
+  for (const a of admins) await sendTemplate(a.email, a.locale, which.user, { org: a.org });
+  const owner = ownerEmail();
+  if (owner && admins[0])
+    await sendTemplate(owner, "es", tpl.ownerNotice, {
+      title: `${which.owner}: ${admins[0].org}`,
+      lines: ["Aviso automático de Stripe."],
+      facts: [["Negocio", admins[0].org], ["Administrador", admins[0].email]],
+    });
 }

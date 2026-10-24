@@ -36,6 +36,15 @@ async function notifySupport(subject: string, text: string) {
   await sendMail(to, subject, text, host ? { href: `https://${host}/admin/soporte`, label: t("Abrir el panel de soporte") } : undefined);
 }
 
+/** Acuse de recibo al usuario cuando su duda la va a ver una persona. */
+async function confirmToUser(email: string | null | undefined, question: string) {
+  if (!email) return;
+  const t = await getT();
+  const { sendTemplate } = await import("@/lib/mailer/send");
+  const { supportReceived } = await import("@/lib/mailer/templates");
+  await sendTemplate(email, t.locale, supportReceived, { question: question.slice(0, 2000) });
+}
+
 // ---------------------------------------------------------------------
 // Feedback
 // ---------------------------------------------------------------------
@@ -141,6 +150,7 @@ export async function resolveSupport(id: number, resolved: boolean, question: st
   const supabase = await createClient();
   const { data: changed, error } = await supabase.rpc("support_resolve", { p_id: id, p_resolved: resolved });
   if (error) return { ok: false, error: friendlyError(error) };
+  if (changed && !resolved) await confirmToUser(user.email, question);
   if (changed && !resolved) await notifySupport(`Duda sin resolver · ${user.orgName ?? ""}`, `${user.email} (${user.orgName ?? "sin espacio"}):\n\n${question.slice(0, 2000)}`);
   revalidatePath("/ayuda");
   return { ok: true };
@@ -156,6 +166,7 @@ export async function sendToSupport(input: z.infer<typeof askSchema>): Promise<A
   const supabase = await createClient();
   const { error } = await supabase.rpc("support_ask", { p_question: parsed.data.question, p_page: parsed.data.page ?? null, p_direct: true });
   if (error) return { ok: false, error: friendlyError(error) };
+  await confirmToUser(user.email, parsed.data.question);
   await notifySupport(`Nueva consulta · ${user.orgName ?? ""}`, `${user.email} (${user.orgName ?? "sin espacio"}):\n\n${parsed.data.question}`);
   revalidatePath("/ayuda");
   return { ok: true };

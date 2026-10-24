@@ -4,7 +4,6 @@ import { getT } from "@/i18n/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { friendlyError, type ActionResult } from "@/lib/errors";
-import { sendMail } from "@/lib/mail";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,12 +24,14 @@ export async function inviteMemberAction(email: string, role: Role): Promise<Act
   const { data, error } = await supabase.rpc("invite_member", { p_email: email, p_role: role });
   if (error || !data) return { ok: false, error: friendlyError(error) };
   const link = `${await siteUrl()}/invitacion/${data as string}`;
-  const emailed = await sendMail(
-    email.trim().toLowerCase(),
-    t("Invitación a {org} en Resellap", { org: me.orgName ?? "" }),
-    `${t("{who} te invita a unirte a {org} en Resellap como {role}.", { who: me.fullName ?? me.email, org: me.orgName ?? "", role: t(ROLE_TEXT[role]) })}\n${t("El enlace caduca en 7 días.")}`,
-    { href: link, label: t("Aceptar invitación") },
-  );
+  const { sendTemplate } = await import("@/lib/mailer/send");
+  const { invitation } = await import("@/lib/mailer/templates");
+  const emailed = await sendTemplate(email.trim().toLowerCase(), t.locale, invitation, {
+    who: me.fullName ?? me.email,
+    org: me.orgName ?? "",
+    role: t(ROLE_TEXT[role]),
+    link,
+  });
   revalidatePath("/equipo");
   return {
     ok: true,
