@@ -1,34 +1,23 @@
 import "server-only";
 import { tSync } from "@/i18n/server";
+import { renderEmail } from "@/lib/mailer/layout";
+import { deliver, mailConfigured } from "@/lib/mailer/send";
 
 /**
- * Envío de correos transaccionales (invitaciones) con Resend.
- * Sin RESEND_API_KEY y MAIL_FROM no se envía nada: la pantalla muestra el
- * enlace para copiarlo. La verificación de email y la recuperación de
- * contraseña las envía Supabase Auth con su propio SMTP.
+ * Correo sencillo (un texto y, si hace falta, un botón) con el diseño de
+ * Resellap. Para los correos con plantilla propia, ver src/lib/mailer.
+ * Sin RESEND_API_KEY y MAIL_FROM no se envía nada.
  */
-export function mailConfigured(): boolean {
-  return !!process.env.RESEND_API_KEY?.trim() && !!process.env.MAIL_FROM?.trim();
-}
-
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+export { mailConfigured };
 
 export async function sendMail(to: string, subject: string, text: string, link?: { href: string; label: string }): Promise<boolean> {
   if (!mailConfigured()) return false;
   const t = tSync();
-  const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#1d1d1b">
-<p>${esc(text).replace(/\n/g, "<br>")}</p>
-${link ? `<p><a href="${esc(link.href)}" style="display:inline-block;background:#007782;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">${esc(link.label)}</a></p><p style="font-size:13px;color:#666">${esc(t("Si el botón no funciona, copia este enlace:"))} ${esc(link.href)}</p>` : ""}
-</div>`;
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY!.trim()}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.MAIL_FROM!.trim(), to: [to], subject, text: link ? `${text}\n\n${link.href}` : text, html }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  const { html, text: plain } = renderEmail(t, {
+    preheader: text.split("\n")[0].slice(0, 120),
+    heading: subject,
+    blocks: text.split(/\n{2,}/).map((p) => ({ kind: "p" as const, text: p })),
+    cta: link,
+  });
+  return deliver(to, subject, html, plain);
 }

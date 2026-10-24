@@ -7,10 +7,16 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function requestDeletionAction(confirmName: string): Promise<ActionResult> {
   const t = await getT();
-  await requireAdmin();
+  const me = await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.rpc("request_org_deletion", { p_confirm_name: confirmName });
   if (error) return { ok: false, error: friendlyError(error) };
+  if (me.orgId) {
+    const { orgAdmins, sendTemplate } = await import("@/lib/mailer/send");
+    const { deletionRequested } = await import("@/lib/mailer/templates");
+    const purge = new Date(Date.now() + 30 * 86_400_000).toISOString();
+    for (const a of await orgAdmins(me.orgId)) await sendTemplate(a.email, a.locale, deletionRequested, { org: a.org, purge });
+  }
   revalidatePath("/", "layout");
   return { ok: true, message: t("Eliminación solicitada. Tienes 30 días para anularla y exportar tus datos.") };
 }

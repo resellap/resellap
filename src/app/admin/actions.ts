@@ -109,15 +109,9 @@ export async function replySupportAction(requestId: number, reply: string): Prom
   const row = (data as { user_email: string | null; question: string }[] | null)?.[0];
   let mailed = false;
   if (row?.user_email) {
-    const { sendMail } = await import("@/lib/mail");
-    const { headers } = await import("next/headers");
-    const host = (await headers()).get("host");
-    mailed = await sendMail(
-      row.user_email,
-      "Respuesta a tu consulta en Resellap",
-      `Tu pregunta:\n${row.question}\n\nNuestra respuesta:\n${text.data}`,
-      host ? { href: `https://${host}/ayuda`, label: "Ver en Resellap" } : undefined,
-    );
+    const { localeOfEmail, sendTemplate } = await import("@/lib/mailer/send");
+    const { supportReply } = await import("@/lib/mailer/templates");
+    mailed = await sendTemplate(row.user_email, await localeOfEmail(row.user_email), supportReply, { question: row.question, reply: text.data });
   }
   revalidatePath("/admin/soporte");
   return { ok: true, message: mailed ? "Respuesta enviada y avisado por correo." : "Respuesta guardada: la verá en «Tus consultas»." };

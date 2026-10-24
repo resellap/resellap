@@ -35,7 +35,7 @@ export async function signup(_prev: SignupState, formData: FormData): Promise<Si
     password: v.data.password,
     options: {
       emailRedirectTo: `${base}/auth/confirmar?next=${encodeURIComponent(next)}`,
-      data: { full_name: v.data.name, business_name: v.data.business ?? null },
+      data: { full_name: v.data.name, business_name: v.data.business ?? null, language: t.locale },
     },
   });
   if (error) {
