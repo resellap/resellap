@@ -7,6 +7,7 @@ const ITEMS = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/espacios", label: "Espacios y suscripciones" },
   { href: "/admin/soporte", label: "Soporte y feedback" },
+  { href: "/admin/correos", label: "Correos" },
 ] as const;
 
 export function AdminNav() {
