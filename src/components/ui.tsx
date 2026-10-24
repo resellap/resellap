@@ -265,7 +265,7 @@ export function LotTag({ label, origin }: { label: string | null | undefined; or
   if (!label) return <Badge tone="warn"><Tx>Lote no identificado</Tx></Badge>;
   return (
     <span className="lot-tag" data-origin={origin ?? (label.startsWith("Ajuste") ? "ajuste" : "compra")}>
-      {label}
+      <Tx>{label}</Tx>
     </span>
   );
 }

@@ -47,7 +47,7 @@ export default async function ExitsPage() {
       <Figures
         className="mb-5"
         items={[
-          { label: t("Salidas sin venta"), value: units(active.reduce((a, e) => a + e.quantity, 0)), note: "unidades" },
+          { label: t("Salidas sin venta"), value: units(active.reduce((a, e) => a + e.quantity, 0)), note: t("unidades") },
           { label: t("Coste perdido"), value: money(loss), tone: loss > 0 ? "bad" : "default" },
           { label: t("Con motivo pendiente"), value: units(pending), tone: pending > 0 ? "bad" : "default" },
         ]}

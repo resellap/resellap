@@ -7,7 +7,7 @@ import { Badge, Empty, Figures, LinkButton, Notice, PageHeader, Pagination, Pane
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { filtersFrom, first, pageFrom, toQuery, type SearchParams } from "@/lib/filters";
-import { money, percent, units } from "@/lib/format";
+import { money, percent, udsLabel, units } from "@/lib/format";
 import { loadCatalogOptions } from "@/lib/options";
 import { must } from "@/lib/db";
 import { PRODUCT_COLUMNS, PRODUCT_SORTS, type ProductSort } from "@/lib/preferences";
@@ -211,7 +211,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <Figures
           className="mb-4"
           items={[
-            { label: t("Stock disponible"), value: `${units(sum.units ?? 0)} uds.`, note: t("{v} productos con stock", { v: inStock.count ?? 0 }) },
+            { label: t("Stock disponible"), value: udsLabel(sum.units ?? 0), note: t("{v} productos con stock", { v: inStock.count ?? 0 }) },
             { label: t("Valor del inventario"), value: money(sum.stock_value ?? 0), note: t("a lo que te costó") },
             { label: t("Valor de venta"), value: money(sum.potential_value ?? 0), note: t("a tu precio normal") },
             { label: t("Beneficio potencial"), value: money(sum.potential_profit ?? 0), tone: "good" },
@@ -256,7 +256,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {error && <Notice tone="bad">{error.message}</Notice>}
       {lowStock && (
         <Notice tone="info" className="mb-3">
-          {t("Mostrando productos con stock bajo (entre 1 y {lowStock}", { lowStock })}{" "}{lowStock === 1 ? "unidad" : "unidades"}).{" "}
+          {lowStock === 1 ? t("Mostrando productos con stock bajo (1 unidad).") : t("Mostrando productos con stock bajo (entre 1 y {lowStock} unidades).", { lowStock })}{" "}
           <Link href="/productos">{t("Ver todos")}</Link>
         </Notice>
       )}

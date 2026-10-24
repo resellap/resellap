@@ -140,7 +140,7 @@ function DetectedCard({ sale: r, carriers, responsibles }: { sale: DetectedSale;
                 </>
               ) : (
                 <span className="text-[14px] font-medium text-warn">
-                  {r.alternatives.length ? t("Sin elegir: {length} {v}", { length: r.alternatives.length, v: r.alternatives.length === 1 ? "posible" : "posibles" }) : t("Sin identificar")}
+                  {r.alternatives.length ? (r.alternatives.length === 1 ? t("Sin elegir: 1 posible") : t("Sin elegir: {length} posibles", { length: r.alternatives.length })) : t("Sin identificar")}
                 </span>
               )}
             </dd>

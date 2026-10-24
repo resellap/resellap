@@ -30,7 +30,7 @@ export const INTL_TAG: Record<Locale, string> = {
  * Idiomas que ya se pueden elegir (con la traducción completa). Los demás
  * existen en el código pero no se ofrecen hasta terminar su traducción.
  */
-export const ENABLED_LOCALES: readonly Locale[] = ["es"];
+export const ENABLED_LOCALES: readonly Locale[] = ["es", "en", "fr", "de", "it", "pt"];
 
 export const LOCALE_COOKIE = "rs-idioma";
 

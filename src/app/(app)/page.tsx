@@ -187,7 +187,7 @@ function Hero({ today, month, losses = 0 }: { today: Period; month: Period; loss
         )}
         <div className="pb-1 text-[13px] text-chrome-ink/70">
           <span className="num font-semibold text-chrome-ink">{units(p.orders)}</span> {p.orders === 1 ? "venta" : "ventas"} ·{" "}
-          <span className="num font-semibold text-chrome-ink">{units(p.units)}</span> {p.units === 1 ? "ud." : "uds."}
+          <span className="num font-semibold text-chrome-ink">{units(p.units)}</span> {p.units === 1 ? t("ud.") : t("uds.")}
         </div>
       </div>
       {!main && losses > 0 && <p className="text-[12.5px] text-chrome-ink/55">{t("{losses} en salidas sin venta este mes", { losses: money(losses) })}</p>}

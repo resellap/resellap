@@ -423,7 +423,7 @@ function Widget({ item, ctx }: { item: WidgetItem; ctx: Ctx }) {
                 key: `${a.product_id}-${a.lot_label}-${i}`,
                 href: `/productos/${a.product_id}`,
                 name: variantDisplay(a.product_name, a.variant_name),
-                sub: `${a.lot_label} · ${t("{n} uds.", { n: units(a.units) })} · ${money(a.value)}`,
+                sub: `${t(a.lot_label)} · ${t("{n} uds.", { n: units(a.units) })} · ${money(a.value)}`,
                 value: t("{n} d", { n: units(a.days) }),
               }))}
             />

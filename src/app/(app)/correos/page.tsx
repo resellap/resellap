@@ -110,7 +110,7 @@ export default async function EmailSalesPage({ searchParams }: { searchParams: P
     <>
       <PageHeader
         title={t("Ventas por correo")}
-        description={t("Lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace que llegan a {v} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.", { v: CENTRAL_ACCOUNT ?? "tu Gmail" })}
+        description={t("Lee los correos de Vinted, Wallapop, eBay, Milanuncios y Facebook Marketplace que llegan a {v} y registra las ventas solo. Nunca duplica ventas: lo dudoso queda aquí para que lo revises.", { v: CENTRAL_ACCOUNT ?? t("tu Gmail") })}
       />
       {okMsg === "conectado" && (
         <Notice tone="good" className="mb-4" title={t("Gmail conectado")}>
