@@ -244,7 +244,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
                 type="button"
                 onClick={() => toggle(p.id)}
                 aria-pressed={on}
-                aria-label={t("Foto {v}{v2}", { v: i + 1, v2: on ? ", elegida" : "" })}
+                aria-label={on ? t("Foto {v}, elegida", { v: i + 1 }) : t("Foto {v}", { v: i + 1 })}
                 className={clsx(
                   "relative block aspect-square w-full overflow-hidden rounded-[var(--radius-sm)] border-2 transition-[border-color,transform] duration-200 active:scale-[0.97]",
                   on ? "border-brand" : "border-transparent",
@@ -278,7 +278,7 @@ function PhotosStep({ productId, name, photos }: { productId: string; name: stri
         {!files ? (
           <Button variant="primary" onClick={prepare} disabled={!chosen.length || !!busy}>
             <Download size={16} strokeWidth={2.5} />
-            {busy ?? t("Preparar {length} {v}", { length: chosen.length, v: chosen.length === 1 ? "foto" : "fotos" })}
+            {busy ?? (chosen.length === 1 ? t("Preparar 1 foto") : t("Preparar {length} fotos", { length: chosen.length }))}
           </Button>
         ) : (
           <Button variant="primary" onClick={save}>

@@ -23,6 +23,21 @@ const LABEL: Record<string, string> = {
   restablecer_preferencias: msg("Ajustes restablecidos"),
   cerrar_sesiones: msg("Sesiones cerradas"),
   crear_venta: msg("Venta"),
+  crear_producto: msg("Producto"),
+  crear_pedido_compra: msg("Pedido de compra"),
+  recibir_pedido_compra: msg("Recepción de compra"),
+  cambiar_costes_compra: msg("Costes de compra"),
+  sustitucion_compra: msg("Sustitución en compra"),
+  crear_salida_sin_venta: msg("Salida sin venta"),
+  ajuste_stock: msg("Ajuste de stock"),
+  anular_venta: msg("Venta anulada"),
+  crear_devolucion: msg("Devolución"),
+  conectar_gmail: msg("Gmail conectado"),
+  desconectar_gmail: msg("Gmail desconectado"),
+  invitar_miembro: msg("Invitación"),
+  cambiar_rol: msg("Cambio de rol"),
+  importacion: msg("Importación"),
+  crear_organizacion: msg("Espacio creado"),
 };
 
 export default async function ActivityPage() {

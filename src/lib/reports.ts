@@ -1,3 +1,4 @@
+import { tSync } from "@/i18n/server";
 import { msg } from "@/i18n/translate";
 /**
  * Definición de los informes: qué columnas tiene cada uno. La misma
@@ -34,7 +35,7 @@ export const REPORTS: Record<ReportType, { title: string; rpc: string; columns: 
       { key: "profit", label: msg("Beneficio"), kind: "money", value: v("profit") },
       { key: "platform_name", label: msg("Plataforma"), kind: "text", value: v("platform_name") },
       { key: "purchase_order_number", label: msg("Pedido"), kind: "int", value: v("purchase_order_number") },
-      { key: "lot_label", label: msg("Lote"), kind: "text", value: v("lot_label") },
+      { key: "lot_label", label: msg("Lote"), kind: "text", tr: true, value: v("lot_label") },
       { key: "refunded_amount", label: msg("Reembolsado"), kind: "money", value: v("refunded_amount") },
       { key: "line_notes", label: msg("Detalle"), kind: "text", value: v("line_notes") },
     ],
@@ -57,7 +58,7 @@ export const REPORTS: Record<ReportType, { title: string; rpc: string; columns: 
       { key: "potential_value", label: msg("Valor potencial"), kind: "money", value: v("potential_value") },
       { key: "potential_profit", label: msg("Beneficio potencial"), kind: "money", value: v("potential_profit") },
       { key: "units_sold", label: msg("Unidades vendidas"), kind: "int", value: v("units_sold") },
-      { key: "lot_labels", label: msg("Lotes con stock"), kind: "text", value: (r) => (Array.isArray(r.lot_labels) ? (r.lot_labels as string[]).join(", ") : "") },
+      { key: "lot_labels", label: msg("Lotes con stock"), kind: "text", value: (r) => (Array.isArray(r.lot_labels) ? (r.lot_labels as string[]).map((l) => tSync()(l)).join(", ") : "") },
     ],
   },
   compras: {
@@ -107,7 +108,7 @@ export const REPORTS: Record<ReportType, { title: string; rpc: string; columns: 
       { key: "exit_date", label: msg("Fecha"), kind: "date", value: v("exit_date") },
       { key: "product_name", label: msg("Producto"), kind: "text", value: v("product_name") },
       { key: "variant_name", label: msg("Variante"), kind: "text", value: variant },
-      { key: "lot_label", label: msg("Lote"), kind: "text", value: v("lot_label") },
+      { key: "lot_label", label: msg("Lote"), kind: "text", tr: true, value: v("lot_label") },
       { key: "quantity", label: msg("Unidades"), kind: "int", value: v("quantity") },
       { key: "cost_amount", label: msg("Coste perdido"), kind: "money", value: v("cost_amount") },
       { key: "reason", label: msg("Motivo"), kind: "text", tr: true, value: (r) => EXIT_REASONS[String(r.reason)] ?? r.reason },

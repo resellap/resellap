@@ -68,6 +68,11 @@ const ACTIONS: Record<string, string> = {
   comprobar_copia: msg("comprobar copia"),
   exportar: msg("exportar"),
   exportar_mis_datos: msg("exportar mis datos"),
+  crear_pedido_compra: msg("crear pedido de compra"),
+  recibir_pedido_compra: msg("recibir pedido de compra"),
+  cambiar_costes_compra: msg("cambiar costes de compra"),
+  sustitucion_compra: msg("sustitución en compra"),
+  crear_salida_sin_venta: msg("salida sin venta"),
 }
 
 const HIDDEN = new Set(["updated_at", "created_at", "id"]);

@@ -108,7 +108,7 @@ export function ProductForm({ initial, brands, categories, onDone }: { initial?:
         {!editing && (
           <Field
             label={t("Fotos")}
-            hint={photos.length ? t("{length} {v}. Las del iPhone se convierten solas.", { length: photos.length, v: photos.length === 1 ? "foto elegida" : "fotos elegidas" }) : t("Puedes elegir varias. Luego podrás ordenarlas y añadir más.")}
+            hint={photos.length ? (photos.length === 1 ? t("1 foto elegida. Las del iPhone se convierten solas.") : t("{length} fotos elegidas. Las del iPhone se convierten solas.", { length: photos.length })) : t("Puedes elegir varias. Luego podrás ordenarlas y añadir más.")}
             className="sm:col-span-2"
           >
             <Input type="file" accept="image/*,.heic,.heif" multiple className="py-1.5" onChange={(e) => setPhotos(Array.from(e.target.files ?? []))} />

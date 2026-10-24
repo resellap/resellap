@@ -339,7 +339,7 @@ export function ImportWizard({ existing, previous }: { existing: ImportExisting;
                     <label className="flex items-start gap-2 text-sm">
                       <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--color-brand)]" checked={m.on} onChange={(e) => setMerges((ms) => ms.map((x, j) => (j === i ? { ...x, on: e.target.checked } : x)))} />
                       <span>
-                        «{m.from}{t("» es «{to}»", { to: m.to })}
+                        {t("«{from}» es «{to}»", { from: m.from, to: m.to })}
                         <span className="block text-xs text-muted">{t(m.reason)}</span>
                       </span>
                     </label>

@@ -30,7 +30,7 @@ export default async function ShipmentsPage() {
         title={t("Pendientes de envío")}
         description={
           total > 0
-            ? t("{total} {v} por enviar{v2}, separados por transportista. Al marcar uno como enviado empieza su seguimiento.", { total, v: total === 1 ? "paquete" : "paquetes", v2: user.role === "admin" ? "" : " de tus ventas" })
+            ? (total === 1 ? (user.role === "admin" ? t("1 paquete por enviar. Al marcarlo como enviado empieza su seguimiento.") : t("1 paquete de tus ventas por enviar. Al marcarlo como enviado empieza su seguimiento.")) : (user.role === "admin" ? t("{total} paquetes por enviar, separados por transportista. Al marcar uno como enviado empieza su seguimiento.", { total }) : t("{total} paquetes de tus ventas por enviar, separados por transportista. Al marcar uno como enviado empieza su seguimiento.", { total })))
             : undefined
         }
         actions={

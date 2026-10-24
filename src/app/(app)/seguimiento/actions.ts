@@ -56,7 +56,7 @@ export async function refreshTracking(saleId?: string): Promise<ActionResult> {
   if (!ids.length) return { ok: true, message: t("No hay envíos con código por consultar.") };
   const r = await runTracking({ saleIds: ids });
   revalidatePath("/", "layout");
-  if (!r.checked && r.errors) return { ok: false, error: t("No se ha podido consultar {v} ({errors} con problemas). Revisa el código y el transportista.", { v: ids.length === 1 ? t("el envío") : t("ningún envío"), errors: r.errors }) };
+  if (!r.checked && r.errors) return { ok: false, error: (ids.length === 1 ? t("No se ha podido consultar el envío. Revisa el código y el transportista.") : t("No se ha podido consultar ningún envío ({errors} con problemas). Revisa los códigos y los transportistas.", { errors: r.errors })) };
   const parts = [r.checked === 1 ? t("1 envío actualizado") : t("{n} envíos actualizados", { n: r.checked })];
   if (r.updated) parts.push(t("{n} con novedades", { n: r.updated }));
   return { ok: true, message: `${parts.join(", ")}${r.errors ? ` ${t("({n} con problemas)", { n: r.errors })}` : ""}.` };

@@ -227,7 +227,7 @@ function ConfirmDialog({
         <Field label={t("Precio de venta (€)")} hint={t("El del artículo, sin el envío.")}>
           <Input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className="num" />
         </Field>
-        <Field label={t("Transportista")} hint={sale.carrier ? t("Detectado en {v}", { v: sale.carrier.source === "etiqueta" ? "la etiqueta" : "el correo" }) : t("No se ha podido detectar")}>
+        <Field label={t("Transportista")} hint={sale.carrier ? t("Detectado en {v}", { v: sale.carrier.source === "etiqueta" ? t("la etiqueta") : t("el correo") }) : t("No se ha podido detectar")}>
           <Select value={carrierId} onChange={(e) => setCarrierId(e.target.value)}>
             <option value="">{t("Sin transportista")}</option>
             {carriers.map((c) => (

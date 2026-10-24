@@ -356,7 +356,7 @@ export default async function SaleDetail({ params, searchParams }: PageProps<"/v
               <dt className="text-muted">{t("Origen")}</dt>
               <dd>
                 {s.source === "correo"
-                  ? t("Automática, desde el correo de {v}", { v: s.platforms?.name ?? "la plataforma" })
+                  ? t("Automática, desde el correo de {v}", { v: s.platforms?.name ?? t("la plataforma") })
                   : s.source_ref
                     ? t("Importado del Excel ({source_ref})", { source_ref: s.source_ref })
                     : s.source === "excel"

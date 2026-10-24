@@ -50,7 +50,7 @@ export default async function CarrierShipments({ params }: PageProps<"/envios/[c
         }
         description={
           rows.length > 0
-            ? t("{length} {v} por enviar, del más antiguo al más reciente.{v2}", { length: rows.length, v: rows.length === 1 ? "paquete" : "paquetes", v2: withoutLabel ? ` ${withoutLabel} sin etiqueta.` : "" })
+            ? (rows.length === 1 ? t("1 paquete por enviar.") : t("{length} paquetes por enviar, del más antiguo al más reciente.", { length: rows.length })) + (withoutLabel ? " " + t("{n} sin etiqueta.", { n: withoutLabel }) : "")
             : undefined
         }
       />

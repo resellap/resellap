@@ -2,14 +2,28 @@
 // flecha y un recuadro verdes que señalan dónde pulsar.
 //
 // Uso (con la app arrancada y datos de ejemplo):
-//   BASE=http://localhost:3100 EMAIL=… PASSWORD=… node scripts/capturas-ayuda.mjs [id …]
+//   BASE=http://localhost:3100 EMAIL=… PASSWORD=… [IDIOMA=en] node scripts/capturas-ayuda.mjs [id …]
+// Con IDIOMA (en, fr, de, it, pt) las guarda en public/ayuda/<idioma>/.
 // Requiere Playwright (variable PW con la ruta del módulo si no está instalado aquí).
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import sharp from "sharp";
 
 const { chromium } = await import(process.env.PW ?? "playwright");
 const BASE = process.env.BASE ?? "http://localhost:3100";
-const OUT = new URL("../public/ayuda/", import.meta.url).pathname;
+const LANG = process.env.IDIOMA ?? "es";
+const DICT = LANG === "es" ? {} : JSON.parse(readFileSync(new URL(`../src/i18n/messages/${LANG}.json`, import.meta.url), "utf8"));
+/** Texto de la app en el idioma de las capturas. */
+const T = (s) => DICT[s] ?? s;
+/** Etiquetas de las flechas (no son textos de la app). */
+const LABELS = {
+  en: { "1. Busca el producto": "1. Search for the product", "Pulsa aquí": "Tap here", "Elige tu Excel": "Choose your Excel", "Conecta tu Gmail": "Connect your Gmail", "Revisa y confirma": "Review and confirm", "Entra en el transportista": "Open the carrier" },
+  fr: { "1. Busca el producto": "1. Cherchez le produit", "Pulsa aquí": "Appuyez ici", "Elige tu Excel": "Choisissez votre Excel", "Conecta tu Gmail": "Connectez votre Gmail", "Revisa y confirma": "Vérifiez et confirmez", "Entra en el transportista": "Ouvrez le transporteur" },
+  de: { "1. Busca el producto": "1. Produkt suchen", "Pulsa aquí": "Hier tippen", "Elige tu Excel": "Excel-Datei wählen", "Conecta tu Gmail": "Gmail verbinden", "Revisa y confirma": "Prüfen und bestätigen", "Entra en el transportista": "Versanddienstleister öffnen" },
+  it: { "1. Busca el producto": "1. Cerca il prodotto", "Pulsa aquí": "Tocca qui", "Elige tu Excel": "Scegli il tuo Excel", "Conecta tu Gmail": "Collega il tuo Gmail", "Revisa y confirma": "Controlla e conferma", "Entra en el transportista": "Apri il corriere" },
+  pt: { "1. Busca el producto": "1. Pesquisa o produto", "Pulsa aquí": "Toca aqui", "Elige tu Excel": "Escolhe o teu Excel", "Conecta tu Gmail": "Liga o teu Gmail", "Revisa y confirma": "Revê e confirma", "Entra en el transportista": "Entra na transportadora" },
+};
+const L = (s) => LABELS[LANG]?.[s] ?? s;
+const OUT = new URL(LANG === "es" ? "../public/ayuda/" : `../public/ayuda/${LANG}/`, import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
 const GREEN = "#36C784";
@@ -17,31 +31,34 @@ const GREEN = "#36C784";
 /** id → pantalla, qué señalar, texto de la etiqueta, alto del recorte (px) */
 const SHOTS = [
   { id: "nueva-venta", path: "/ventas/nueva", target: (p) => p.getByRole("combobox").or(p.getByPlaceholder(/busca/i)).first(), label: "1. Busca el producto", h: 700 },
-  { id: "crear-producto", path: "/productos", target: (p) => p.getByRole("link", { name: "Nuevo producto" }).first(), label: "Pulsa aquí", h: 520 },
-  { id: "nuevo-pedido", path: "/compras", target: (p) => p.getByRole("link", { name: "Nuevo pedido" }).first(), label: "Pulsa aquí", h: 520 },
-  { id: "importar", path: "/importar", target: (p) => p.getByText("Elegir archivo", { exact: true }).first(), label: "Elige tu Excel", h: 560, pad: 230 },
+  { id: "crear-producto", path: "/productos", target: (p) => p.getByRole("link", { name: T("Nuevo producto") }).first(), label: "Pulsa aquí", h: 520 },
+  { id: "nuevo-pedido", path: "/compras", target: (p) => p.getByRole("link", { name: T("Nuevo pedido") }).first(), label: "Pulsa aquí", h: 520 },
+  { id: "importar", path: "/importar", target: (p) => p.getByText(T("Elegir archivo"), { exact: true }).first(), label: "Elige tu Excel", h: 560, pad: 230 },
   {
     id: "gmail",
     path: "/correos",
     // Como lo ve alguien que aún no ha conectado su correo
     prepare: async (p) =>
-      p.evaluate(() => {
-        for (const b of document.querySelectorAll("main button, main a")) {
-          if (b.textContent?.trim() === "Volver a conectar") b.lastChild.textContent = "Conectar Gmail";
-          if (["Revisar ahora", "Desconectar", "Desconectar Gmail"].includes(b.textContent?.trim() ?? "")) b.style.visibility = "hidden";
-        }
-        for (const el of document.querySelectorAll("main [role=status], main [role=alert], main aside")) el.style.display = "none";
-        for (const el of document.querySelectorAll("main p")) if (/@gmail\.com$/.test(el.textContent?.trim() ?? "")) el.textContent = "tunegocio@gmail.com";
-        for (const el of document.querySelectorAll("main span")) if (el.textContent?.trim() === "Conectado") el.style.visibility = "hidden";
-      }),
-    target: (p) => p.getByText("Conectar Gmail", { exact: true }).first(),
+      p.evaluate(
+        (w) => {
+          for (const b of document.querySelectorAll("main button, main a")) {
+            if (b.textContent?.trim() === w.reconnect) b.lastChild.textContent = w.connect;
+            if (w.hide.includes(b.textContent?.trim() ?? "")) b.style.visibility = "hidden";
+          }
+          for (const el of document.querySelectorAll("main [role=status], main [role=alert], main aside")) el.style.display = "none";
+          for (const el of document.querySelectorAll("main p")) if (/@gmail\.com$/.test(el.textContent?.trim() ?? "")) el.textContent = "tunegocio@gmail.com";
+          for (const el of document.querySelectorAll("main span")) if (el.textContent?.trim() === w.connected) el.style.visibility = "hidden";
+        },
+        { reconnect: T("Volver a conectar"), connect: T("Conectar Gmail"), connected: T("Conectado"), hide: [T("Revisar ahora"), T("Desconectar"), T("Desconectar Gmail")] },
+      ),
+    target: (p) => p.getByText(T("Conectar Gmail"), { exact: true }).first(),
     label: "Conecta tu Gmail",
     h: 620,
     pad: 200,
   },
-  { id: "detectadas", path: "/detectadas", target: (p) => p.getByRole("button", { name: "Confirmar venta" }).first(), label: "Revisa y confirma", h: 560, above: true, pad: 330 },
-  { id: "envios", path: "/envios", target: (p) => p.getByRole("link", { name: /Ver pedidos/ }).first(), label: "Entra en el transportista", h: 620 },
-  { id: "equipo", path: "/equipo", target: (p) => p.getByRole("button", { name: "Invitar" }).or(p.getByRole("link", { name: "Invitar" })).first(), label: "Pulsa aquí", h: 520 },
+  { id: "detectadas", path: "/detectadas", target: (p) => p.getByRole("button", { name: T("Confirmar venta") }).first(), label: "Revisa y confirma", h: 560, above: true, pad: 330 },
+  { id: "envios", path: "/envios", target: (p) => p.getByRole("link", { name: new RegExp(T("Ver pedidos")) }).first(), label: "Entra en el transportista", h: 620 },
+  { id: "equipo", path: "/equipo", target: (p) => p.getByRole("button", { name: T("Invitar") }).or(p.getByRole("link", { name: T("Invitar") })).first(), label: "Pulsa aquí", h: 520 },
 ];
 
 /** Dibuja el recuadro, la flecha curva y la etiqueta sobre la página. */
@@ -76,6 +93,7 @@ function drawArrow({ box, label, green, above }) {
 
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const ctx = await browser.newContext({ viewport: { width: 1290, height: 1000 }, deviceScaleFactor: 1.5, locale: "es-ES", timezoneId: "Europe/Madrid", colorScheme: "dark" });
+await ctx.addCookies([{ name: "rs-idioma", value: LANG, url: BASE }]);
 const page = await ctx.newPage();
 await page.goto(BASE + "/login");
 await page.fill("#email", process.env.EMAIL ?? "");
@@ -88,7 +106,7 @@ const only = process.argv.slice(2);
 for (const s of SHOTS.filter((x) => !only.length || only.includes(x.id))) {
   await page.goto(BASE + s.path);
   await page.waitForLoadState("networkidle");
-  await page.addStyleTag({ content: "*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} header.fixed,header.sticky,body>div>header,aside[aria-label=\"Más secciones\"],nav[aria-label=\"Accesos rápidos\"]{visibility:hidden!important}" });
+  await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} header.fixed,header.sticky,body>div>header,aside[aria-label=\"${T("Más secciones")}\"],nav[aria-label=\"${T("Accesos rápidos")}\"]{visibility:hidden!important}` });
   await s.prepare?.(page);
   const el = s.target(page);
   await el.scrollIntoViewIfNeeded();
@@ -97,7 +115,7 @@ for (const s of SHOTS.filter((x) => !only.length || only.includes(x.id))) {
   if (!box) throw new Error(`${s.id}: no encuentro el elemento`);
   const scroll = await page.evaluate(() => ({ x: scrollX, y: scrollY }));
   const abs = { x: box.x + scroll.x, y: box.y + scroll.y, width: box.width, height: box.height };
-  const r = await page.evaluate(drawArrow, { box: abs, label: s.label, green: GREEN, above: !!s.above });
+  const r = await page.evaluate(drawArrow, { box: abs, label: L(s.label), green: GREEN, above: !!s.above });
   // Recorte de 1200 × h centrado en lo señalado (dentro de la zona de contenido)
   const W = 1200;
   const pageW = await page.evaluate(() => document.documentElement.scrollWidth);
